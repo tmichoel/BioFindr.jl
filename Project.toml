@@ -1,0 +1,13 @@
+name = "Findr"
+uuid = "77580646-997d-4218-a3cc-42097ecd1c68"
+authors = ["tmichoel <11647967+tmichoel@users.noreply.github.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
