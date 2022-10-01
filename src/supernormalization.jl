@@ -18,6 +18,5 @@ function supernormalize(X, c=0.375)
     println(σ)
     Y = Y/σ
     return Y
-
 end
 
