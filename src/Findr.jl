@@ -2,8 +2,9 @@ module Findr
 
 # Write your package code here.
 
-import StatsBase
-import Distributions
+using Statistics
+using StatsBase
+using Distributions
 
 include("supernormalization.jl")
 
