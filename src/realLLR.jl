@@ -18,6 +18,40 @@ Compute the log-likelihood ratios for Findr test 0 (**correlation test**) with p
 realLLRcorr_row_sumstat(ρ) = -0.5*log.(1 .- ρ.^2)
 
 """
+    realLLRcausal_row(Y,E,row)
+
+Compute for a given `row` (gene) of gene expression matrix `Y` with categorical instrument `E` against all other rows of `Y` the log-likelihood ratios for Findr causal tests: 
+
+- Test 2 (**Linkage test**) 
+- Test 3 (**Mediation test**)
+- Test 4 (**Relevance test**)
+- Test 5 (**Pleiotropy test**)
+
+`Y` is assumed to have undergone supernormalization with each row having mean zero and variance one. The LLRs are scaled by the number of samples.
+"""
+function realLLRcausal_row(Y,E,row)
+    # compute the sufficient statistics
+    ρ, σ1, σ2 = llrstats_row(Y,E,row)
+
+    # test 2
+    llr2 = -0.5*log.(σ1)
+
+    # test 4
+    # the abs in the argument of the log is to have a positive argument when applied to the "row"th entry, where the exact value is 0
+    llr4 = -0.5*log.(abs.(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2)) .+ 0.5*log.(σ1[row])
+    llr4[row] = Inf # set self to exact value
+
+    # test 3
+    llr3 = llr4 .+ 0.5*log.(1 .- ρ.^2)
+
+    # test 5
+    llr5 = llr4 .+ 0.5*log.(σ1)
+
+    # output
+    llr2, llr3, llr4, llr5
+end
+
+"""
     realLLRlink_row(Y,E)
 
 Compute the log-likelihood ratios for Findr test 2 (**linkage test**) for categorical vector `E` against all rows of matrix `Y`.
@@ -47,7 +81,8 @@ function realLLRmed_row(Y,E,row)
     ρ = cov_row(Y,row)
     σ1 = groupvar(Y,E)
     σ2 = groupcov(Y,E,row)
-    -0.5*log(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2) .+ 0.5*log(σ1[row]) + 0.5*log(1 .- ρ.^2)
+    # the abs in the argument of the first log is to have a positive argument when applied to the "row"th entry, where the exact value is 0
+    -0.5*log.(abs.(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2)) .+ 0.5*log.(σ1[row]) .+ 0.5*log.(1 .- ρ.^2)
 end
 
 """
@@ -55,7 +90,7 @@ end
 
 Compute the log-likelihood ratios for Findr test 3 (**mediation test**) with precomputed correlation values `ρ` and weighted average group variances `σ1` and covariances `σ2`
 """
-realLLRmed_row_sumstat(ρ,σ1,σ2) = -0.5*log(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2) .+ 0.5*log(σ1[row]) + 0.5*log(1 .- ρ.^2)
+realLLRmed_row_sumstat(ρ,σ1,σ2,row) = -0.5*log.(abs.(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2)) .+ 0.5*log.(σ1[row]) .+ 0.5*log.(1 .- ρ.^2)
 
 """
     realLLRrelev_row(Y,E,row)
@@ -68,15 +103,16 @@ function realLLRrelev_row(Y,E,row)
     ρ = cov_row(Y,row)
     σ1 = groupvar(Y,E)
     σ2 = groupcov(Y,E,row)
-    -0.5*log(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2) .+ 0.5*log(σ1[row])
+    # the abs in the argument of the first log is to have a positive argument when applied to the "row"th entry, where the exact value is 0
+    -0.5*log(abs.(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2)) .+ 0.5*log(σ1[row])
 end
 
 """
     realLLRrelev_row_sumstat(ρ,σ1,σ2)
 
-Compute the log-likelihood ratios for Findr test 3 (**mediation test**) with precomputed correlation values `ρ` and weighted average group variances `σ1` and covariances `σ2`
+Compute the log-likelihood ratios for Findr test 4 (**relevance test**) with precomputed correlation values `ρ` and weighted average group variances `σ1` and covariances `σ2`
 """
-realLLRrelev_row_sumstat(ρ,σ1,σ2) = -0.5*log(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2) .+ 0.5*log(σ1[row])
+realLLRrelev_row_sumstat(ρ,σ1,σ2) = -0.5*log(abs.(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2)) .+ 0.5*log(σ1[row])
 
 
 """
@@ -90,7 +126,8 @@ function realLLRpleio_row(Y,E,row)
     ρ = cov_row(Y,row)
     σ1 = groupvar(Y,E)
     σ2 = groupcov(Y,E,row)
-    -0.5*log(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2) .+ 0.5*log(σ1[row].*σ1)
+    # the abs in the argument of the first log is to have a positive argument when applied to the "row"th entry, where the exact value is 0
+    -0.5*log(abs.(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2)) .+ 0.5*log(σ1[row].*σ1)
 end
 
 """
@@ -98,7 +135,7 @@ end
 
 Compute the log-likelihood ratios for Findr test 3 (**mediation test**) with precomputed correlation values `ρ` and weighted average group variances `σ1` and covariances `σ2`
 """
-realLLRpleio_row_sumstat(ρ,σ1,σ2) = -0.5*log(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2) .+ 0.5*log(σ1[row].*σ1)
+realLLRpleio_row_sumstat(ρ,σ1,σ2) = -0.5*log(abs.(σ1[row].*σ1 .- (ρ .+ σ2 .- 1).^2)) .+ 0.5*log(σ1[row].*σ1)
 
 """
     llrstats_row(Y,E,row)
@@ -115,7 +152,7 @@ The sufficient statistics are:
 """
 function llrstats_row(Y,E,row)
     ρ = cov(Y[row,:],Y,dims=2,corrected=false)'
-    ρ[row] = 1.
+    ρ[row] = 1. # set self to exact values
 
     gs, μ = groupmeans(Y,E)
     
