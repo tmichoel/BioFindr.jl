@@ -36,7 +36,8 @@ end
 Evaluate the cumulative distribution function of an LBeta distribution using its relation to the Beta distribution. 
 """
 function Distributions.cdf(d::LBeta, x::Real)
-    bd = Beta(params(d)...) 
+    bp = 0.5 .* params(d)
+    bd = Beta(bp...) 
     return cdf(bd, 1-exp(-2x))
 end
 
@@ -46,7 +47,8 @@ end
 Evaluate the complementary cumulative distribution function of an LBeta distribution using its relation to the Beta distribution. 
 """
 function Distributions.ccdf(d::LBeta, x::Real)
-    bd = Beta(params(d)...) 
+    bp = 0.5 .* params(d)
+    bd = Beta(bp...)
     return ccdf(bd, 1-exp(-2x))
 end
 
@@ -56,127 +58,78 @@ end
 Evaluate the complementary cumulative distribution function of an LBeta distribution using its relation to the Beta distribution. 
 """
 function Distributions.logccdf(d::LBeta, x::Real)
-    bd = Beta(params(d)...) 
+    bp = 0.5 .* params(d)
+    bd = Beta(bp...)
     return logccdf(bd, 1-exp(-2x))
 end
 
 """
-    randomLLRcorr_pval(llr,ns)
+    nulldist(ns,[ng,test])
 
-Return p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for Findr test 0 (**correlation test**) with sample size `ns`. 
+Return an LBeta distribution that is the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
+
+- ':corr' - **correlation test** (test 0)
+- ':link' - **linkage test** (test 1/2)
+- ':med' - **mediation test** (test 3)
+- ':relev' - **relevance test** (test 4)
+- ':pleio' - **pleiotropy test** (test 5)
+
+With only one input argument, the null distribution for the correlation test with `ns` samples is returned. With two input arguments, or  with three arguments and `test` equal to "corr", the null distribution for the correlation test with `ns` samples is returned and the second argument is ignored
 """
-function randomLLRcorr_pval(llr,ns)
-    # create null distribution
-    nulld = LBeta(1,ns-2)
-    # get p-values
-    ccdf(nulld,llr) 
+function nulldist(ns,ng=1,test=:corr)
+    if test==:corr
+        return LBeta(1,ns-2)
+    elseif test==:link
+        return LBeta(ng-1,ns-ng)
+    elseif test==:med
+        return LBeta(ng-1,ns-ng-1)
+    elseif test==:relev
+        return LBeta(ng,ns-ng-1)
+    elseif test==:pleio
+        return LBeta(1,ns-ng-1)
+    else
+        error("the third argument must be a symbol from the set {:corr,:link,:med,:relev,:pleio}")
+    end
 end
 
 """
-    randomLLRcorr_log10pval(llr,ns)
+    nullpval(llr,ns,[ng,test])
 
-Return -log10(p-values) for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for Findr test 0 (**correlation test**) with sample size `ns`. 
+Return p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
+
+- ':corr' - **correlation test** (test 0)
+- ':link' - **linkage test** (test 1/2)
+- ':med' - **mediation test** (test 3)
+- ':relev' - **relevance test** (test 4)
+- ':pleio' - **pleiotropy test** (test 5)
+
+With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to ":corr", the correlation test with `ns` samples is used and the third argument is ignored.
 """
-function randomLLRcorr_log10pval(llr,ns)
+function nullpval(llr,ns,ng=1,test=:corr)
     # create null distribution
-    nulld = LBeta(1,ns-2)
-    # get p-values
-    -logccdf(nulld,llr)/log(10) 
+    nulld = nulldist(ns,ng,test)
+    # check for Inf and NaN
+    #tf = llr.==Inf | isnan(llr) 
+    # compute p-values
+    ccdf(nulld,llr)
 end
 
 """
-    randomLLRlink_pval(llr,ns)
+    nulllog10pval(llr,ns,[ng,test])
 
-Return p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for Findr test 2 (**linkage test**) with sample size `ns` and number of genotype groups `ng`. 
+Return negative log10 p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
+
+- ':corr' - **correlation test** (test 0)
+- ':link' - **linkage test** (test 1/2)
+- ':med' - **mediation test** (test 3)
+- ':relev' - **relevance test** (test 4)
+- ':pleio' - **pleiotropy test** (test 5)
+
+With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to "corr", the correlation test with `ns` samples is used and the third argument is ignored.
 """
-function randomLLRlink_pval(llr,ns,ng)
+function nulllog10pval(llr,ns,ng=1,test=:corr)
     # create null distribution
-    nulld = LBeta(ng-1,ns-ng)
-    # get p-values
-    ccdf(nulld,llr) 
-end
-
-"""
-    randomLLRlink_log10pval(llr,ns,ng)
-
-Return -log10(p-values) for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for Findr test 2 (**linkage test**) with sample size `ns`. 
-"""
-function randomLLRlink_log10pval(llr,ns,ng)
-    # create null distribution
-    nulld = LBeta(ng-1,ns-ng)
-    # get p-values
-    -logccdf(nulld,llr)/log(10) 
-end
-
-"""
-    randomLLRmed_pval(llr,ns)
-
-Return p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for Findr test 3 (**mediation test**) with sample size `ns` and number of genotype groups `ng`. 
-"""
-function randomLLRmed_pval(llr,ns,ng)
-    # create null distribution
-    nulld = LBeta(ng-1,ns-ng-1)
-    # get p-values
-    ccdf(nulld,llr) 
-end
-
-"""
-    randomLLRmed_log10pval(llr,ns,ng)
-
-Return -log10(p-values) for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for Findr test 3 (**mediation test**) with sample size `ns`. 
-"""
-function randomLLRmed_log10pval(llr,ns,ng)
-    # create null distribution
-    nulld = LBeta(ng-1,ns-ng-1)
-    # get p-values
-    -logccdf(nulld,llr)/log(10) 
-end
-
-
-"""
-    randomLLRrelev_pval(llr,ns)
-
-Return p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for Findr test 4 (**relevance test**) with sample size `ns` and number of genotype groups `ng`. 
-"""
-function randomLLRrelev_pval(llr,ns,ng)
-    # create null distribution
-    nulld = LBeta(ng,ns-ng-1)
-    # get p-values
-    ccdf(nulld,llr) 
-end
-
-"""
-    randomLLRrelev_log10pval(llr,ns,ng)
-
-Return -log10(p-values) for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for Findr test 4 (**relevance test**) with sample size `ns`. 
-"""
-function randomLLRrelev_log10pval(llr,ns,ng)
-    # create null distribution
-    nulld = LBeta(ng,ns-ng-1)
-    # get p-values
-    -logccdf(nulld,llr)/log(10) 
-end
-
-"""
-    randomLLRpleio_pval(llr,ns)
-
-Return p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for Findr test 4 (**relevance test**) with sample size `ns` and number of genotype groups `ng`. 
-"""
-function randomLLRpleio_pval(llr,ns,ng)
-    # create null distribution
-    nulld = LBeta(1,ns-ng-1)
-    # get p-values
-    ccdf(nulld,llr) 
-end
-
-"""
-    randomLLRpleio_log10pval(llr,ns,ng)
-
-Return -log10(p-values) for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for Findr test 4 (**relevance test**) with sample size `ns`. 
-"""
-function randomLLRpleio_log10pval(llr,ns,ng)
-    # create null distribution
-    nulld = LBeta(1,ns-ng-1)
-    # get p-values
+    nulld = nulldist(ns,ng,test)
+    # compute negative log10 p-values
     -logccdf(nulld,llr)/log(10) 
 end
