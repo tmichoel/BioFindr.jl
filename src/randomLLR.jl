@@ -5,7 +5,7 @@ The *LBeta distribution* with parameters ``\\alpha`` and ``\\beta`` is defined a
 
 ``X=-\\frac{1}{2}(\\ln(1-Y))``
 
-where ``Y\\sim\\operatorname{Beta}(\\alpha, \\beta)``
+where ``Y\\sim\\operatorname{Beta}(\\alpha/2, \\beta/2)``
 """
 struct LBeta{T<:Real} <: ContinuousUnivariateDistribution 
     α :: T
@@ -63,6 +63,33 @@ function Distributions.logccdf(d::LBeta, x::Real)
     return logccdf(bd, 1-exp(-2x))
 end
 
+"""
+    fit(LBeta, x)
+
+Fit an `LBeta` distribution to data `x` using the method of moments by exploiting its relationship to the Beta distribution.
+
+See https://github.com/JuliaStats/Distributions.jl/blob/master/src/univariate/continuous/beta.jl
+"""
+function fit(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Real
+    z = 1 .-  exp.(-2 .* x) # if `x` is LBeta distributed, then `z` is Beta distributed
+    bd = Distributions.fit(Beta,z)
+    lbp = 2 .* params(bd) # multiply fitted Beta param to obtain LBeta parameters
+    return LBeta(lbp...)
+end
+
+"""
+    fit_mle(LBeta, x)
+
+Fit an `LBeta` distribution to data `x` using maximum-likelihood estimation by exploiting its relationship to the Beta distribution.
+
+See https://github.com/JuliaStats/Distributions.jl/blob/master/src/univariate/continuous/beta.jl
+"""
+function fit_mle(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Real
+    z = 1 .-  exp.(-2 .* x) # if `x` is LBeta distributed, then `z` is Beta distributed
+    bd = Distributions.fit_mle(Beta,z)
+    lbp = 2 .* params(bd) # multiply fitted Beta param to obtain LBeta parameters
+    return LBeta(lbp...)
+end
 """
     nulldist(ns,[ng,test])
 
@@ -132,4 +159,26 @@ function nulllog10pval(llr,ns,ng=1,test=:corr)
     nulld = nulldist(ns,ng,test)
     # compute negative log10 p-values
     -logccdf(nulld,llr)/log(10) 
+end
+
+"""
+    nullpdf(llr,ns,[ng,test])
+
+Return probability distribution function evaluations for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
+
+- ':corr' - **correlation test** (test 0)
+- ':link' - **linkage test** (test 1/2)
+- ':med' - **mediation test** (test 3)
+- ':relev' - **relevance test** (test 4)
+- ':pleio' - **pleiotropy test** (test 5)
+
+With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to ":corr", the correlation test with `ns` samples is used and the third argument is ignored.
+"""
+function nullpdf(llr,ns,ng=1,test=:corr)
+    # create null distribution
+    nulld = nulldist(ns,ng,test)
+    # check for Inf and NaN
+    #tf = llr.==Inf | isnan(llr) 
+    # compute p-values
+    pdf.(nulld,llr)
 end
