@@ -12,6 +12,7 @@ struct LBeta{T<:Real} <: ContinuousUnivariateDistribution
     β :: T
 end
 
+
 """
     params(d)
 
@@ -70,7 +71,7 @@ Fit an `LBeta` distribution to data `x` using the method of moments by exploitin
 
 See https://github.com/JuliaStats/Distributions.jl/blob/master/src/univariate/continuous/beta.jl
 """
-function fit(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Real
+function Distributions.fit(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Real
     z = 1 .-  exp.(-2 .* x) # if `x` is LBeta distributed, then `z` is Beta distributed
     bd = Distributions.fit(Beta,z)
     lbp = 2 .* params(bd) # multiply fitted Beta param to obtain LBeta parameters
@@ -84,7 +85,7 @@ Fit an `LBeta` distribution to data `x` using maximum-likelihood estimation by e
 
 See https://github.com/JuliaStats/Distributions.jl/blob/master/src/univariate/continuous/beta.jl
 """
-function fit_mle(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Real
+function Distributions.fit_mle(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Real
     z = 1 .-  exp.(-2 .* x) # if `x` is LBeta distributed, then `z` is Beta distributed
     bd = Distributions.fit_mle(Beta,z)
     lbp = 2 .* params(bd) # multiply fitted Beta param to obtain LBeta parameters
