@@ -7,6 +7,7 @@ using StatsBase
 using Distributions
 using SpecialFunctions
 using KernelDensity
+using LinearAlgebra
 
 # Define test names as variables
 corr = "corr"

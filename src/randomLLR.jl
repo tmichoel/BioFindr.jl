@@ -7,9 +7,14 @@ The *LBeta distribution* with parameters ``\\alpha`` and ``\\beta`` is defined a
 
 where ``Y\\sim\\operatorname{Beta}(\\alpha/2, \\beta/2)``
 """
-struct LBeta{T<:Real} <: ContinuousUnivariateDistribution 
-    α :: T
-    β :: T
+# struct LBeta{T<:Real} <: ContinuousUnivariateDistribution 
+#     α :: T
+#     β :: T
+# end
+
+struct LBeta <: ContinuousUnivariateDistribution
+    α :: Float64
+    β :: Float64
 end
 
 
@@ -91,6 +96,70 @@ function Distributions.fit_mle(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Re
     lbp = 2 .* params(bd) # multiply fitted Beta param to obtain LBeta parameters
     return LBeta(lbp...)
 end
+
+"""
+    fit_weighted(LBeta, x, w)
+
+Fit an `LBeta` distribution to data `x` where each observation in `x` has a weight `w` between 0 and 1, using the method of moments. The function exploits the relationship to the Beta distribution and is a simple adaptation of the `fit` function in
+
+https://github.com/JuliaStats/Distributions.jl/blob/master/src/univariate/continuous/beta.jl
+"""
+function fit_weighted(::Type{<:LBeta}, x::AbstractArray{T}, w::AbstractWeights) where T<:Real
+    z = 1 .-  exp.(-2 .* x) # if `x` is LBeta distributed, then `z` is Beta distributed
+
+    # the following lines adapated from beta.jl fit function by replacing calls to `mean` and `var` by their weighted versions
+    z_bar = mean(z, w)
+    v_bar = var(z, w; mean=z_bar, corrected=true)
+    temp = ((z_bar * (one(T) - z_bar)) / v_bar) - one(T)
+    α = z_bar * temp
+    β = (one(T) - z_bar) * temp
+
+
+    lbp = 2 .* [α,β] # multiply fitted Beta param to obtain LBeta parameters
+    return LBeta(lbp...)
+end
+
+
+# """
+#     fit_mle_weighted(LBeta, x, w)
+
+# Fit an `LBeta` distribution to data `x` where each observation in `x` has a weight `w` between 0 and 1, using maximum likelihood. The function exploits the relationship to the Beta distribution and is a simple adaptation of the `fit_mle` function in
+
+# https://github.com/JuliaStats/Distributions.jl/blob/master/src/univariate/continuous/beta.jl
+# """
+# function fit_mle_weighted(::Type{<:LBeta}, x::AbstractArray{T}, w::AbstractWeights; 
+#     maxiter::Int=1000, tol::Float64=1e-14) where T<:Real
+
+#     z = 1 .-  exp.(-2 .* x) # if `x` is LBeta distributed, then `z` is Beta distributed
+
+#     # the following lines adapated from beta.jl fit function by replacing calls to `mean` and `var` by their weighted versions
+    
+#     α₀,β₀ = 0.5*params(fit_weighted(LBeta,x,w)) #initial guess of parameters
+#     g₁ = mean(log.(z),w)
+#     g₂ = mean(log.(one(T) .- z),w)
+#     θ= [α₀ ; β₀ ]
+
+#     converged = false
+#     t=0
+#     while !converged && t < maxiter #newton method
+#         t+=1
+#         temp1 = digamma(θ[1]+θ[2])
+#         temp2 = trigamma(θ[1]+θ[2])
+#         grad = [g₁+temp1-digamma(θ[1])
+#                temp1+g₂-digamma(θ[2])]
+#         hess = [temp2-trigamma(θ[1]) temp2
+#                 temp2 temp2-trigamma(θ[2])]
+#         Δθ = hess\grad #newton step
+#         θ .-= Δθ
+#         converged = dot(Δθ,Δθ) < 2*tol #stopping criterion
+#     end
+
+
+#     lbp = 2 .* θ # multiply fitted Beta param to obtain LBeta parameters
+#     return LBeta(lbp...)
+# end
+
+
 """
     nulldist(ns,[ng,test])
 
