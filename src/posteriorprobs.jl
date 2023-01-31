@@ -17,45 +17,7 @@ function pi0est(pval)
 end
 
 """
-    fit_kde(llr)
-
-Fit a distribution function to a vector of log-likelihood ratio values `llr` using kernel density estimation. To avoid boundary effects in the KDE, the log-likelihoods (which take values in ``[0,\\infty)``) are first transformed to a vector of `z`,
-    
-``
-z = \\log \\left( e^{2 LLR} - 1 \\right)
-``
-
-which takes values in ``(-\\infty,\\infty)``. KDE is applied to `z`, and the probability density function (pdf) for `llr` is obtained from the pdf for `z` by the usual transformation rule for functions of random variables.
-"""
-#function fitdist(llr,ns,ng=1,test=:corr)
-function fit_kde(llr)
-    # dnull = nulldist(ns,ng,test)
-    # α = Float64(params(dnull)[1])
-    # β0 = Float64(params(dnull)[2])
-    
-    # Transform to avoid edge effects in density estimation
-    z = log.(exp.(2 .* llr[llr.<Inf]) .- 1)
-    
-    # β = min(β0 , 2 * invdigamma( digamma(0.5α) - mean(z) ) )
-    # dfit = LBeta(α,β)
-    # π0 = beta(0.5α, 0.5β0) / beta(0.5α, 0.5β)
-    # return dfit, π0
-
-    dfit = kde(z)
-
-    # Evaluate pdf at llr values using rule for transformations of random variables
-    pd = zeros(size(llr))
-    pd[llr.<Inf] = 2 * pdf(dfit, z) .* (1 .+ exp.(-z))
-    return pd
-
-    # Transform back
-    # x = 0.5 * log.(exp.(pdZ.x) .+ 1)
-    # dens = 2 * pdZ.density .* (1 .+ exp.(-pdZ.x))
-    # return x, dens 
-end
-
-"""
-    fit_mixdist(llr,pi0,ns,ng=1,test=:corr; maxiter=1000, tol=1e-14)
+    fit_mixdist_EM(llr,pi0,ns,ng=1,test=:corr; maxiter=1000, tol=1e-14)
 
 Fit a two-component mixture distribution of two LBeta distribution to a vector of log-likelihood ratios `llr` using an EM algorithm. The first component is the true null distribution for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an LBeta distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the `pi0est` function. Hence only the parameters of the alternative component need to be estimated.
 
@@ -71,7 +33,7 @@ The input variable `test` can take the values:
 
 With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to ":corr", the correlation test with `ns` samples is used and the third argument is ignored.
 """
-function fit_mixdist(llr,π0,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=1e-14)
+function fit_mixdist_EM(llr,π0,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=1e-5)
     # Null distribution
     dnull = nulldist(ns, ng, test)
 
@@ -95,19 +57,24 @@ function fit_mixdist(llr,π0,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64
         # Update α, β using current pp
         w = pweights(pp)
         dalt = fit_weighted(LBeta, llr, w)
+        if dalt.α < dnull.α
+            dalt = LBeta(dnull.α,dalt.β)
+        end
         # Update pp using new params
         palt = pdf.(dalt, llr)
+       # π0 = 1 - sum(pp)/length(pp)
         pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt)
+        
         # Check convergence
         converged = norm(pp.-w,Inf) < tol 
+        #println(norm(pp.-w,Inf))
     end
     println(it)
-
     return pp, dalt
 end
 
 """
-    postprob(llr,ns,[ng,test])
+    fit_mixdist_KDE(llr,ns,[ng,test])
 
 Return posterior probabilities for a vector of log-likelihood ratio values `llr` for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
 
@@ -119,21 +86,20 @@ Return posterior probabilities for a vector of log-likelihood ratio values `llr`
 
 With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to ":corr", the correlation test with `ns` samples is used and the third argument is ignored.
 """
-function postprob(llr,ns,ng=1,test=:corr)
+function fit_mixdist_KDE(llr,π0,ns,ng=1,test=:corr)
     # Set the null distribution
-    #dnull = nulldist(ns, ng, test)
+    dnull = nulldist(ns, ng, test)
     
     # Evaluate the null distribution p.d.f. on the log-likelihood ratios
-    pnull = pdf.(nulldist(ns, ng, test), llr)
-    # Obtain p-values under the null and estimate the proportion of true null findings
-    #pv = nullpval(llr, ns, ng)
-    π0 = pi0est(nullpval(llr, ns, ng))
-
+    pnull = pdf.(dnull, llr)
+    
     # Fit and evaluate the real distribution p.d.f. on the log-likelihood ratios
     preal = fit_kde(llr)
 
     # Compute the posterior probabilities of the alternative hypothesis being true
     pp = 1 .- π0 * pnull ./ preal
+
+    # Smoothen posterior probs and make monotonically increasing
 
     # Fit an LBeta distribution with same α to the log-likelihood ratios
     # dreal,π0 = fitdist(llr, ns, ng, test)
@@ -143,4 +109,29 @@ function postprob(llr,ns,ng=1,test=:corr)
     # π0 = beta(0.5.*params(dnull)...) / beta(0.5.*params(dreal)...) 
     # Compute the posterior probabilities. 
     # 1 .- exp.(-(dnull.β - dreal.β)*llr)
+end
+
+
+"""
+    fit_kde(llr)
+
+Fit a distribution function to a vector of log-likelihood ratio values `llr` using kernel density estimation. To avoid boundary effects in the KDE, the log-likelihoods (which take values in ``[0,\\infty)``) are first transformed to a vector of `z`,
+    
+``
+z = \\log \\left( e^{2 LLR} - 1 \\right)
+``
+
+which takes values in ``(-\\infty,\\infty)``. KDE is applied to `z`, and the probability density function (pdf) for `llr` is obtained from the pdf for `z` by the usual transformation rule for functions of random variables.
+"""
+function fit_kde(llr)
+    # Transform llr values to avoid edge effects in density estimation
+    z = log.(exp.(2 .* llr[llr.<Inf]) .- 1)
+    
+    # Apply kernel density estimation to transformed values
+    dfit = kde(z)
+
+    # Evaluate pdf at llr values using rule for transformations of random variables
+    pd = zeros(size(llr))
+    pd[llr.<Inf] = 2 * pdf(dfit, z) .* (1 .+ exp.(-z))
+    return pd
 end

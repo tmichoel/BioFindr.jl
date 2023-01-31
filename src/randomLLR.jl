@@ -110,11 +110,15 @@ function fit_weighted(::Type{<:LBeta}, x::AbstractArray{T}, w::AbstractWeights) 
     # the following lines adapated from beta.jl fit function by replacing calls to `mean` and `var` by their weighted versions
     z_bar = mean(z, w)
     v_bar = var(z, w; mean=z_bar, corrected=true)
-    temp = ((z_bar * (one(T) - z_bar)) / v_bar) - one(T)
-    α = z_bar * temp
-    β = (one(T) - z_bar) * temp
-
-
+    if v_bar < z_bar*(1-z_bar)
+        temp = ((z_bar * (1. - z_bar)) / v_bar) - 1.
+        α = z_bar * temp
+        β = (1. - z_bar) * temp
+    else
+        α = 0.
+        β = 0.
+    end
+    
     lbp = 2 .* [α,β] # multiply fitted Beta param to obtain LBeta parameters
     return LBeta(lbp...)
 end
