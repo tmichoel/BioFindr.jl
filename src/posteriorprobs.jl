@@ -1,4 +1,23 @@
 """
+    pprob_corr_row(Y,row)
+
+Compute the posterior probabilities for Findr test 0 (**correlation test**) for a given `row` (gene) of gene expression matrix `Y` against all other rows of `Y`.
+
+`Y` is assumed to have undergone supernormalization with each row having mean zero and variance one. The LLRs are scaled by the number of samples.
+"""
+function pprob_corr_row(Y,row)
+    # number of samples
+    ns = size(Y,2) 
+    # log-likelihood ratios
+    llr = realLLRcorr_row(Y,row) 
+    # remove diagonal element?
+    
+    # posterior probabilities
+    pp, dalt, dnull = fit_mixdist_EM(llr,ns)
+    return pp, π0, dalt, dnull
+end
+
+"""
     pi0est(pval)
 
 Estimate the proportion π0 of truly null features in a vector `pval` of p-values using Storey's method
@@ -33,9 +52,11 @@ The input variable `test` can take the values:
 
 With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to ":corr", the correlation test with `ns` samples is used and the third argument is ignored.
 """
-function fit_mixdist_EM(llr,π0,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=1e-5)
-    # Null distribution
-    dnull = nulldist(ns, ng, test)
+function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=1e-5)
+
+    dnull = nulldist(ns, ng, test) # null distribution
+    pnull = pdf.(dnull, llr) # pvalues under the null hypothesis
+    π0 = pi0est(pnull) # estimated proportion of true nulls
 
     # Initial guess for α and β: take the parameters of the null distribution and multiply α0 by a factor greater than one to ensure that in the limit LLR -> 0, all observations come from the null
     α, β = params(dnull)
@@ -45,9 +66,8 @@ function fit_mixdist_EM(llr,π0,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Floa
     dalt = LBeta(α,β)
 
     # Set the current recognition / posterior probability values
-    palt = pdf.(dalt, llr)
-    pnull = pdf.(dnull, llr)
-    pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt)
+    palt = pdf.(dalt, llr) # pvalues under the alternative distribution
+    pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt) # posterior probabilities
 
     # EM until convergence
     converged = false
@@ -70,7 +90,7 @@ function fit_mixdist_EM(llr,π0,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Floa
         #println(norm(pp.-w,Inf))
     end
     println(it)
-    return pp, dalt
+    return pp, dalt, dnull
 end
 
 """
