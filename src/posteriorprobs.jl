@@ -11,10 +11,10 @@ function pprob_corr_row(Y,row)
     # log-likelihood ratios
     llr = realLLRcorr_row(Y,row) 
     # remove diagonal element?
-    
+    pp = ones(size(llr))
     # posterior probabilities
-    pp, dalt, dnull = fit_mixdist_EM(llr,ns)
-    return pp, π0, dalt, dnull
+    pp[Not(row)], dreal = fit_mixdist_EM(llr[Not(row)],ns)
+    return pp, dreal
 end
 
 """
@@ -52,11 +52,11 @@ The input variable `test` can take the values:
 
 With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to ":corr", the correlation test with `ns` samples is used and the third argument is ignored.
 """
-function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=1e-5)
+function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=1e-3)
 
-    dnull = nulldist(ns, ng, test) # null distribution
-    pnull = pdf.(dnull, llr) # pvalues under the null hypothesis
-    π0 = pi0est(pnull) # estimated proportion of true nulls
+    # set null distribution and estimate proportion of true nulls
+    dnull = nulldist(ns, ng, test) 
+    π0 = pi0est( nullpval(llr, ns, ng, test) )
 
     # Initial guess for α and β: take the parameters of the null distribution and multiply α0 by a factor greater than one to ensure that in the limit LLR -> 0, all observations come from the null
     α, β = params(dnull)
@@ -66,8 +66,9 @@ function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=
     dalt = LBeta(α,β)
 
     # Set the current recognition / posterior probability values
-    palt = pdf.(dalt, llr) # pvalues under the alternative distribution
-    pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt) # posterior probabilities
+    pnull = pdf.(dnull, llr)
+    palt = pdf.(dalt, llr) 
+    pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt)
 
     # EM until convergence
     converged = false
@@ -90,7 +91,12 @@ function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=
         #println(norm(pp.-w,Inf))
     end
     println(it)
-    return pp, dalt, dnull
+
+    # Set mixture distribution
+    dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
+
+    # Return posterior probabilities and estimated mixture distribution
+    return pp, dreal
 end
 
 """

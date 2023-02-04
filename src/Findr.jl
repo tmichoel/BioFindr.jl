@@ -8,6 +8,7 @@ using Distributions
 using SpecialFunctions
 using KernelDensity
 using LinearAlgebra
+using InvertedIndices
 
 # Define test names as variables
 corr = "corr"
