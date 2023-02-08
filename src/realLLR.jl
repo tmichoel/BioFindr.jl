@@ -84,7 +84,7 @@ function groupmeans(Y,E)
     uE = unique(E)
     gs = zeros(Int,length(uE))
     μ = zeros(size(Y)[1],length(uE))
-    for i = eachindex(uE)
+    Threads.@threads for i = eachindex(uE)
         gs[i] = sum(E.==uE[i])
         μ[:,i] = mean(Y[:,E.==uE[i]], dims=2)
     end

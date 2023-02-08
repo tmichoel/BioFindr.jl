@@ -10,11 +10,44 @@ function pprob_corr_row(Y,row)
     ns = size(Y,2) 
     # log-likelihood ratios
     llr = realLLRcorr_row(Y,row) 
-    # remove diagonal element?
+    # vector to hold the output
     pp = ones(size(llr))
-    # posterior probabilities
+    # posterior probabilities, diagonal element set to 1 by default
     pp[Not(row)], dreal = fit_mixdist_EM(llr[Not(row)],ns)
     return pp, dreal
+end
+
+"""
+    pprob_causal_row(Y,row)
+
+Compute the posterior probabilities for a given `row` (gene) of gene expression matrix `Y` with categorical instrument `E` against all other rows of `Y` for Findr causal tests: 
+
+    - Test 2 (**Linkage test**) 
+    - Test 3 (**Mediation test**)
+    - Test 4 (**Relevance test**)
+    - Test 5 (**Pleiotropy test**)
+    
+`Y` is assumed to have undergone supernormalization with each row having mean zero and variance one.
+
+For test 2, 4, and 5 the posterior probabilities are the probabilities of the alternative hypothesis being true. For test 3 they are the probabilities of the null hypothesis being true.
+"""
+function pprob_causal_row(Y,E,row)
+    # number of samples and groups
+    ns = size(Y,2) 
+    ng = length(unique(E))
+    # log-likelihood ratios
+    llr2, llr3, llr4, llr5 = realLLRcausal_row(Y,E,row)
+    # remove diagonal element?
+    pp = ones(length(llr2),4)
+    # posterior probabilities for test 2, here we keep the true diagonal element
+    pp[:,1], dreal = fit_mixdist_EM(llr2,ns,ng,:link)
+    # posterior probabilities for test 3, here we keep the default diagonal element and swap the role of null and alternative
+    pp[Not(row),2], dreal = fit_mixdist_EM(llr3[Not(row)],ns,ng,:med)
+    # posterior probabilities for test 3, here we keep the default diagonal element
+    pp[Not(row),3], dreal = fit_mixdist_EM(llr4[Not(row)],ns,ng,:relev)
+    pp[Not(row),4], dreal = fit_mixdist_EM(llr5[Not(row)],ns,ng,:pleio)
+
+    return pp[:,1], pp[:,2], pp[:,3], pp[:,4], dreal
 end
 
 """
@@ -36,7 +69,7 @@ function pi0est(pval)
 end
 
 """
-    fit_mixdist_EM(llr,pi0,ns,ng=1,test=:corr; maxiter=1000, tol=1e-14)
+    fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter=1000, tol=1e-14)
 
 Fit a two-component mixture distribution of two LBeta distribution to a vector of log-likelihood ratios `llr` using an EM algorithm. The first component is the true null distribution for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an LBeta distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the `pi0est` function. Hence only the parameters of the alternative component need to be estimated.
 
@@ -58,12 +91,9 @@ function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=
     dnull = nulldist(ns, ng, test) 
     π0 = pi0est( nullpval(llr, ns, ng, test) )
 
-    # Initial guess for α and β: take the parameters of the null distribution and multiply α0 by a factor greater than one to ensure that in the limit LLR -> 0, all observations come from the null
-    α, β = params(dnull)
-    α = α/π0
-
-    # Set the current alternative distribution
-    dalt = LBeta(α,β)
+    # Initial guess for α and β: fit single LBeta distribution to llr values
+    dalt = fit(LBeta,llr)
+    #println([dalt.α,dalt.β])
 
     # Set the current recognition / posterior probability values
     pnull = pdf.(dnull, llr)
@@ -91,7 +121,6 @@ function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=
         #println(norm(pp.-w,Inf))
     end
     println(it)
-
     # Set mixture distribution
     dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
 

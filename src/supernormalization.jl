@@ -11,11 +11,10 @@ function supernormalize(X, c=0.375)
     nd = Normal()
     n = size(X,2)
     Y = zeros(size(X))
-    for i = axes(X)[1]
+    Threads.@threads for i = axes(X)[1]
         Y[i,:] = map(x -> quantile(nd,(x-c)/(n-2c+1)), ordinalrank(X[i,:]))
     end
     σ = std(Y[1,:];corrected=false)
-    println(σ)
     Y = Y/σ
     return Y
 end
