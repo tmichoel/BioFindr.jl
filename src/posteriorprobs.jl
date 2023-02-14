@@ -1,53 +1,54 @@
 """
-    pprob_corr_row(Y,row)
+    pprob_corr_col(Y,col)
 
-Compute the posterior probabilities for Findr test 0 (**correlation test**) for a given `row` (gene) of gene expression matrix `Y` against all other rows of `Y`.
+Compute the posterior probabilities for Findr test 0 (**correlation test**) for a given column `col` (gene) of gene expression matrix `Y` against all other columns of `Y`.
 
-`Y` is assumed to have undergone supernormalization with each row having mean zero and variance one. The LLRs are scaled by the number of samples.
+`Y` is assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 """
-function pprob_corr_row(Y,row)
+function pprob_corr_col(Y,col)
     # number of samples
-    ns = size(Y,2) 
+    ns = size(Y,1) 
     # log-likelihood ratios
-    llr = realLLRcorr_row(Y,row) 
+    llr = realLLRcorr_col(Y,col) 
     # vector to hold the output
     pp = ones(size(llr))
     # posterior probabilities, diagonal element set to 1 by default
-    pp[Not(row)], dreal = fit_mixdist_EM(llr[Not(row)],ns)
-    return pp, dreal
+    pp[Not(col)], dreal = fit_mixdist_EM(llr[Not(col)],ns)
+    #pp[Not(col)] = fit_mixdist_KDE(llr[Not(col)],ns)
+    return pp
 end
 
 """
-    pprob_causal_row(Y,row)
+    pprob_causal_col(Y,col)
 
-Compute the posterior probabilities for a given `row` (gene) of gene expression matrix `Y` with categorical instrument `E` against all other rows of `Y` for Findr causal tests: 
+Compute the posterior probabilities for a given column `col` (gene) of gene expression matrix `Y` with categorical instrument `E` against all other columns of `Y` for Findr causal tests: 
 
     - Test 2 (**Linkage test**) 
     - Test 3 (**Mediation test**)
     - Test 4 (**Relevance test**)
     - Test 5 (**Pleiotropy test**)
     
-`Y` is assumed to have undergone supernormalization with each row having mean zero and variance one.
+`Y` is assumed to have undergone supernormalization with each column having mean zero and variance one.
 
 For test 2, 4, and 5 the posterior probabilities are the probabilities of the alternative hypothesis being true. For test 3 they are the probabilities of the null hypothesis being true.
 """
-function pprob_causal_row(Y,E,row)
+function pprob_causal_col(Y,E,col)
     # number of samples and groups
-    ns = size(Y,2) 
+    ns = size(Y,1) 
     ng = length(unique(E))
     # log-likelihood ratios
-    llr2, llr3, llr4, llr5 = realLLRcausal_row(Y,E,row)
+    llr2, llr3, llr4, llr5 = realLLRcausal_col(Y,E,col)
     # remove diagonal element?
     pp = ones(length(llr2),4)
     # posterior probabilities for test 2, here we keep the true diagonal element
-    pp[:,1], dreal = fit_mixdist_EM(llr2,ns,ng,:link)
+    pp[:,1], _ = fit_mixdist_EM(llr2,ns,ng,:link)
     # posterior probabilities for test 3, here we keep the default diagonal element and swap the role of null and alternative
-    pp[Not(row),2], dreal = fit_mixdist_EM(llr3[Not(row)],ns,ng,:med)
+    pp[Not(col),2], _ = fit_mixdist_EM(llr3[Not(col)],ns,ng,:med)
     # posterior probabilities for test 3, here we keep the default diagonal element
-    pp[Not(row),3], dreal = fit_mixdist_EM(llr4[Not(row)],ns,ng,:relev)
-    pp[Not(row),4], dreal = fit_mixdist_EM(llr5[Not(row)],ns,ng,:pleio)
+    pp[Not(col),3], _ = fit_mixdist_EM(llr4[Not(col)],ns,ng,:relev)
+    pp[Not(col),4], _ = fit_mixdist_EM(llr5[Not(col)],ns,ng,:pleio)
 
-    return pp[:,1], pp[:,2], pp[:,3], pp[:,4], dreal
+    return pp
 end
 
 """
@@ -92,8 +93,8 @@ function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=
     π0 = pi0est( nullpval(llr, ns, ng, test) )
 
     # Initial guess for α and β: fit single LBeta distribution to llr values
-    dalt = fit(LBeta,llr)
-    #println([dalt.α,dalt.β])
+    dalt = fit(LBeta,llr[llr .> quantile(llr,0.5)])
+#    println([dalt.α,dalt.β])
 
     # Set the current recognition / posterior probability values
     pnull = pdf.(dnull, llr)
@@ -120,7 +121,7 @@ function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=
         converged = norm(pp.-w,Inf) < tol 
         #println(norm(pp.-w,Inf))
     end
-    println(it)
+    # println(it)
     # Set mixture distribution
     dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
 
@@ -141,9 +142,10 @@ Return posterior probabilities for a vector of log-likelihood ratio values `llr`
 
 With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to ":corr", the correlation test with `ns` samples is used and the third argument is ignored.
 """
-function fit_mixdist_KDE(llr,π0,ns,ng=1,test=:corr)
+function fit_mixdist_KDE(llr,ns,ng=1,test=:corr)
     # Set the null distribution
     dnull = nulldist(ns, ng, test)
+    π0 = pi0est( nullpval(llr, ns, ng, test) )
     
     # Evaluate the null distribution p.d.f. on the log-likelihood ratios
     pnull = pdf.(dnull, llr)
@@ -156,6 +158,7 @@ function fit_mixdist_KDE(llr,π0,ns,ng=1,test=:corr)
 
     # Smoothen posterior probs and make monotonically increasing
 
+    return pp
     # Fit an LBeta distribution with same α to the log-likelihood ratios
     # dreal,π0 = fitdist(llr, ns, ng, test)
     # # Evaluate the real distribution p.d.f. on the log-likelihood ratios
@@ -164,6 +167,7 @@ function fit_mixdist_KDE(llr,π0,ns,ng=1,test=:corr)
     # π0 = beta(0.5.*params(dnull)...) / beta(0.5.*params(dreal)...) 
     # Compute the posterior probabilities. 
     # 1 .- exp.(-(dnull.β - dreal.β)*llr)
+
 end
 
 

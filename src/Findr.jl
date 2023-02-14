@@ -5,6 +5,7 @@ module Findr
 using Statistics
 using StatsBase
 using Distributions
+using Random
 using SpecialFunctions
 using KernelDensity
 using LinearAlgebra
@@ -21,6 +22,8 @@ pleio = "pleio"
 
 include("supernormalization.jl")
 
+include("lbeta.jl")
+
 include("randomLLR.jl")
 
 include("realLLR.jl")
@@ -32,17 +35,17 @@ include("bayesiannets.jl")
 """
     findr_corr(X)
 
-Compute posterior probabilities for nonzero pairwise correlations between rows of input matrix `X`. The probabilities are directed in the sense that they are estimated from a row-specific background distribution.
+Compute posterior probabilities for nonzero pairwise correlations between rows of input matrix `X`. The probabilities are directed in the sense that they are estimated from a row-specific background distribution. 
 """
 function findr_corr(X)
     # Inverse-normal transformation and standardization for each row of X
     Y = supernormalize(X)
     # Matrix to store posterior probabilities
-    nrows = size(X,1)
-    PP = zeros(nrows,nrows)
+    ncols = size(X,2)
+    PP = zeros(ncols,ncols)
     # Compute posterior probabilities for each row separately
-    Threads.@threads for row = 1:nrows
-        PP[row,:],dreal = pprob_corr_row(Y,row)
+    Threads.@threads for col = 1:ncols
+        PP[:,col] = pprob_corr_row(Y,col)
     end
     return PP
 end
@@ -79,17 +82,17 @@ function findr_causal(X,G,pairGX)
     Y = supernormalize(X)
     # Matrix to store posterior probabilities
     npairs = size(pairGX,1)
-    nrowsX = size(X,1)
-    PP2 = zeros(npairs,nrowsX)
-    PP3 = zeros(npairs,nrowsX)
-    PP4 = zeros(npairs,nrowsX)
-    PP5 = zeros(npairs,nrowsX)
+    ncolsX = size(X,1)
+    PP2 = zeros(ncolsX,npairs)
+    PP3 = zeros(ncolsX,npairs)
+    PP4 = zeros(ncolsX,npairs)
+    PP5 = zeros(ncolsX.npairs)
     # Compute posterior probabilities for each row separately
-    Threads.@threads for row = 1:npairs
-        println(row)
-        rowG = pairGX[row,1]
-        rowX = pairGX[row,2]
-        PP2[row,:], PP3[row,:], PP4[row,:], PP5[row,:], dreal = pprob_causal_row(Y,G[rowG,:],rowX)
+    Threads.@threads for col = 1:npairs
+        # println(row)
+        colG = pairGX[col,1]
+        colX = pairGX[col,2]
+        PP2[:,col], PP3[:,col], PP4[:,col], PP5[:,col] = pprob_causal_row(Y,G[:,colG],colX)
     end
     return PP2, PP3, PP4, PP5
 end
