@@ -82,19 +82,19 @@ function findr_causal(X,G,pairGX)
     Y = supernormalize(X)
     # Matrix to store posterior probabilities
     npairs = size(pairGX,1)
-    ncolsX = size(X,1)
-    PP2 = zeros(ncolsX,npairs)
-    PP3 = zeros(ncolsX,npairs)
-    PP4 = zeros(ncolsX,npairs)
-    PP5 = zeros(ncolsX.npairs)
+    ncolsX = size(X,2)
+    PP = zeros(ncolsX,4,npairs)
+    # PP3 = zeros(ncolsX,npairs)
+    # PP4 = zeros(ncolsX,npairs)
+    # PP5 = zeros(ncolsX.npairs)
     # Compute posterior probabilities for each row separately
     Threads.@threads for col = 1:npairs
         # println(row)
         colG = pairGX[col,1]
         colX = pairGX[col,2]
-        PP2[:,col], PP3[:,col], PP4[:,col], PP5[:,col] = pprob_causal_row(Y,G[:,colG],colX)
+        PP[:,:,col] = pprob_causal_col(Y,G[:,colG],colX)
     end
-    return PP2, PP3, PP4, PP5
+    return PP
 end
 
 
