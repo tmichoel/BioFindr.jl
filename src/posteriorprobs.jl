@@ -38,43 +38,27 @@ function pprob_causal_col(Y,E,col)
     ng = length(unique(E))
     # log-likelihood ratios
     llr2, llr3, llr4, llr5 = realLLRcausal_col(Y,E,col)
-    # remove diagonal element?
+    # allocate output array
     pp = ones(length(llr2),4)
     # posterior probabilities for test 2, here we keep the true diagonal element
     pp[:,1], _ = fit_mixdist_EM(llr2,ns,ng,:link)
     # posterior probabilities for test 3, here we keep the default diagonal element and swap the role of null and alternative
     pp[Not(col),2], _ = fit_mixdist_EM(llr3[Not(col)],ns,ng,:med)
-    # posterior probabilities for test 3, here we keep the default diagonal element
+    # posterior probabilities for test 4 and 5, here we keep the default diagonal element
     pp[Not(col),3], _ = fit_mixdist_EM(llr4[Not(col)],ns,ng,:relev)
     pp[Not(col),4], _ = fit_mixdist_EM(llr5[Not(col)],ns,ng,:pleio)
 
     return pp
 end
 
-"""
-    pi0est(pval)
 
-Estimate the proportion π0 of truly null features in a vector `pval` of p-values using Storey's method
-
-See also http://varianceexplained.org/files/pi0boot.pdf
-"""
-function pi0est(pval)
-    λ = 0:0.05:0.95
-    pval = sort(pval)
-    m = length(pval)
-    W = map(x -> sum(pval.>=x),λ)
-    π0 = W ./ (m*(1 .- λ))
-    minπ0 = minimum(π0) # quantile(π0,0.1) # 
-    mse = (W ./ (m^2 * (1 .- λ).^2)) .* (1 .- W/m) .+ (π0 .- minπ0).^2
-    π0[argmin(mse)]
-end
 
 """
     fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter=1000, tol=1e-14)
 
-Fit a two-component mixture distribution of two LBeta distribution to a vector of log-likelihood ratios `llr` using an EM algorithm. The first component is the true null distribution for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an LBeta distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the `pi0est` function. Hence only the parameters of the alternative component need to be estimated.
+Fit a two-component mixture distribution of two LBeta distributions to a vector of log-likelihood ratios `llr` using an EM algorithm. The first component is the true null distribution for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an LBeta distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the `pi0est` function. Hence only the parameters of the alternative component need to be estimated.
 
-The EM algorithm outputs posterior probabilities of the alternative hypothesis being true, in the form of the estimated recognition distribution. The optional parameters `maxiter` (default value 1000) and `tol` (default value 1e-14) control the convergence of the EM algorithm.
+The EM algorithm outputs posterior probabilities of the alternative hypothesis being true, in the form of the estimated recognition distribution. The optional parameters `maxiter` (default value 1000) and `tol` (default value 1e-3) control the convergence of the EM algorithm.
 
 The input variable `test` can take the values:
 
@@ -92,7 +76,7 @@ function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=
     dnull = nulldist(ns, ng, test) 
     π0 = pi0est( nullpval(llr, ns, ng, test) )
 
-    # Initial guess for α and β: fit single LBeta distribution to llr values
+    # Initial guess for the alternative distribution: fit an LBeta distribution to the 50% largest llr values
     dalt = fit(LBeta,llr[llr .> quantile(llr,0.5)])
 #    println([dalt.α,dalt.β])
 
@@ -106,7 +90,7 @@ function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=
     it = 0
     while !converged && it < maxiter
         it += 1
-        # Update α, β using current pp
+        # Update the alternative distribution using current pp
         w = pweights(pp)
         dalt = fit_weighted(LBeta, llr, w)
         if dalt.α < dnull.α
@@ -159,15 +143,7 @@ function fit_mixdist_KDE(llr,ns,ng=1,test=:corr)
     # Smoothen posterior probs and make monotonically increasing
 
     return pp
-    # Fit an LBeta distribution with same α to the log-likelihood ratios
-    # dreal,π0 = fitdist(llr, ns, ng, test)
-    # # Evaluate the real distribution p.d.f. on the log-likelihood ratios
-    # preal = pdf.(dreal, llr)
-    # # Estimate the proportion of truly null features among the data
-    # π0 = beta(0.5.*params(dnull)...) / beta(0.5.*params(dreal)...) 
-    # Compute the posterior probabilities. 
-    # 1 .- exp.(-(dnull.β - dreal.β)*llr)
-
+    
 end
 
 
@@ -193,4 +169,31 @@ function fit_kde(llr)
     pd = zeros(size(llr))
     pd[llr.<Inf] = 2 * pdf(dfit, z) .* (1 .+ exp.(-z))
     return pd
+end
+
+"""
+    pi0est(pval)
+
+Estimate the proportion π0 of truly null features in a vector `pval` of p-values using Storey's method
+
+See also http://varianceexplained.org/files/pi0boot.pdf
+"""
+function pi0est(pval)
+    λ = 0:0.05:0.95
+    pval = sort(pval)
+    m = length(pval)
+    W = map(x -> sum(pval.>=x),λ)
+    π0 = W ./ (m*(1 .- λ))
+    minπ0 = minimum(π0) # quantile(π0,0.1) # 
+    mse = (W ./ (m^2 * (1 .- λ).^2)) .* (1 .- W/m) .+ (π0 .- minπ0).^2
+    π0[argmin(mse)]
+end
+
+"""
+    lfdr(pval)
+
+Estimate local false discovery rates for a vector `pval` of p-values using Storey's method.
+"""
+function lfdr(pval)
+    
 end

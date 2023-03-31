@@ -15,7 +15,12 @@ makedocs(;
         assets=String[],
     ),
     pages=[
-        "Home" => "index.md",
+        "General inference algorithm" => "index.md",
+        "Likelihood ratio tests" => "realLLR.md",
+        "Null distributions of the LLRs" => "randomLLR.md",
+        "Bayesian inference of posterior probabilities" => "posteriorprobs.md",
+        "Tests to evaluate" => "testLLR.md",
+        "List of functions" => "listfunctions.md"       
     ],
 )
 

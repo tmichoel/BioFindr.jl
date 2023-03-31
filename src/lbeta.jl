@@ -25,20 +25,6 @@ Get the parameters of an LBeta distribution.
 """
 Distributions.params(d::LBeta) = (d.α, d.β)
 
-"""
-    Sampling
-"""
-function sampler(d::LBeta)
-    bp = 0.5 .* params(d)
-    bd = Beta(bp...)
-    return sampler(bd)
-end
-
-function rand(rng::AbstractRNG, d::LBeta)
-    bp = 0.5 .* params(d)
-    bd = Beta(bp...)
-    x = rand(rng,bd)
-end
 
 """
     pdf(d,x)
@@ -147,43 +133,29 @@ function fit_weighted(::Type{<:LBeta}, x::AbstractArray{T}, w::AbstractWeights) 
     return LBeta(lbp...)
 end
 
-
 # """
-#     fit_mle_weighted(LBeta, x, w)
-
-# Fit an `LBeta` distribution to data `x` where each observation in `x` has a weight `w` between 0 and 1, using maximum likelihood. The function exploits the relationship to the Beta distribution and is a simple adaptation of the `fit_mle` function in
-
-# https://github.com/JuliaStats/Distributions.jl/blob/master/src/univariate/continuous/beta.jl
+#     beta_mixture_model(z)
 # """
-# function fit_mle_weighted(::Type{<:LBeta}, x::AbstractArray{T}, w::AbstractWeights; 
-#     maxiter::Int=1000, tol::Float64=1e-14) where T<:Real
-
-#     z = 1 .-  exp.(-2 .* x) # if `x` is LBeta distributed, then `z` is Beta distributed
-
-#     # the following lines adapated from beta.jl fit function by replacing calls to `mean` and `var` by their weighted versions
-    
-#     α₀,β₀ = 0.5*params(fit_weighted(LBeta,x,w)) #initial guess of parameters
-#     g₁ = mean(log.(z),w)
-#     g₂ = mean(log.(one(T) .- z),w)
-#     θ= [α₀ ; β₀ ]
-
-#     converged = false
-#     t=0
-#     while !converged && t < maxiter #newton method
-#         t+=1
-#         temp1 = digamma(θ[1]+θ[2])
-#         temp2 = trigamma(θ[1]+θ[2])
-#         grad = [g₁+temp1-digamma(θ[1])
-#                temp1+g₂-digamma(θ[2])]
-#         hess = [temp2-trigamma(θ[1]) temp2
-#                 temp2 temp2-trigamma(θ[2])]
-#         Δθ = hess\grad #newton step
-#         θ .-= Δθ
-#         converged = dot(Δθ,Δθ) < 2*tol #stopping criterion
+# @model function beta_mixture_model(z,α0,β0,π0)
+#     if z === missing
+#         z = Vector{Float64}(undef,1)
 #     end
 
+#     # Draw the parameters of the alternative distribution from an uninformative prior with constraints imposed by the null distribution
+#     α ~ FlatPos(α0)
+#     β ~ Uniform(0.,β0)
 
-#     lbp = 2 .* θ # multiply fitted Beta param to obtain LBeta parameters
-#     return LBeta(lbp...)
+#     # Latent variable distribution
+#     latent = Categorical([π0; 1-π0])
+
+#     # Construct Beta distributions for the null and alternative
+#     beta_components = [Beta(0.5α0, 0.5β0); Beta(0.5α, 0.5β)]
+
+#     # Draw assignments for each observation
+#     N = length(z)
+#     u = Vector{Int}(undef, N)
+#     for i = eachindex(z)
+#         u[i] ~ latent
+#         z[i] ~ beta_components[u[i]]
+#     end
 # end
-
