@@ -6,7 +6,7 @@ Compute the log-likelihood ratios for Findr test 0 (**correlation test**) for a 
 `Y` is assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 """
 function realLLRcorr_col(Y,col)
-    ρ = cov(Y,Y[:,col],corrected=false)
+    ρ = vec(cov(Y,Y[:,col],corrected=false))
     ρ[col] = 1. # set self to exact value
     -0.5*log.(abs.(1 .- ρ.^2))
 end
@@ -61,7 +61,7 @@ The sufficient statistics are:
 - the weighted average covariance `σ2` between the given column `col` of `Y` and all other columns of `Y` over the groups (unique values) of `E`
 """
 function llrstats_col(Y,E,col)
-    ρ = cov(Y,Y[:,col],corrected=false)
+    ρ = vec(cov(Y,Y[:,col],corrected=false))
     ρ[col] = 1. # set self to exact values
 
     gs, μ = groupmeans(Y,E)

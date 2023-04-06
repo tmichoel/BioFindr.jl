@@ -51,7 +51,62 @@ function pprob_causal_col(Y,E,col)
     return pp
 end
 
+"""
+    fit_mixdist_mom(llr,ns,ng=1,test=:corr; maxiter=1000, tol=1e-14)
 
+Fit a two-component mixture distribution of two LBeta distributions to a vector of log-likelihood ratios `llr` using a method-of-moments algorithm. The first component is the true null distribution for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an LBeta distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the `pi0est` function. Hence only the parameters of the alternative component need to be estimated.
+
+The input variable `test` can take the values:
+
+- ':corr' - **correlation test** (test 0)
+- ':link' - **linkage test** (test 1/2)
+- ':med' - **mediation test** (test 3)
+- ':relev' - **relevance test** (test 4)
+- ':pleio' - **pleiotropy test** (test 5)
+
+With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to ":corr", the correlation test with `ns` samples is used and the third argument is ignored.
+"""
+function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
+    # set null distribution and estimate proportion of true nulls
+    dnull = nulldist(ns, ng, test) 
+    π0 = pi0est( nullpval(llr, ns, ng, test) )
+
+    # first and second moment for the Beta distribution corresponding to the null distribution
+    bp = 0.5 .* params(dnull)
+    bm1 = bp[1] / sum(bp)
+    bm2 = bm1 * (bp[1] + 1) / (sum(bp) + 1)
+
+    # transform llr to (mixture of) Beta distributed values
+    z = 1 .-  exp.(-2 .* llr)
+
+    # get first and second moment for the Beta distribution corresponding to the alternative distribution
+    m1 = ( mean(z) - π0 * bm1 ) / (1 - π0)
+    m2 = ( mean(z.^2) - π0 * bm2 ) / (1 - π0)
+
+    # get the alternative distribution
+    dalt = fit_mom(LBeta, m1, m2)
+
+    # do some sanity checks:
+    #   - in the limit llr -> 0, dnull must dominate
+    #   - in the limint llr -> Inf, dalt must dominate
+    if dalt.α < dnull.α
+        dalt = LBeta(dnull.α,dalt.β)
+    end
+    if dalt.β > dnull.β
+        dalt = LBeta(dnull.α,dalt.β)
+    end
+
+    # evaluate null and alternative distributions and compute posterior probabilities
+    pnull = pdf.(dnull, llr)
+    palt = pdf.(dalt, llr) 
+    pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt)
+
+    # Set mixture distribution
+    dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
+
+    # Return posterior probabilities and estimated mixture distribution
+    return pp, dreal
+end
 
 """
     fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter=1000, tol=1e-14)
@@ -141,6 +196,10 @@ function fit_mixdist_KDE(llr,ns,ng=1,test=:corr)
     pp = 1 .- π0 * pnull ./ preal
 
     # Smoothen posterior probs and make monotonically increasing
+    perm = sortperm(llr, rev=true);
+    inv_perm = sortperm(perm);
+    pp[pp .< 0] .= 0;
+    pp = accumulate(min,pp[perm])[inv_perm];
 
     return pp
     
@@ -187,13 +246,4 @@ function pi0est(pval)
     minπ0 = minimum(π0) # quantile(π0,0.1) # 
     mse = (W ./ (m^2 * (1 .- λ).^2)) .* (1 .- W/m) .+ (π0 .- minπ0).^2
     π0[argmin(mse)]
-end
-
-"""
-    lfdr(pval)
-
-Estimate local false discovery rates for a vector `pval` of p-values using Storey's method.
-"""
-function lfdr(pval)
-    
 end
