@@ -9,7 +9,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
     # number of samples
     ns = size(Y,1) 
     # log-likelihood ratios
-    llr = realLLRcorr_col(Y,Ycol) 
+    llr = realLLR_col(Y,Ycol) 
     # posterior probabilities
     pp, dreal = fit_mixdist_mom(llr,ns)
     return pp
@@ -34,7 +34,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}) where {T<:Abstract
     ns = size(Y,1) 
     ng = length(unique(E))
     # log-likelihood ratios
-    llr2, llr3, llr4, llr5 = realLLRcausal_col(Y,Ycol,E)
+    llr2, llr3, llr4, llr5 = realLLR_col(Y,Ycol,E)
     # allocate output array
     pp = ones(length(llr2),4)
     # posterior probabilities for test 2
@@ -61,7 +61,7 @@ function pprob_col(Y::Matrix{T},E::Vector{S}) where {T<:AbstractFloat, S<:Intege
     ns = size(Y,1) 
     ng = length(unique(E))
     # log-likelihood ratios
-    llr2 = realLLRde_col(Y,E)
+    llr2 = realLLR_col(Y,E)
     # posterior probabilities for test 2
     pp, _ = fit_mixdist_mom(llr2,ns,ng,:link)
 

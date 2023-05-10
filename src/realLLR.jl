@@ -1,18 +1,18 @@
 """
-    realLLRcorr_col(Y,Ycol)
+    realLLR_col(Y,Ycol)
 
 Compute the log-likelihood ratios for Findr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
 `Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 """
-function realLLRcorr_col(Y,Ycol)
+function realLLR_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
     ρ = vec(cov(Y,Ycol,corrected=false))
     # ρ[col] = 1. # set self to exact value
     -0.5*log.(abs.(1 .- ρ.^2))
 end
 
 """
-    realLLRcausal_col(Y,Ycol,E)
+    realLLR_col(Y,Ycol,E)
 
 Compute the log-likelihood ratios for the Findr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y` : 
 
@@ -23,7 +23,7 @@ Compute the log-likelihood ratios for the Findr causal tests for a given column 
 
 `Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 """
-function realLLRcausal_col(Y,Ycol,E)
+function realLLR_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
     # compute the sufficient statistics
     ρ, σ, σcol = llrstats_col(Y,Ycol,E)
 
@@ -49,13 +49,13 @@ end
 
 
 """
-    realLLRde_col(Y,Ycol,E)
+    realLLR_col(Y,Ycol,E)
 
 Compute the log-likelihood ratios for Findr test 2 (**Linkage test**)  for a given categorical vector `E` against all columns of matrix `Y`.
 
 `Y` is assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 """
-function realLLRde_col(Y,E)
+function realLLR_col(Y::Matrix{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
     # compute the sufficient statistics
     σ = llrstats_col(Y,E)
 
