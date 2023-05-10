@@ -1,27 +1,24 @@
 """
-    pprob_corr_col(Y,col)
+    pprob_col(Y,Ycol)
 
-Compute the posterior probabilities for Findr test 0 (**correlation test**) for a given column `col` (gene) of gene expression matrix `Y` against all other columns of `Y`.
+Compute the posterior probabilities for Findr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
-`Y` is assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
+`Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 """
-function pprob_corr_col(Y,col)
+function pprob_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
     # number of samples
     ns = size(Y,1) 
     # log-likelihood ratios
-    llr = realLLRcorr_col(Y,col) 
-    # vector to hold the output
-    pp = ones(size(llr))
-    # posterior probabilities, diagonal element set to 1 by default
-    pp[Not(col)], dreal = fit_mixdist_EM(llr[Not(col)],ns)
-    #pp[Not(col)] = fit_mixdist_KDE(llr[Not(col)],ns)
+    llr = realLLRcorr_col(Y,Ycol) 
+    # posterior probabilities
+    pp, dreal = fit_mixdist_mom(llr,ns)
     return pp
 end
 
 """
-    pprob_causal_col(Y,col)
+    pprob_col(Y,Ycol,E)
 
-Compute the posterior probabilities for a given column `col` (gene) of gene expression matrix `Y` with categorical instrument `E` against all other columns of `Y` for Findr causal tests: 
+Compute the posterior probabilities for the Findr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y`: 
 
     - Test 2 (**Linkage test**) 
     - Test 3 (**Mediation test**)
@@ -32,27 +29,49 @@ Compute the posterior probabilities for a given column `col` (gene) of gene expr
 
 For test 2, 4, and 5 the posterior probabilities are the probabilities of the alternative hypothesis being true. For test 3 they are the probabilities of the null hypothesis being true.
 """
-function pprob_causal_col(Y,E,col)
+function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
     # number of samples and groups
     ns = size(Y,1) 
     ng = length(unique(E))
     # log-likelihood ratios
-    llr2, llr3, llr4, llr5 = realLLRcausal_col(Y,E,col)
+    llr2, llr3, llr4, llr5 = realLLRcausal_col(Y,Ycol,E)
     # allocate output array
     pp = ones(length(llr2),4)
-    # posterior probabilities for test 2, here we keep the true diagonal element
-    pp[:,1], _ = fit_mixdist_EM(llr2,ns,ng,:link)
-    # posterior probabilities for test 3, here we keep the default diagonal element and swap the role of null and alternative
-    pp[Not(col),2], _ = fit_mixdist_EM(llr3[Not(col)],ns,ng,:med)
-    # posterior probabilities for test 4 and 5, here we keep the default diagonal element
-    pp[Not(col),3], _ = fit_mixdist_EM(llr4[Not(col)],ns,ng,:relev)
-    pp[Not(col),4], _ = fit_mixdist_EM(llr5[Not(col)],ns,ng,:pleio)
+    # posterior probabilities for test 2
+    pp[:,1], _ = fit_mixdist_mom(llr2,ns,ng,:link)
+    # posterior probabilities for test 3, here we swap the role of null and alternative
+    pp[:,2], _ = fit_mixdist_mom(llr3,ns,ng,:med)
+    # posterior probabilities for test 4 and 5
+    pp[:,3], _ = fit_mixdist_mom(llr4,ns,ng,:relev)
+    pp[:,4], _ = fit_mixdist_mom(llr5,ns,ng,:pleio)
 
     return pp
 end
 
+
 """
-    fit_mixdist_mom(llr,ns,ng=1,test=:corr; maxiter=1000, tol=1e-14)
+    pprob_col(Y,E)
+
+Compute the posterior probabilities for differential expression of columns of matrix `Y` in the groups defined by  categorical vector `E` using Findr test 2 (**Linkage test**) 
+    
+`Y` is assumed to have undergone supernormalization with each column having mean zero and variance one.
+"""
+function pprob_col(Y::Matrix{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
+    # number of samples and groups
+    ns = size(Y,1) 
+    ng = length(unique(E))
+    # log-likelihood ratios
+    llr2 = realLLRde_col(Y,E)
+    # posterior probabilities for test 2
+    pp, _ = fit_mixdist_mom(llr2,ns,ng,:link)
+
+    return pp
+end
+
+
+
+"""
+    fit_mixdist_mom(llr,ns,ng=1,test=:corr)
 
 Fit a two-component mixture distribution of two LBeta distributions to a vector of log-likelihood ratios `llr` using a method-of-moments algorithm. The first component is the true null distribution for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an LBeta distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the `pi0est` function. Hence only the parameters of the alternative component need to be estimated.
 
@@ -83,7 +102,7 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
     m1 = ( mean(z) - π0 * bm1 ) / (1 - π0)
     m2 = ( mean(z.^2) - π0 * bm2 ) / (1 - π0)
 
-    # get the alternative distribution
+    # fit the alternative distribution
     dalt = fit_mom(LBeta, m1, m2)
 
     # do some sanity checks:
@@ -93,7 +112,7 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
         dalt = LBeta(dnull.α,dalt.β)
     end
     if dalt.β > dnull.β
-        dalt = LBeta(dnull.α,dalt.β)
+        dalt = LBeta(dalt.α,dnull.β)
     end
 
     # evaluate null and alternative distributions and compute posterior probabilities
@@ -109,7 +128,7 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
 end
 
 """
-    fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter=1000, tol=1e-14)
+    fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter=1000, tol=1e-3)
 
 Fit a two-component mixture distribution of two LBeta distributions to a vector of log-likelihood ratios `llr` using an EM algorithm. The first component is the true null distribution for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an LBeta distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the `pi0est` function. Hence only the parameters of the alternative component need to be estimated.
 
@@ -133,7 +152,6 @@ function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=
 
     # Initial guess for the alternative distribution: fit an LBeta distribution to the 50% largest llr values
     dalt = fit(LBeta,llr[llr .> quantile(llr,0.5)])
-#    println([dalt.α,dalt.β])
 
     # Set the current recognition / posterior probability values
     pnull = pdf.(dnull, llr)
@@ -219,14 +237,13 @@ which takes values in ``(-\\infty,\\infty)``. KDE is applied to `z`, and the pro
 """
 function fit_kde(llr)
     # Transform llr values to avoid edge effects in density estimation
-    z = log.(exp.(2 .* llr[llr.<Inf]) .- 1)
+    z = log.(exp.(2 .* llr) .- 1)
     
     # Apply kernel density estimation to transformed values
     dfit = kde(z)
 
     # Evaluate pdf at llr values using rule for transformations of random variables
-    pd = zeros(size(llr))
-    pd[llr.<Inf] = 2 * pdf(dfit, z) .* (1 .+ exp.(-z))
+    pd = 2 * pdf(dfit, z) .* (1 .+ exp.(-z))
     return pd
 end
 

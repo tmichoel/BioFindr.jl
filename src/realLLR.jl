@@ -1,50 +1,66 @@
 """
-    realLLRcorr_col(Y,col)
+    realLLRcorr_col(Y,Ycol)
 
-Compute the log-likelihood ratios for Findr test 0 (**correlation test**) for a given column `col` (gene) of gene expression matrix `Y` against all other columns of `Y`.
+Compute the log-likelihood ratios for Findr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
-`Y` is assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
+`Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 """
-function realLLRcorr_col(Y,col)
-    ρ = vec(cov(Y,Y[:,col],corrected=false))
-    ρ[col] = 1. # set self to exact value
+function realLLRcorr_col(Y,Ycol)
+    ρ = vec(cov(Y,Ycol,corrected=false))
+    # ρ[col] = 1. # set self to exact value
     -0.5*log.(abs.(1 .- ρ.^2))
 end
 
 """
-    realLLRcausal_col(Y,E,col)
+    realLLRcausal_col(Y,Ycol,E)
 
-Compute for a given column `col` (gene) of gene expression matrix `Y` with categorical instrument `E` against all other columns of `Y` the log-likelihood ratios for Findr causal tests: 
+Compute the log-likelihood ratios for the Findr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y` : 
 
 - Test 2 (**Linkage test**) 
 - Test 3 (**Mediation test**)
 - Test 4 (**Relevance test**)
 - Test 5 (**Pleiotropy test**)
 
-`Y` is assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
+`Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 """
-function realLLRcausal_col(Y,E,col)
+function realLLRcausal_col(Y,Ycol,E)
     # compute the sufficient statistics
-    ρ, σ1, σ2 = llrstats_col(Y,E,col)
+    ρ, σ, σcol = llrstats_col(Y,Ycol,E)
 
     # test 2
-    llr2 = -0.5*log.(σ1)
+    llr2 = -0.5*log.(σ[:,1])
 
     # test 4
-    # the abs in the argument of the log is to have a positive argument when applied to the "col"th entry, where the exact value is 0
-    llr4 = -0.5*log.(abs.(σ1[col].*σ1 .- (ρ .+ σ2 .- 1).^2)) .+ 0.5*log.(σ1[col])
-    llr4[col] = Inf # set self to Inf
+    # the abs in the argument of the log is to have a positive argument in cases where the exact value is 0
+    llr4 = -0.5*log.(abs.(σcol.*σ[:,1] .- (ρ .+ σ[:,2] .- 1).^2)) .+ 0.5*log.(σcol)
+    #llr4[col] = Inf # set self to Inf
 
     # test 3
     llr3 = llr4 .+ 0.5*log.(abs.(1 .- ρ.^2))
-    llr3[col] = Inf
+    # llr3[col] = Inf
 
     # test 5
-    llr5 = llr4 .+ 0.5*log.(σ1)
-    llr5[col] = Inf
+    llr5 = llr4 .+ 0.5*log.(σ[:,1])
+    # llr5[col] = Inf
 
     # output
     llr2, llr3, llr4, llr5
+end
+
+
+"""
+    realLLRde_col(Y,Ycol,E)
+
+Compute the log-likelihood ratios for Findr test 2 (**Linkage test**)  for a given categorical vector `E` against all columns of matrix `Y`.
+
+`Y` is assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
+"""
+function realLLRde_col(Y,E)
+    # compute the sufficient statistics
+    σ = llrstats_col(Y,E)
+
+    # test 2
+    -0.5*log.(σ)
 end
 
 """
@@ -60,20 +76,87 @@ The sufficient statistics are:
 - the weighted average variances `σ1` of each column of matrix `Y` over the groups (unique values) in `E`
 - the weighted average covariance `σ2` between the given column `col` of `Y` and all other columns of `Y` over the groups (unique values) of `E`
 """
-function llrstats_col(Y,E,col)
-    ρ = vec(cov(Y,Y[:,col],corrected=false))
-    ρ[col] = 1. # set self to exact values
+# function llrstats_col(Y,E,col)
+#     ρ = vec(cov(Y,Y[:,col],corrected=false))
+#     ρ[col] = 1. # set self to exact values
 
+#     gs, μ = groupmeans(Y,E)
+    
+#     ns = length(E) # number of samples
+#     w = pweights(gs/ns) # probability weights
+
+#     σ1 = vec(1 .- sum(μ.^2,w,dims=2))
+#     σ2 = vec(1 .- sum(μ.*μ[col,:]',w,dims=2))
+
+#     ρ, σ1, σ2
+# end
+
+
+
+"""
+    llrstats_col(Y,Ycol,E)
+
+Compute the sufficient statistics to compute the log-likelihood ratios for Findr tests 2-5  for a given column vector `Ycol` (gene) of gene expression values with categorical instrument `E` against all columns of `Y`.
+
+`Ycol` and `Y` are assumed to have undergone supernormalization with each col having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
+
+The sufficient statistics are:
+
+- the covariance `ρ` between the given `Ycol` and all columns of `Y`
+- the weighted average variances `σ1` of each column of matrix `Y` over the groups (unique values) in `E`
+- the weighted average covariance `σ2` between `Ycol` and all  columns of `Y` over the groups (unique values) of `E`
+"""
+function llrstats_col(Y,Ycol,E)
+    ρ = vec(cov(Y,Ycol,corrected=false))
+
+    gs, μ, μcol = groupmeans(Y,Ycol,E)
+    
+    ns = length(E) # number of samples
+    w = pweights(gs/ns) # probability weights
+
+    σ = [vec(1 .- sum(μ.^2,w,dims=2)) vec(1 .- sum(μ.*μcol',w,dims=2))]
+    σcol = 1 - sum(μcol.^2,w)
+
+    ρ, σ, σcol
+end
+
+
+"""
+    llrstats_col(Y,E)
+
+Compute the sufficient statistics to compute the log-likelihood ratios for Findr tests 2  for a given categorical vector `E` against all columns of `Y`.
+
+`Y` is assumed to have undergone supernormalization with each col having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
+
+The sufficient statistics are the weighted average variances `σ1` of each column of matrix `Y` over the groups (unique values) in `E`.
+"""
+function llrstats_col(Y,E)
     gs, μ = groupmeans(Y,E)
     
     ns = length(E) # number of samples
     w = pweights(gs/ns) # probability weights
 
-    σ1 = vec(1 .- sum(μ.^2,w,dims=2))
-    σ2 = vec(1 .- sum(μ.*μ[col,:]',w,dims=2))
-
-    ρ, σ1, σ2
+    vec(1 .- sum(μ.^2,w,dims=2))
 end
+
+"""
+    groupmeans(Y,Ycol,E)
+
+Compute the size and mean of each column of matrix `Y` and of the column vector `Ycol` for each of the groups (unique values) in categorical vector `E`.
+"""
+function groupmeans(Y,Ycol,E)
+    uE = unique(E)
+    gs = zeros(Int,length(uE))
+    μ = zeros(size(Y,2),length(uE))
+    μcol = zeros(length(uE))
+    Threads.@threads for i = eachindex(uE)
+        gs[i] = sum(E.==uE[i])
+        μ[:,i] = mean(Y[E.==uE[i],:], dims=1)
+        μcol[i] = mean(Ycol[E.==uE[i]])
+    end
+    gs, μ, μcol
+end
+
 
 """
     groupmeans(Y,E)

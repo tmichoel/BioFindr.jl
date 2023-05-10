@@ -1,7 +1,8 @@
 module Findr
 
-# Write your package code here.
+# External packages
 
+using DataFrames
 using Statistics
 using StatsBase
 using Distributions
@@ -32,37 +33,47 @@ include("posteriorprobs.jl")
 
 include("bayesiannets.jl")
 
+# Main Findr function calls
+
 """
-    findr_corr(X)
+    findr(X)
 
 Compute posterior probabilities for nonzero pairwise correlations between columns of input matrix `X`. The probabilities are directed (asymmetric) in the sense that they are estimated from a column-specific background distribution. 
 """
-function findr_corr(X)
+function findr(X::Matrix{T}) where T<:AbstractFloat
     # Inverse-normal transformation and standardization for each columns of X
     Y = supernormalize(X)
     # Matrix to store posterior probabilities
-    ncols = size(X,2)
-    PP = zeros(ncols,ncols)
+    ncols = size(Y,2)
+    PP = ones(ncols,ncols) # this sets the diagonal elements to one
     # Compute posterior probabilities for each column separately
-    Threads.@threads for col = 1:ncols
-        PP[:,col] = pprob_corr_row(Y,col)
+    Threads.@threads for col = axes(Y,2)
+        PP[Not(col),col] = pprob_col(Y[:,Not(col)],Y[:,col])
     end
     return PP
 end
 
 """
-    findr_diffexp(X,E)
+    findr(X,G)
 
-Compute posterior probabilities for nonzero differential expression of rows of input matrix `X` across groups defined by one or more categorical variables (rows of `E`).
+Compute posterior probabilities for nonzero differential expression of colunns of input matrix `X` across groups defined by one or more categorical variables (columns of `G`).
 
-Return a matrix of size num_rows(E) x num_rows(X)
+Return a matrix of size num_cols(X) x num_cols(G)
 """
-function findr_diffexp(X,E)
-
+function findr(X::Matrix{T},G::Array{S}) where {T<:AbstractFloat, S<:Integer}
+    # Inverse-normal transformation and standardization for each column of X
+    Y = supernormalize(X)
+    # Matrix to store posterior probabilities
+    PP = zeros(size(X,2),size(G,2))
+    # Compute posterior probabilities for each column separately
+    Threads.@threads for col = axes(G,2)
+        PP[:,col] = pprob_col(Y,G[:,col])
+    end
+    return PP
 end
 
 """
-    findr_causal(X,G,pairGX)
+    findr(X,G,pairGX)
 
 Compute posterior probabilities for nonzero causal relations between columns of input matrix `X`. The probabilities are estimated for a subset of columns of `X` that have a (discrete) instrumental variable in input matrix `G`. The matching between columns of `X` and columns of `G` is given by `pairEX`, a two-column array where the first column corresponds to a column index in `G` and the second to a column index in `X`.
 
@@ -75,27 +86,51 @@ Posterior probabilities are computed for the following tests
 
 which can be combined into the mediation test (``P_2 P_3``), the non-independence test (``P_2 P_5``), or Findr's legacy combination (``\\frac{1}{2}(P_2 P_5 + P_4)``). Alternatively, individual probability matrices for all tests are returned.
 
-All return matrices have size numcols(X) x numrows(E) .
+All return matrices have size num_cols(X) x num_cols(G) .
 """
-function findr_causal(X,G,pairGX)
+function findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{S}) where {T<:AbstractFloat, S<:Integer}
     # Inverse-normal transformation and standardization for each column of X
     Y = supernormalize(X)
     # Matrix to store posterior probabilities
-    npairs = size(pairGX,1)
-    ncolsX = size(X,2)
-    PP = zeros(ncolsX,4,npairs)
-    # PP3 = zeros(ncolsX,npairs)
-    # PP4 = zeros(ncolsX,npairs)
-    # PP5 = zeros(ncolsX.npairs)
-    # Compute posterior probabilities for each row separately
-    Threads.@threads for col = 1:npairs
+    PP = ones(size(X,2),4,size(pairGX,1)) # this sets the diagonal to one
+    # Compute posterior probabilities for each column separately
+    Threads.@threads for col = axes(pairGX,1)
         # println(row)
         colG = pairGX[col,1]
         colX = pairGX[col,2]
-        PP[:,:,col] = pprob_causal_col(Y,G[:,colG],colX)
+        PP[Not(colX),:,col] = pprob_col(Y[:,Not(colX)], Y[:,colX], G[:,colG])
     end
     return PP
 end
 
+"""
+    findr(X1,X2,G)
+
+Compute posterior probabilities for nonzero causal relations from columns of input matrix `X2` to columns of input matrix `X1`. The columns of input matrix `G` are (discrete) instrumental variables for the corresponding columns in `X2`.
+
+Posterior probabilities are computed for the following tests
+
+ - Test 2 (**Linkage test**) 
+ - Test 3 (**Mediation test**)
+ - Test 4 (**Relevance test**)
+ - Test 5 (**Pleiotropy test**)
+
+which can be combined into the mediation test (``P_2 P_3``), the non-independence test (``P_2 P_5``), or Findr's legacy combination (``\\frac{1}{2}(P_2 P_5 + P_4)``). Alternatively, individual probability matrices for all tests are returned.
+
+All return matrices have size num_cols(X1) x num_cols(X2) .
+"""
+function findr(X1::Matrix{T},X2::Array{T},G::Array{S})  where {T<:AbstractFloat, S<:Integer}
+    # Inverse-normal transformation and standardization for each column of X1 and X2
+    Y1 = supernormalize(X1)
+    Y2 = supernormalize(X2)
+    # Matrix to store posterior probabilities
+    PP = ones(size(X1,2),4,size(X2,2)) # this sets the diagonal to one
+    # Compute posterior probabilities for each column separately
+    Threads.@threads for col = axes(Y2,2)
+        # println(row)
+        PP[:,:,col] = pprob_col(Y1, Y2[:,col], G[:,col])
+    end
+    return PP
+end
 
 end
