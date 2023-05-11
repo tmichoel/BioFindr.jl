@@ -90,38 +90,43 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
     dnull = nulldist(ns, ng, test) 
     π0 = pi0est( nullpval(llr, ns, ng, test) )
 
-    # first and second moment for the Beta distribution corresponding to the null distribution
-    bp = 0.5 .* params(dnull)
-    bm1 = bp[1] / sum(bp)
-    bm2 = bm1 * (bp[1] + 1) / (sum(bp) + 1)
+    if π0 < 1.
+        # first and second moment for the Beta distribution corresponding to the null distribution
+        bp = 0.5 .* params(dnull)
+        bm1 = bp[1] / sum(bp)
+        bm2 = bm1 * (bp[1] + 1) / (sum(bp) + 1)
 
-    # transform llr to (mixture of) Beta distributed values
-    z = 1 .-  exp.(-2 .* llr)
+        # transform llr to (mixture of) Beta distributed values
+        z = 1 .-  exp.(-2 .* llr)
 
-    # get first and second moment for the Beta distribution corresponding to the alternative distribution
-    m1 = ( mean(z) - π0 * bm1 ) / (1 - π0)
-    m2 = ( mean(z.^2) - π0 * bm2 ) / (1 - π0)
+        # get first and second moment for the Beta distribution corresponding to the alternative distribution
+        m1 = ( mean(z) - π0 * bm1 ) / (1 - π0)
+        m2 = ( mean(z.^2) - π0 * bm2 ) / (1 - π0)
 
-    # fit the alternative distribution
-    dalt = fit_mom(LBeta, m1, m2)
+        # fit the alternative distribution
+        dalt = fit_mom(LBeta, m1, m2)
 
-    # do some sanity checks:
-    #   - in the limit llr -> 0, dnull must dominate
-    #   - in the limint llr -> Inf, dalt must dominate
-    if dalt.α < dnull.α
-        dalt = LBeta(dnull.α,dalt.β)
+        # do some sanity checks:
+        #   - in the limit llr -> 0, dnull must dominate
+        #   - in the limint llr -> Inf, dalt must dominate
+        if dalt.α < dnull.α
+            dalt = LBeta(dnull.α,dalt.β)
+        end
+        if dalt.β > dnull.β
+            dalt = LBeta(dalt.α,dnull.β)
+        end
+
+        # evaluate null and alternative distributions and compute posterior probabilities
+        pnull = pdf.(dnull, llr)
+        palt = pdf.(dalt, llr) 
+        pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt)
+
+        # Set mixture distribution
+        dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
+    else
+        pp = zeros(size(llr))
+        dreal = dnull
     end
-    if dalt.β > dnull.β
-        dalt = LBeta(dalt.α,dnull.β)
-    end
-
-    # evaluate null and alternative distributions and compute posterior probabilities
-    pnull = pdf.(dnull, llr)
-    palt = pdf.(dalt, llr) 
-    pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt)
-
-    # Set mixture distribution
-    dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
 
     # Return posterior probabilities and estimated mixture distribution
     return pp, dreal
@@ -150,37 +155,42 @@ function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=
     dnull = nulldist(ns, ng, test) 
     π0 = pi0est( nullpval(llr, ns, ng, test) )
 
-    # Initial guess for the alternative distribution: fit an LBeta distribution to the 50% largest llr values
-    dalt = fit(LBeta,llr[llr .> quantile(llr,0.5)])
+    if π0 >= 1.
+        # Initial guess for the alternative distribution: fit an LBeta distribution to the 50% largest llr values
+        dalt = fit(LBeta,llr[llr .> quantile(llr,0.5)])
 
-    # Set the current recognition / posterior probability values
-    pnull = pdf.(dnull, llr)
-    palt = pdf.(dalt, llr) 
-    pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt)
-
-    # EM until convergence
-    converged = false
-    it = 0
-    while !converged && it < maxiter
-        it += 1
-        # Update the alternative distribution using current pp
-        w = pweights(pp)
-        dalt = fit_weighted(LBeta, llr, w)
-        if dalt.α < dnull.α
-            dalt = LBeta(dnull.α,dalt.β)
-        end
-        # Update pp using new params
-        palt = pdf.(dalt, llr)
-       # π0 = 1 - sum(pp)/length(pp)
+        # Set the current recognition / posterior probability values
+        pnull = pdf.(dnull, llr)
+        palt = pdf.(dalt, llr) 
         pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt)
-        
-        # Check convergence
-        converged = norm(pp.-w,Inf) < tol 
-        #println(norm(pp.-w,Inf))
+
+        # EM until convergence
+        converged = false
+        it = 0
+        while !converged && it < maxiter
+            it += 1
+            # Update the alternative distribution using current pp
+            w = pweights(pp)
+            dalt = fit_weighted(LBeta, llr, w)
+            if dalt.α < dnull.α
+                dalt = LBeta(dnull.α,dalt.β)
+            end
+            # Update pp using new params
+            palt = pdf.(dalt, llr)
+        # π0 = 1 - sum(pp)/length(pp)
+            pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt)
+            
+            # Check convergence
+            converged = norm(pp.-w,Inf) < tol 
+            #println(norm(pp.-w,Inf))
+        end
+        # println(it)
+        # Set mixture distribution
+        dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
+    else
+        pp = zeros(size(llr))
+        dreal = dnull
     end
-    # println(it)
-    # Set mixture distribution
-    dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
 
     # Return posterior probabilities and estimated mixture distribution
     return pp, dreal
