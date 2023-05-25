@@ -58,7 +58,7 @@ end
 
 Compute posterior probabilities for nonzero differential expression of colunns of input matrix `X` across groups defined by one or more categorical variables (columns of `G`).
 
-Return a matrix of size num_cols(X) x num_cols(G)
+Return a matrix of size ncols(X) x ncols(G)
 """
 function findr(X::Matrix{T},G::Array{S}) where {T<:AbstractFloat, S<:Integer}
     # Inverse-normal transformation and standardization for each column of X
@@ -75,7 +75,7 @@ end
 """
     findr(X,G,pairGX)
 
-Compute posterior probabilities for nonzero causal relations between columns of input matrix `X`. The probabilities are estimated for a subset of columns of `X` that have a (discrete) instrumental variable in input matrix `G`. The matching between columns of `X` and columns of `G` is given by `pairEX`, a two-column array where the first column corresponds to a column index in `G` and the second to a column index in `X`.
+Compute posterior probabilities for nonzero causal relations between columns of input matrix `X`. The probabilities are estimated for a subset of columns of `X` that have a (discrete) instrumental variable in input matrix `G`. The matching between columns of `X` and columns of `G` is given by `pairGX`, a two-column array where the first column corresponds to a column index in `G` and the second to a column index in `X`.
 
 Posterior probabilities are computed for the following tests
 
@@ -86,7 +86,7 @@ Posterior probabilities are computed for the following tests
 
 which can be combined into the mediation test (``P_2 P_3``), the non-independence test (``P_2 P_5``), or Findr's legacy combination (``\\frac{1}{2}(P_2 P_5 + P_4)``). Alternatively, individual probability matrices for all tests are returned.
 
-All return matrices have size num_cols(X) x num_cols(G) .
+All return matrices have size ncols(X) x ncols(G) .
 """
 function findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{S}) where {T<:AbstractFloat, S<:Integer}
     # Inverse-normal transformation and standardization for each column of X
@@ -117,7 +117,7 @@ Posterior probabilities are computed for the following tests
 
 which can be combined into the mediation test (``P_2 P_3``), the non-independence test (``P_2 P_5``), or Findr's legacy combination (``\\frac{1}{2}(P_2 P_5 + P_4)``). Alternatively, individual probability matrices for all tests are returned.
 
-All return matrices have size num_cols(X1) x num_cols(X2) .
+All return matrices have size ncols(X1) x ncols(X2) .
 """
 function findr(X1::Matrix{T},X2::Array{T},G::Array{S})  where {T<:AbstractFloat, S<:Integer}
     # Inverse-normal transformation and standardization for each column of X1 and X2
