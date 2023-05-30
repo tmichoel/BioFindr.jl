@@ -36,7 +36,7 @@ include("bayesiannets.jl")
 # Main Findr function calls
 
 """
-    findr(X)
+    findr(X::Matrix{T}) where T<:AbstractFloat
 
 Compute posterior probabilities for nonzero pairwise correlations between columns of input matrix `X`. The probabilities are directed (asymmetric) in the sense that they are estimated from a column-specific background distribution. 
 """
@@ -54,13 +54,23 @@ function findr(X::Matrix{T}) where T<:AbstractFloat
 end
 
 """
-    findr(X,G)
+    findr(dX::T) where T<:AbstractDataFrame
+
+Wrapper for `findr(Matrix(dX))` when the input `dX` is in the form of a DataFrame. The output is then also wrapped in a DataFrame with the same column names. 
+"""
+function findr(dX::T) where T<:AbstractDataFrame
+    PP = DataFrame(findr(Matrix(dX)) , names(dX))
+    return PP
+end
+
+"""
+    findr(X::Matrix{T},G::Array{S}) where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero differential expression of colunns of input matrix `X` across groups defined by one or more categorical variables (columns of `G`).
 
 Return a matrix of size ncols(X) x ncols(G)
 """
-function findr(X::Matrix{T},G::Array{S}) where {T<:AbstractFloat, S<:Integer}
+function findr(X::Matrix{T},G::Matrix{S}) where {T<:AbstractFloat, S<:Integer}
     # Inverse-normal transformation and standardization for each column of X
     Y = supernormalize(X)
     # Matrix to store posterior probabilities
@@ -73,7 +83,7 @@ function findr(X::Matrix{T},G::Array{S}) where {T<:AbstractFloat, S<:Integer}
 end
 
 """
-    findr(X,G,pairGX)
+    findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{S}) where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero causal relations between columns of input matrix `X`. The probabilities are estimated for a subset of columns of `X` that have a (discrete) instrumental variable in input matrix `G`. The matching between columns of `X` and columns of `G` is given by `pairGX`, a two-column array where the first column corresponds to a column index in `G` and the second to a column index in `X`.
 
@@ -104,7 +114,7 @@ function findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{S}) where {T<:AbstractFl
 end
 
 """
-    findr(X1,X2,G)
+    findr(X1::Matrix{T},X2::Array{T},G::Array{S})  where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero causal relations from columns of input matrix `X2` to columns of input matrix `X1`. The columns of input matrix `G` are (discrete) instrumental variables for the corresponding columns in `X2`.
 
