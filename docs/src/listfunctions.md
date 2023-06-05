@@ -9,6 +9,6 @@ Documentation for [Findr](https://github.com/tmichoel/Findr.jl).
 ```@index
 ```
 
-```@autodocs
+```autodocs
 Modules = [Findr]
 ```

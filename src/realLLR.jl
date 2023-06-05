@@ -1,5 +1,5 @@
 """
-    realLLR_col(Y,Ycol)
+    realLLR_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
 
 Compute the log-likelihood ratios for Findr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
@@ -12,7 +12,7 @@ function realLLR_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
 end
 
 """
-    realLLR_col(Y,Ycol,E)
+    realLLR_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
 
 Compute the log-likelihood ratios for the Findr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y` : 
 
@@ -49,7 +49,7 @@ end
 
 
 """
-    realLLR_col(Y,Ycol,E)
+    realLLR_col(Y::Matrix{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
 
 Compute the log-likelihood ratios for Findr test 2 (**Linkage test**)  for a given categorical vector `E` against all columns of matrix `Y`.
 
@@ -62,36 +62,6 @@ function realLLR_col(Y::Matrix{T},E::Vector{S}) where {T<:AbstractFloat, S<:Inte
     # test 2
     -0.5*log.(σ)
 end
-
-"""
-    llrstats_col(Y,E,col)
-
-Compute the sufficient statistics to compute the log-likelihood ratios for Findr tests 2-5  for a given column `col` (gene) of gene expression matrix `Y` with categorical instrument `E` against all other columns of `Y`.
-
-`Y` is assumed to have undergone supernormalization with each col having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
-
-The sufficient statistics are:
-
-- the covariance `ρ` between the given column `col` of matrix `Y` and all other columns of `Y`
-- the weighted average variances `σ1` of each column of matrix `Y` over the groups (unique values) in `E`
-- the weighted average covariance `σ2` between the given column `col` of `Y` and all other columns of `Y` over the groups (unique values) of `E`
-"""
-# function llrstats_col(Y,E,col)
-#     ρ = vec(cov(Y,Y[:,col],corrected=false))
-#     ρ[col] = 1. # set self to exact values
-
-#     gs, μ = groupmeans(Y,E)
-    
-#     ns = length(E) # number of samples
-#     w = pweights(gs/ns) # probability weights
-
-#     σ1 = vec(1 .- sum(μ.^2,w,dims=2))
-#     σ2 = vec(1 .- sum(μ.*μ[col,:]',w,dims=2))
-
-#     ρ, σ1, σ2
-# end
-
-
 
 """
     llrstats_col(Y,Ycol,E)
