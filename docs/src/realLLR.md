@@ -190,11 +190,61 @@ where
 \sigma_{AB} \equiv 1-\sum_{j=0}^{n_a}\frac{n_j}{n}\hat{\mu}_j\hat{\nu}_j,
 ``` 
 
-and ``\hat\rho`` is defined in .
+and ``\hat\rho`` is defined in the [Correlation test](@ref) section.
 
+## Relevance test
 
+Since the indirect regulation ``E\rightarrow B`` tends to be weaker than any of its direct regulation components (``E\rightarrow A`` or ``A\rightarrow B``), we propose to test ``E\rightarrow A\rightarrow B`` with indirect regulation ``E\rightarrow B`` as well as the direct regulation ``A\rightarrow B`` for stronger distinguishing power on weak regulations. We define
 
-The LLRs for the secondary linkage, conditional independence, relevance, and pleiotrropy tests of a specific gene ``A`` against all other genes ``B`` (possibly including ``A`` itself) are implemented as a method of the `realLLR_col` function:
+```math
+{\mathcal H}_{\mathrm{alt}}^{\mathrm{(4)}}\equiv E\rightarrow A\wedge E\rightarrow B\leftarrow A
+```
+
+and
+
+```math
+{\mathcal H}_{\mathrm{null}}^{\mathrm{(4)}}\equiv E\rightarrow A\qquad B
+```
+   
+This simply verifies that ``B`` is not independent from both ``A`` and ``E`` simultaneously. In the alternative hypothesis, ``B`` is regulated by ``E`` and ``A``, which is modeled as a normal distribution whose mean is additively determined by ``E`` categorically and ``A`` linearly, i.e.
+
+```math
+B_i\mid E_i,A_i\sim N(\nu_{E_i}+\rho A_i,\sigma_B^2).
+```
+
+We can hence solve its LLR as
+
+```math
+\mathrm{LLR}^{\mathrm{(4)}}=-\frac{n}{2}\ln\left(\hat{\sigma}_A^2\hat{\sigma}_B^2-(\hat{\rho}+\sigma_{AB}-1)^2\right)+\frac{n}{2}\ln\hat{\sigma}_A^2,
+```
+
+with all MLEs as defined before.
+
+## Pleiotropy test
+
+Based on the positives of the secondary test, we can further distinguish the alternative hypothesis 
+
+```math
+{\mathcal H}_{\mathrm{alt}}^{\mathrm{(5)}}\equiv B\leftarrow E\rightarrow A\wedge A\rightarrow B
+```
+
+from the null
+
+```math
+{\mathcal H}_{\mathrm{null}}^{\mathrm{(5)}}\equiv B\leftarrow E\rightarrow A
+```
+    
+to verify that ``E`` does not regulate ``A`` and ``B`` independently. Its LLR can be solved as
+
+```math
+\mathrm{LLR}^{\mathrm{(5)}}=-\frac{n}{2}\ln\left(\hat{\sigma}_A^2\hat{\sigma}_B^2-(\hat{\rho}+\sigma_{AB}-1)^2\right)+\frac{n}{2}\ln\hat{\sigma}_A^2\hat\sigma_B^2.
+```
+
+with all MLEs as defined before. Note that this test was called the **controlled** test in the original paper (see figure above), but we now prefer to refer to it as the **pleiotropy** test.
+
+## Implementation
+
+The LLRs for the secondary linkage, conditional independence, relevance, and pleiotrropy tests of a specific gene ``A`` against all other genes ``B`` are implemented as a method of the `realLLR_col` function:
 
 
 ```@docs
