@@ -260,9 +260,7 @@ end
 """
     pi0est(pval)
 
-Estimate the proportion π0 of truly null features in a vector `pval` of p-values using Storey's method
-
-See also http://varianceexplained.org/files/pi0boot.pdf
+Estimate the proportion π0 of truly null features in a vector `pval` of p-values using a [bootstrap method](http://varianceexplained.org/files/pi0boot.pdf).
 """
 function pi0est(pval)
     λ = 0:0.05:0.95

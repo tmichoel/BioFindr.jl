@@ -4,13 +4,13 @@
 
 Return an LBeta distribution that is the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
 
-- ':corr' - **correlation test** (test 0)
-- ':link' - **linkage test** (test 1/2)
-- ':med' - **mediation test** (test 3)
-- ':relev' - **relevance test** (test 4)
-- ':pleio' - **pleiotropy test** (test 5)
+- :corr - **correlation test** (test 0)
+- :link - **linkage test** (test 1/2)
+- :med - **mediation test** (test 3)
+- :relev - **relevance test** (test 4)
+- :pleio - **pleiotropy test** (test 5)
 
-With only one input argument, the null distribution for the correlation test with `ns` samples is returned. With two input arguments, or  with three arguments and `test` equal to "corr", the null distribution for the correlation test with `ns` samples is returned and the second argument is ignored
+With only one input argument, the null distribution for the correlation test with `ns` samples is returned. With two input arguments, or  with three arguments and `test` equal to `:corr`, the null distribution for the correlation test with `ns` samples is returned and the second argument is ignored
 """
 function nulldist(ns,ng=1,test=:corr)
     if test==:corr
@@ -33,13 +33,13 @@ end
 
 Return p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
 
-- ':corr' - **correlation test** (test 0)
-- ':link' - **linkage test** (test 1/2)
-- ':med' - **mediation test** (test 3)
-- ':relev' - **relevance test** (test 4)
-- ':pleio' - **pleiotropy test** (test 5)
+- :corr - **correlation test** (test 0)
+- :link - **linkage test** (test 1/2)
+- :med - **mediation test** (test 3)
+- :relev - **relevance test** (test 4)
+- :pleio - **pleiotropy test** (test 5)
 
-With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to ":corr", the correlation test with `ns` samples is used and the third argument is ignored.
+With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to `:corr`, the correlation test with `ns` samples is used and the third argument is ignored.
 """
 function nullpval(llr,ns,ng=1,test=:corr)
     # create null distribution
@@ -55,13 +55,13 @@ end
 
 Return negative log10 p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
 
-- ':corr' - **correlation test** (test 0)
-- ':link' - **linkage test** (test 1/2)
-- ':med' - **mediation test** (test 3)
-- ':relev' - **relevance test** (test 4)
-- ':pleio' - **pleiotropy test** (test 5)
+- :corr - **correlation test** (test 0)
+- :link - **linkage test** (test 1/2)
+- :med - **mediation test** (test 3)
+- :relev - **relevance test** (test 4)
+- :pleio - **pleiotropy test** (test 5)
 
-With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to "corr", the correlation test with `ns` samples is used and the third argument is ignored.
+With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to `:corr`, the correlation test with `ns` samples is used and the third argument is ignored.
 """
 function nulllog10pval(llr,ns,ng=1,test=:corr)
     # create null distribution
@@ -75,13 +75,13 @@ end
 
 Return probability distribution function evaluations for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
 
-- ':corr' - **correlation test** (test 0)
-- ':link' - **linkage test** (test 1/2)
-- ':med' - **mediation test** (test 3)
-- ':relev' - **relevance test** (test 4)
-- ':pleio' - **pleiotropy test** (test 5)
+- :corr - **correlation test** (test 0)
+- :link - **linkage test** (test 1/2)
+- :med - **mediation test** (test 3)
+- :relev - **relevance test** (test 4)
+- :pleio - **pleiotropy test** (test 5)
 
-With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to ":corr", the correlation test with `ns` samples is used and the third argument is ignored.
+With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to `:corr`, the correlation test with `ns` samples is used and the third argument is ignored.
 """
 function nullpdf(llr,ns,ng=1,test=:corr)
     # create null distribution
