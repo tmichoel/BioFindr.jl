@@ -59,7 +59,13 @@ For a threshold value `c`, the global FDR, ``FDR(c)`` is defined as one minus th
 
 where ``N_c=\sharp\{i\colon P_i\leq c\}`` is the number of selected pairs. The q-value of a given pair is defined as the smallest FDR at which this pair is still selected.
 """
-
 function globalfdr(P::Matrix{T},FDR) where T<:AbstractFloat
-    
+    # operate on vector of probabilities
+    Pvec = vec(P)
+    # permutation to sort Pvec in descending order
+    I = sortperm(Pvec,rev=true)
+    # the inverse permutation
+    Iinv = invperm(I)
+    # accumulate 1 - mean(Pvec[I]) and return to original order
+    Qvec = 1 .- (cumsum(Pvec[I])./(1:length(Pvec)))[Iinv]
 end
