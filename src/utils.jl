@@ -27,21 +27,39 @@ function getpairs(dX::T, dG::T, dE::T; colG=1, colX=2) where T<:AbstractDataFram
 end
 
 """
-    combineprobs(PP; combination="none")
+    combineprobs(P; combination="none")
+
+Combine posterior probabilities `P` for multiple likelihood likelihood ratio tests in a single probability (local precision) value.
 """
-function combineprobs(PP; combination="none")
+function combineprobs(P; combination="none")
     if combination == "none"
-        return PP
+        return P
     elseif combination == "IV"
         # P2 x P5
-        return PP[:,1,:] .* PP[:,4,:]
+        return P[:,1,:] .* P[:,4,:]
     elseif combination == "mediation"
         # P2 x P3
-        return PP[:,1,:] .* PP[:,2,:]
+        return P[:,1,:] .* P[:,2,:]
     elseif combination == "orig"
         # 0.5 (P2 x P5 + P4)
-        return 0.5 .*( PP[:,1,:] .* PP[:,4,:] .+ PP[:,3,:] )
+        return 0.5 .*( P[:,1,:] .* P[:,4,:] .+ P[:,3,:] )
     else
         error("Combination parameter must be one of \"none\", \"IV\", \"mediation\", or \"orig\"")
     end
+end
+
+"""
+    globalfdr(P::Matrix{T},FDR) where T<:AbstractFloat
+
+For a matrix `P` of posterior probabilities (local precision values), find the threshold corresponding to global false discovery rate `FDR`. Return the selected pairs, their posterior probabilities, and their q-values. 
+
+For a threshold value `c`, the global FDR, ``FDR(c)`` is defined as one minus the average local precision:
+
+``FDR(c) = 1 - \frac{1}{N_c} \sum_{i\colon P_i\leq c} P_i,``
+
+where ``N_c=\sharp\{i\colon P_i\leq c\}`` is the number of selected pairs. The q-value of a given pair is defined as the smallest FDR at which this pair is still selected.
+"""
+
+function globalfdr(P::Matrix{T},FDR) where T<:AbstractFloat
+    
 end

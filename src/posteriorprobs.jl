@@ -1,22 +1,30 @@
 """
-    pprob_col(Y,Ycol)
+    pprob_col(Y::Matrix{T},Ycol::Vector{T}; method="moments") where T<:AbstractFloat
 
 Compute the posterior probabilities for Findr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
 `Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
+
+The optional parameters `method` determines the mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 """
-function pprob_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
+function pprob_col(Y::Matrix{T},Ycol::Vector{T}; method="moments") where T<:AbstractFloat
     # number of samples
     ns = size(Y,1) 
     # log-likelihood ratios
     llr = realLLR_col(Y,Ycol) 
     # posterior probabilities
-    pp, dreal = fit_mixdist_mom(llr,ns)
+    if method == "moments"
+        pp, _ = fit_mixdist_mom(llr,ns)
+    elseif method == "kde"
+        pp = fit_mixdist_KDE(llr,ns)
+    else
+        error("Optional `method` parameter must be equal to `moments` or `KDE`.")
+    end
     return pp
 end
 
 """
-    pprob_col(Y,Ycol,E)
+    pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}   
 
 Compute the posterior probabilities for the Findr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y`: 
 
@@ -28,8 +36,10 @@ Compute the posterior probabilities for the Findr causal tests for a given colum
 `Y` is assumed to have undergone supernormalization with each column having mean zero and variance one.
 
 For test 2, 4, and 5 the posterior probabilities are the probabilities of the alternative hypothesis being true. For test 3 they are the probabilities of the null hypothesis being true.
+
+The optional parameters `method` determines the mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 """
-function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
+function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
     # number of samples and groups
     ns = size(Y,1) 
     ng = length(unique(E))
@@ -37,34 +47,52 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}) where {T<:Abstract
     llr2, llr3, llr4, llr5 = realLLR_col(Y,Ycol,E)
     # allocate output array
     pp = ones(length(llr2),4)
-    # posterior probabilities for test 2
-    pp[:,1], _ = fit_mixdist_mom(llr2,ns,ng,:link)
-    # posterior probabilities for test 3, here we swap the role of null and alternative
-    pp[:,2], _ = fit_mixdist_mom(llr3,ns,ng,:med)
-    # posterior probabilities for test 4 and 5
-    pp[:,3], _ = fit_mixdist_mom(llr4,ns,ng,:relev)
-    pp[:,4], _ = fit_mixdist_mom(llr5,ns,ng,:pleio)
-
+    if method == "moments"
+        # posterior probabilities for test 2
+        pp[:,1], _ = fit_mixdist_mom(llr2,ns,ng,:link)
+        # posterior probabilities for test 3, here we swap the role of null and alternative
+        pp[:,2], _ = fit_mixdist_mom(llr3,ns,ng,:med)
+        # posterior probabilities for test 4 and 5
+        pp[:,3], _ = fit_mixdist_mom(llr4,ns,ng,:relev)
+        pp[:,4], _ = fit_mixdist_mom(llr5,ns,ng,:pleio)
+    elseif method == "kde"
+        # posterior probabilities for test 2
+        pp[:,1], _ = fit_mixdist_KDE(llr2,ns,ng,:link)
+        # posterior probabilities for test 3, here we swap the role of null and alternative
+        pp[:,2], _ = fit_mixdist_KDE(llr3,ns,ng,:med)
+        # posterior probabilities for test 4 and 5
+        pp[:,3], _ = fit_mixdist_KDE(llr4,ns,ng,:relev)
+        pp[:,4], _ = fit_mixdist_KDE(llr5,ns,ng,:pleio)
+    else
+        error("Optional `method` parameter must be equal to `moments` or `KDE`.")
+    end
     return pp
 end
 
 
 """
-    pprob_col(Y,E)
+    pprob_col(Y::Matrix{T},E::Vector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
 
 Compute the posterior probabilities for differential expression of columns of matrix `Y` in the groups defined by  categorical vector `E` using Findr test 2 (**Linkage test**) 
     
 `Y` is assumed to have undergone supernormalization with each column having mean zero and variance one.
+
+The optional parameters `method` determines the mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 """
-function pprob_col(Y::Matrix{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
+function pprob_col(Y::Matrix{T},E::Vector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
     # number of samples and groups
     ns = size(Y,1) 
     ng = length(unique(E))
     # log-likelihood ratios
     llr2 = realLLR_col(Y,E)
     # posterior probabilities for test 2
-    pp, _ = fit_mixdist_mom(llr2,ns,ng,:link)
-
+    if method == "moments"
+        pp, _ = fit_mixdist_mom(llr2,ns,ng,:link)
+    elseif method == "kde"
+        pp = fit_mixdist_KDE(llr2,ns,ng,:link)
+    else
+        error("Optional `method` parameter must be equal to `moments` or `KDE`.")
+    end
     return pp
 end
 
@@ -73,17 +101,19 @@ end
 """
     fit_mixdist_mom(llr,ns,ng=1,test=:corr)
 
-Fit a two-component mixture distribution of two LBeta distributions to a vector of log-likelihood ratios `llr` using a method-of-moments algorithm. The first component is the true null distribution for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an LBeta distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the `pi0est` function. Hence only the parameters of the alternative component need to be estimated.
+Fit a two-component mixture distribution of two LBeta distributions to a vector of log-likelihood ratios `llr` using a method-of-moments algorithm. The first component is the true null distribution for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an [`LBeta`](@ref) distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the [`pi0est`](@ref) function. Hence only the parameters of the alternative component need to be estimated.
 
 The input variable `test` can take the values:
 
-- ':corr' - **correlation test** (test 0)
-- ':link' - **linkage test** (test 1/2)
-- ':med' - **mediation test** (test 3)
-- ':relev' - **relevance test** (test 4)
-- ':pleio' - **pleiotropy test** (test 5)
+- :corr - **correlation test** (test 0)
+- :link - **linkage test** (test 1/2)
+- :med - **mediation test** (test 3)
+- :relev - **relevance test** (test 4)
+- :pleio - **pleiotropy test** (test 5)
 
-With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to ":corr", the correlation test with `ns` samples is used and the third argument is ignored.
+With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to `:corr`, the correlation test with `ns` samples is used and the third argument is ignored.
+
+See also [`fit_mom`](@ref)
 """
 function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
     # set null distribution and estimate proportion of true nulls

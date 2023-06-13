@@ -156,9 +156,9 @@ Given samples ``x_1, x_2,\dots,x_n`` we transform them to
 y_i = 1 - e^{-2 x_i}
 ```
 
-and replace ``\mathbb{E}(Y)`` and ``\mathbb{E}(Y^2)`` in these equations by their estimates ``\frac{1}{n}\sum_i y_i`` and ``\frac{1}{n}\sum_i y_i^2``, respectively, and likewise replace ``\pi_0`` by its estimate ``\hat{\pi}_0`` obtained as explained above (see [`pi0est`](@ref)). Since ``\alpha_0`` and ``\beta_0`` are known exactly, we obtain estimates ``\hat{m}_1`` and ``\hat{m}_2`` for the moments of a Beta distribution with parameters ``\alpha/2`` and ``\beta/2``. Finally, plugging these moment estimates in the [`fit_mom`](@ref) function gives estimates ``\hat{\alpha}`` and ``\hat{\beta}`` for the corresponding [`LBeta`](@ref).
+and replace ``\mathbb{E}(Y)`` and ``\mathbb{E}(Y^2)`` in these equations by their estimates ``\frac{1}{n}\sum_i y_i`` and ``\frac{1}{n}\sum_i y_i^2``, respectively. Likewise we replace ``\pi_0`` by its estimate ``\hat{\pi}_0`` obtained as explained above (see [`pi0est`](@ref)). Since ``\alpha_0`` and ``\beta_0`` are known exactly, we obtain estimates ``\hat{m}_1`` and ``\hat{m}_2`` for the moments of a Beta distribution with parameters ``\alpha/2`` and ``\beta/2``. Plugging these moment estimates in the [`fit_mom`](@ref) function gives estimates ``\hat{\alpha}`` and ``\hat{\beta}`` for the corresponding [`LBeta`](@ref).
 
-To make this estimated distribution a valid alternative distribution component of the LLRs mixture distribution, two properties must be verified:
+To make this estimated distribution a valid alternative distribution component of the LLRs mixture distribution, we need to ensure the validity of two edge cases:
 
 - In the limit $\mathrm{LLR}\to 0^+$, all cases must come from the null distribution. This will be the case if $\hat{\alpha} \geq \alpha_0$, and if this is not the case, we set $\hat{\alpha} = \alpha_0$.
 - In the limit $\mathrm{LLR}\to \infty$, all cases must come from the alternative distribution. This will be the case if $\hat{\beta} \leq \beta_0$, and if this is not the case, we set $\hat{\beta} = \beta_0$.
@@ -169,6 +169,15 @@ The entire procedure is implemented in the `fit_mixdist_mom` function:
 fit_mixdist_mom
 ```
 
+## Diagnostics
+
+An important advantage of having a parametric solution for the observed LLR distributions, in the form of a [mixture model object](https://juliastats.org/Distributions.jl/stable/mixture/), is that its fit to the data can be evaluated easily. In this case, p-values for the real data under the real distribution must be uniformly distributed. Formally, if $X$ is a continuous, univariate random variable with CDF $F_X$, then the transformed random variable
+
+$$
+P = 1 - F_X(X) \sim U(0,1)
+$$
+
+where $U(0,1)$ is the [uniform distribution](https://en.wikipedia.org/wiki/Continuous_uniform_distribution) on the unit interval.
 
 ## Comparison
 

@@ -208,7 +208,7 @@ function findr(X1::Matrix{T}, X2::Array{T}, G::Array{S}, pairGX::Matrix{R}; comb
         # println(row)
         colG = pairGX[col,1]
         colX = pairGX[col,2]
-        PP[Not(colX),:,col] = pprob_col(Y1, Y2[:,colX], G[:,colG])
+        PP[:,:,col] = pprob_col(Y1, Y2[:,colX], G[:,colG])
     end
     return combineprobs(PP; combination = combination)
 end

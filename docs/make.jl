@@ -21,7 +21,7 @@ makedocs(;
         "Null distributions of the LLRs" => "randomLLR.md",
         "Bayesian inference of posterior probabilities" => "posteriorprobs.md",
         "Tests to evaluate" => "testLLR.md",
-        "Bayesian networks" => "bayesiannets.md",
+ #       "Bayesian networks" => "bayesiannets.md",
         "Utilities" => "utils.md",
         "List of functions" => "listfunctions.md"       
     ],
