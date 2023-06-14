@@ -139,6 +139,7 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
         # do some sanity checks:
         #   - in the limit llr -> 0, dnull must dominate
         #   - in the limint llr -> Inf, dalt must dominate
+        #   - 
         if dalt.α < dnull.α
             dalt = LBeta(dnull.α,dalt.β)
         end
@@ -184,6 +185,7 @@ function fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter::Int=1000, tol::Float64=
     # set null distribution and estimate proportion of true nulls
     dnull = nulldist(ns, ng, test) 
     π0 = pi0est( nullpval(llr, ns, ng, test) )
+    println(π0)
 
     if π0 >= 1.
         # Initial guess for the alternative distribution: fit an LBeta distribution to the 50% largest llr values
@@ -255,7 +257,7 @@ function fit_mixdist_KDE(llr,ns,ng=1,test=:corr)
 
     # Smoothen posterior probs and make monotonically increasing
     perm = sortperm(llr, rev=true);
-    inv_perm = sortperm(perm);
+    inv_perm = invperm(perm);
     pp[pp .< 0] .= 0;
     pp = accumulate(min,pp[perm])[inv_perm];
 

@@ -49,23 +49,56 @@ function combineprobs(P; combination="none")
 end
 
 """
-    globalfdr(P::Matrix{T},FDR) where T<:AbstractFloat
+    globalfdr(P::Array{T},FDR) where T<:AbstractFloat
 
-For a matrix `P` of posterior probabilities (local precision values), find the threshold corresponding to global false discovery rate `FDR`. Return the selected pairs, their posterior probabilities, and their q-values. 
+For an array (matrix or vector) `P` of posterior probabilities (local precision values), compute their corresponding q-values `Q`, and return the indices of `P` with q-value less than a desired global false discovery rate `FDR`. 
 
-For a threshold value `c`, the global FDR, ``FDR(c)`` is defined as one minus the average local precision:
+For a threshold value `c` on the posterior probabilities `P`, the global FDR, ``FDR(c)`` is defined as one minus the average local precision:
 
-``FDR(c) = 1 - \frac{1}{N_c} \sum_{i\colon P_i\leq c} P_i,``
+``FDR(c) = 1 - \\frac{1}{N_c} \\sum_{i\\colon P_i\\leq c} P_i,``
 
-where ``N_c=\sharp\{i\colon P_i\leq c\}`` is the number of selected pairs. The q-value of a given pair is defined as the smallest FDR at which this pair is still selected.
+where ``N_c=\\sharp\\{i\\colon P_i\\leq c\\}`` is the number of selected pairs. The q-value of a given index in `P` is defined as the smallest FDR at which this pair is still called significant.
 """
-function globalfdr(P::Matrix{T},FDR) where T<:AbstractFloat
+function globalfdr(P::Array{T},FDR) where T<:AbstractFloat
     # operate on vector of probabilities
     Pvec = vec(P)
     # permutation to sort Pvec in descending order
     I = sortperm(Pvec,rev=true)
     # the inverse permutation
     Iinv = invperm(I)
-    # accumulate 1 - mean(Pvec[I]) and return to original order
-    Qvec = 1 .- (cumsum(Pvec[I])./(1:length(Pvec)))[Iinv]
+    # accumulate 1 - mean(Pvec[I])
+    Qvec = 1 .- (cumsum(Pvec[I])./(1:length(Pvec)))
+    # q-values must be sorted
+    if !issorted(Qvec)
+        error("sorting")
+        for k = eachindex(Qvec)
+            Qvec[k] = minimum(Qvec[k:end])
+        end
+    end
+    # return to original order
+    Qvec = Qvec[Iinv]
+    # return entries with q-value <= FDR
+    if isa(P,Vector)  
+        return findall(Qvec .<= FDR), Qvec
+    else
+        # reshape q-values in original shape
+        Q = reshape(Qvec,size(P))
+        return findall(Q .<= FDR), Q
+    end
+end
+
+"""
+    globalfdr(dP::T,FDR) where T<:AbstractDataFrame
+
+Wrapper for `globalfdr(Matrix(dP),FDR)` when the input `dP` is a DataFrame. `dP` is assumed to be the output of a `findr` where column names correspond to source variables, rows to target variables, and the first column contains the target variable names.
+
+With a DataFrame input, only the selected pairs and their posterior probabilities and q-values are returned, in the form of a DataFrame.
+"""
+function globalfdr(dP::T,FDR) where T<:AbstractDataFrame
+    # Extract matrix of posterior probability values
+    P = Matrix(select(dP,Not(1)))
+    # call globalfdr on array input
+    I, Q = globalfdr(P,FDR)
+    # create new dataframe with selected pairs
+    df = DataFrame(P = P[I], q = Q[I])
 end
