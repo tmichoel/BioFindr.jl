@@ -49,34 +49,32 @@ function combineprobs(P; combination="none")
 end
 
 """
+    stackprobs(P,colnames,rownames;nodiag=true)
+
+Convert a matrix of pairwise posterior probabilities `P` with column and row names `colnames` and `rownames`, respectively, to a stacked dataframe with `Source`, `Target`, and `Posterior probability` columns, corresponding respectively to a column name, a row name, and the value of `P` in the corresponding row and column pair.
+"""
+function stackprobs(P,colnames,rownames;nodiag=true)
+    # First put the matrix of probabilities in a dataframe
+    dP = DataFrame(P, colnames)
+    # Add column with row names
+    insertcols!(dP, 1, "Target" => rownames)
+    dP = stack(dP, Not(:Target), variable_name=:Source, value_name=:"Posterior probability")
+    if nodiag
+        # remove rows where source and target are the same
+        filter!(row -> row.Target != row.Source, dP)
+    end
+    return dP[!, [2,1,3]]
+end
+
+"""
     globalfdr(P::Array{T},FDR) where T<:AbstractFloat
 
-For an array (matrix or vector) `P` of posterior probabilities (local precision values), compute their corresponding q-values `Q`, and return the indices of `P` with q-value less than a desired global false discovery rate `FDR`. 
+For an array (matrix or vector) `P` of posterior probabilities (local precision values), compute their corresponding q-values `Q`, and return the indices of `P` with q-value less than a desired global false discovery rate `FDR`.
 
-For a threshold value `c` on the posterior probabilities `P`, the global FDR, ``FDR(c)`` is defined as one minus the average local precision:
-
-``FDR(c) = 1 - \\frac{1}{N_c} \\sum_{i\\colon P_i\\leq c} P_i,``
-
-where ``N_c=\\sharp\\{i\\colon P_i\\leq c\\}`` is the number of selected pairs. The q-value of a given index in `P` is defined as the smallest FDR at which this pair is still called significant.
+See also [`qvalue`](@ref)
 """
 function globalfdr(P::Array{T},FDR) where T<:AbstractFloat
-    # operate on vector of probabilities
-    Pvec = vec(P)
-    # permutation to sort Pvec in descending order
-    I = sortperm(Pvec,rev=true)
-    # the inverse permutation
-    Iinv = invperm(I)
-    # accumulate 1 - mean(Pvec[I])
-    Qvec = 1 .- (cumsum(Pvec[I])./(1:length(Pvec)))
-    # q-values must be sorted
-    if !issorted(Qvec)
-        error("sorting")
-        for k = eachindex(Qvec)
-            Qvec[k] = minimum(Qvec[k:end])
-        end
-    end
-    # return to original order
-    Qvec = Qvec[Iinv]
+    Qvec = qvalue(vec(P))
     # return entries with q-value <= FDR
     if isa(P,Vector)  
         return findall(Qvec .<= FDR), Qvec
@@ -88,17 +86,45 @@ function globalfdr(P::Array{T},FDR) where T<:AbstractFloat
 end
 
 """
-    globalfdr(dP::T,FDR) where T<:AbstractDataFrame
+    globalfdr!(dP::T,FDR) where T<:AbstractDataFrame
 
-Wrapper for `globalfdr(Matrix(dP),FDR)` when the input `dP` is a DataFrame. `dP` is assumed to be the output of a `findr` where column names correspond to source variables, rows to target variables, and the first column contains the target variable names.
-
-With a DataFrame input, only the selected pairs and their posterior probabilities and q-values are returned, in the form of a DataFrame.
+For a DataFrame `dP` of posterior probabilities (local precision values), compute their corresponding q-values `Q` and keep only the rows with `Q` less than a desired global false discovery rate `FDR`. `dP` is assumed to be the output of a `findr` run with columns `Source`, `Target`, and `Posterior probability`. The output DataFrame mirrors the structure of `dP`, keeping only the selected rows, and with an additional column `q-value`. The output is sorted by `q-value` if the optional argument `sorted` is `true` (default).
 """
-function globalfdr(dP::T,FDR) where T<:AbstractDataFrame
-    # Extract matrix of posterior probability values
-    P = Matrix(select(dP,Not(1)))
-    # call globalfdr on array input
-    I, Q = globalfdr(P,FDR)
-    # create new dataframe with selected pairs
-    df = DataFrame(P = P[I], q = Q[I])
+function globalfdr!(dP::T,FDR=1.0; sorted=true) where T<:AbstractDataFrame
+    # test if dP already has a q-value column, this allows repeated calling of the function for additional filtering or sorting
+    if ∉("q-value",names(dP))
+        qval = qvalue(dP."Posterior probability")
+        insertcols!(dP,"q-value" => qval)
+    end
+    subset!(dP, :"q-value" => x -> x .<= FDR)
+    if sorted
+        sort!(dP, :"q-value")
+    end
+end
+
+"""
+    qvalue(P::Vector{T}) where T<:AbstractFloat
+
+Convert a vector `P` of posterior probabilities (local precisions) to a vector of q-values. For a threshold value `c` on the posterior probabilities `P`, the global FDR, ``FDR(c)`` is defined as one minus the average local precision:
+
+``FDR(c) = 1 - \\frac{1}{N_c} \\sum_{i\\colon P_i\\leq c} P_i,``
+
+where ``N_c=\\sharp\\{i\\colon P_i\\leq c\\}`` is the number of selected pairs. The q-value of a given index in `P` is then defined as the smallest FDR at which this pair is still called significant.
+"""
+function qvalue(P::Vector{T}) where T<:AbstractFloat
+    # permutation to sort Pvec in descending order
+    I = sortperm(P,rev=true)
+    # the inverse permutation
+    Iinv = invperm(I)
+    # accumulate 1 - mean(Pvec[I])
+    qval = 1 .- (cumsum(P[I])./(1:length(P)))
+    # q-values must be ordered
+    if !issorted(qval)
+        error("sorting")
+        for k = eachindex(qval)
+            qval[k] = minimum(qval[k:end])
+        end
+    end
+    # return to original order
+    qval[Iinv]
 end

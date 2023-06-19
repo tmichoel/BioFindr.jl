@@ -62,12 +62,12 @@ end
 """
     findr(dX::T) where T<:AbstractDataFrame
 
-Wrapper for `findr(Matrix(dX))` when the input `dX` is in the form of a DataFrame. The output is then also wrapped in a DataFrame with the same column names. 
+Wrapper for `findr(Matrix(dX))` when the input `dX` is in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` and `Posterior probability` columns.
+
+See also [`stackprobs`](@ref).
 """
 function findr(dX::T) where T<:AbstractDataFrame
-    dP = DataFrame(findr(Matrix(dX)) , names(dX))
-    insertcols!(dP, 1, "Target↓" => names(dX))
-    return dP
+    stackprobs(findr(Matrix(dX)), names(dX), names(dX))
 end
 
 """
@@ -98,12 +98,12 @@ end
 """
     findr(dX::T, dG::T) where T<:AbstractDataFrame
 
-Wrapper for `findr(Matrix(dX), Matrix(dG))` when the inputs `dX` and `dG` are in the form of a DataFrame. The output is then also wrapped in a DataFrame with the same column names. 
+Wrapper for `findr(Matrix(dX), Matrix(dG))` when the inputs `dX` and `dG` are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` and `Posterior probability` columns.
+
+See also [`stackprobs`](@ref). 
 """
 function findr(dX::T, dG::T) where T<:AbstractDataFrame
-    dP = DataFrame(findr(Matrix(dX), Matrix(dG)) , names(dG))
-    insertcols!(dP, 1, "Target↓" => names(dX))
-    return dP
+    stackprobs(findr(Matrix(dX), Matrix(dG)), names(dG), names(dX))
 end
 
 
@@ -147,7 +147,7 @@ end
 """
     findr(dX::T, dG::T, dE::T, colX=2, colG=1, combination="IV") where T<:AbstractDataFrame
 
-Wrapper for `findr(X, G, pairGX)` when the inputs are in the form of a DataFrame. The output is then also wrapped in a DataFrame with the same column names. When DataFrames are used, only a combined posterior probabilities can be returned (`combination="IV"` (default), `"mediation"`, or `"orig"`).
+Wrapper for `findr(X, G, pairGX)` when the inputs are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` and `Posterior probability` columns. When DataFrames are used, only combined posterior probabilities can be returned (`combination="IV"` (default), `"mediation"`, or `"orig"`).
 
 The input dataframes are:
 
@@ -156,6 +156,8 @@ The input dataframes are:
 - `dE` - DataFrame with eQTL results, must contains columns with gene and SNP IDs that can be mapped to column names in `dX` and `dG`, respectively
 - `colG` - name or number of variant ID column in `dE`, default 1
 - `colX` - name or number of gene ID column in `dE`, default 2
+
+See also [`stackprobs`](@ref).
 """
 function findr(dX::T, dG::T, dE::T; colG=1, colX=2, combination="IV") where T<:AbstractDataFrame
     if combination == "none"
@@ -165,9 +167,7 @@ function findr(dX::T, dG::T, dE::T; colG=1, colX=2, combination="IV") where T<:A
         pairGX = getpairs(dX, dG, dE; colG = colG, colX = colX)
         # Call Findr on numeric data
         PP = findr(Matrix(dX), Matrix(dG), pairGX; combination=combination)
-        dP = DataFrame(PP, names(dX)[pairGX[:,2]])
-        insertcols!(dP, 1, "Target↓" => names(dX))
-        return dP
+        return stackprobs(PP, names(dX)[pairGX[:,2]], names(dX))   
     else
         error("Combination parameter must be one of \"IV\", \"mediation\", or \"orig\"")
     end
@@ -217,7 +217,9 @@ end
 """
     findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, combination="IV") where T<:AbstractDataFrame
 
-Wrapper for `findr(Matrix(dX1), Matrix(dX2), Matrix(dG))` when the inputs `dX1`, `dX2`, and `dG` are in the form of a DataFrame. The output is then also wrapped in a DataFrame with the same column names. When DataFrames are used, only a combined posterior probabilities can be returned (`combination="IV"` (default), `"mediation"`, or `"orig"`).
+Wrapper for `findr(Matrix(dX1), Matrix(dX2), Matrix(dG))` when the inputs `dX1`, `dX2`, and `dG` are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` and `Posterior probability` columns. When DataFrames are used, only a combined posterior probabilities can be returned (`combination="IV"` (default), `"mediation"`, or `"orig"`).
+
+See also [`stackprobs`](@ref).
 """
 function findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, combination="IV") where T<:AbstractDataFrame
     if combination == "none"
@@ -227,9 +229,7 @@ function findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, combination="IV") w
         pairGX = getpairs(dX2, dG, dE; colG = colG, colX = colX)
         # Call Findr on numeric data
         PP = findr(Matrix(dX1), Matrix(dX2), Matrix(dG), pairGX; combination=combination)
-        dP = DataFrame(PP, names(dX2)[pairGX[:,2]])
-        insertcols!(dP, 1, "Target↓" => names(dX1))
-        return dP
+        return stackprobs(PP, names(dX2)[pairGX[:,2]], names(dX1))
     else
         error("Combination parameter must be one of \"IV\", \"mediation\", or \"orig\"")
     end

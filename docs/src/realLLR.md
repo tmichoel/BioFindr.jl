@@ -190,7 +190,7 @@ where
 \sigma_{AB} \equiv 1-\sum_{j=0}^{n_a}\frac{n_j}{n}\hat{\mu}_j\hat{\nu}_j,
 ``` 
 
-and ``\hat\rho`` is defined in the [Correlation test](@ref) section.
+and ``\hat\rho`` is defined in the [Null distributions of the log-likelihood ratios](@ref) section.
 
 ## Relevance test
 

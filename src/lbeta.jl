@@ -95,9 +95,14 @@ end
 """
     fit_mom(LBeta, m1, m2)
 
-Fit an `LBeta` distribution to given first and second moments `m1` and `m2` of the corresponding Beta distribution.
+Fit an `LBeta` distribution to given first and second moments `m1` and `m2` of the corresponding Beta distribution. This requires that `m1` and `m2` satisfy the following relations (see also the [Beta distribution wiki](https://en.wikipedia.org/wiki/Beta_distribution#Two_unknown_parameters)):
+
+``m_1>m_2 \\wedge m_2>m_1^2``
+
+An [AssertionError](https://docs.julialang.org/en/v1/base/base/#Core.AssertionError) is thrown if the condition evaluates to `false`.
 """
 function fit_mom(LBeta, m1, m2)
+    @assert m1>m2 && m2>m1^2 "Invalid Beta distribution moments."
     α = 2 * m1 * (m1 - m2) / (m2 - m1^2)
     β = 2 * (1 - m1) * (m1 - m2) / (m2 - m1^2)
     return LBeta(α,β)
@@ -140,7 +145,6 @@ function fit_weighted(::Type{<:LBeta}, x::AbstractArray{T}, w::AbstractWeights) 
         α = 0.
         β = 0.
     end
-    
     lbp = 2 .* [α,β] # multiply fitted Beta param to obtain LBeta parameters
     return LBeta(lbp...)
 end
