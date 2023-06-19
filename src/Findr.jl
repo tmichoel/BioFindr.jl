@@ -19,8 +19,6 @@ med = "med"
 relev = "relev"
 pleio = "pleio"
 
-
-
 # Load the different code files
 
 include("supernormalization.jl")
@@ -40,13 +38,15 @@ include("utils.jl")
 # Main Findr function calls
 
 """
-    findr(X::Matrix{T}) where T<:AbstractFloat
+    findr(X::Matrix{T}; method="moments") where T<:AbstractFloat
 
-Compute posterior probabilities for nonzero pairwise correlations between columns of input matrix `X`. The probabilities are directed (asymmetric) in the sense that they are estimated from a column-specific background distribution. 
+Compute posterior probabilities for nonzero pairwise correlations between columns of input matrix `X`. The probabilities are directed (asymmetric) in the sense that they are estimated from a column-specific background distribution.
+
+The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 
 See also [`findr(dX::DataFrame)`](@ref)-
 """
-function findr(X::Matrix{T}) where T<:AbstractFloat
+function findr(X::Matrix{T}; method="moments") where T<:AbstractFloat
     # Inverse-normal transformation and standardization for each columns of X
     Y = supernormalize(X)
     # Matrix to store posterior probabilities
@@ -54,61 +54,69 @@ function findr(X::Matrix{T}) where T<:AbstractFloat
     PP = ones(ncols,ncols) # this sets the diagonal elements to one
     # Compute posterior probabilities for each column separately
     Threads.@threads for col = axes(Y,2)
-        PP[Not(col),col] = pprob_col(Y[:,Not(col)],Y[:,col])
+        PP[Not(col),col] = pprob_col(Y[:,Not(col)],Y[:,col]; method = method)
     end
     return PP
 end
 
 """
-    findr(dX::T) where T<:AbstractDataFrame
+    findr(dX::T; method="moments", FDR=1.0, sorted=true) where T<:AbstractDataFrame
 
 Wrapper for `findr(Matrix(dX))` when the input `dX` is in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` and `Posterior probability` columns.
 
+The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+
 See also [`stackprobs`](@ref).
 """
-function findr(dX::T) where T<:AbstractDataFrame
-    stackprobs(findr(Matrix(dX)), names(dX), names(dX))
+function findr(dX::T; method="moments", FDR=1.0, sorted=true) where T<:AbstractDataFrame
+    dP = stackprobs(findr(Matrix(dX); method = method), names(dX), names(dX))
+    globalfdr!(dP, FDR = FDR, sorted = sorted)
 end
 
 """
-    findr(X::Matrix{T},G::Array{S}) where {T<:AbstractFloat, S<:Integer}
+    findr(X::Matrix{T},G::Array{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero differential expression of colunns of input matrix `X` across groups defined by one or more categorical variables (columns of `G`).
 
 Return a matrix of size ncols(X) x ncols(G)
+
+The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 
 See also [`findr(dX::DataFrame,dG::DataFrame)`](@ref).
 
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. CategoricalArrays will be supported in the future.
 """
-function findr(X::Matrix{T}, G::Array{S}) where {T<:AbstractFloat, S<:Integer}
+function findr(X::Matrix{T}, G::Array{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
     # Inverse-normal transformation and standardization for each column of X
     Y = supernormalize(X)
     # Matrix to store posterior probabilities
     PP = zeros(size(X,2),size(G,2))
     # Compute posterior probabilities for each column separately
     Threads.@threads for col = axes(G,2)
-        PP[:,col] = pprob_col(Y,G[:,col])
+        PP[:,col] = pprob_col(Y,G[:,col]; method = method)
     end
     return PP
 end
 
 
 """
-    findr(dX::T, dG::T) where T<:AbstractDataFrame
+    findr(dX::T, dG::T; method="moments", FDR=1.0, sorted=true) where T<:AbstractDataFrame
 
 Wrapper for `findr(Matrix(dX), Matrix(dG))` when the inputs `dX` and `dG` are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` and `Posterior probability` columns.
 
+The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+
 See also [`stackprobs`](@ref). 
 """
-function findr(dX::T, dG::T) where T<:AbstractDataFrame
-    stackprobs(findr(Matrix(dX), Matrix(dG)), names(dG), names(dX))
+function findr(dX::T, dG::T; method="moments", FDR=1.0, sorted=true) where T<:AbstractDataFrame
+    dP = stackprobs(findr(Matrix(dX), Matrix(dG); method = method), names(dG), names(dX))
+    globalfdr!(dP, FDR = FDR, sorted = sorted)
 end
 
 
 """
-    findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{S}; combination="none") where {T<:AbstractFloat, S<:Integer}
+    findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{S}; ; method="moments", combination="none") where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero causal relations between columns of input matrix `X`. The probabilities are estimated for a subset of columns of `X` that have a (discrete) instrumental variable in input matrix `G`. The matching between columns of `X` and columns of `G` is given by `pairGX`, a two-column array where the first column corresponds to a column index in `G` and the second to a column index in `X`.
 
@@ -121,12 +129,14 @@ Posterior probabilities are computed for the following tests
 
 which can be combined into the mediation test (``P_2 P_3``; `combination="mediation"`), the instrumental variable or non-independence test (``P_2 P_5``; `combination="IV"`), or Findr's original combination (``\\frac{1}{2}(P_2 P_5 + P_4)``; `combination="orig"`). By default, individual probability matrices for all tests are returned (`combination="none"`).
 
+The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+
 All return matrices have size ncols(X) x ncols(G).
 
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. I intend to use CategoricalArrays in the future.
 """
-function findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{R}; combination="none") where {T<:AbstractFloat, S<:Integer, R<:Integer}
+function findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{R}; method="moments", combination="none") where {T<:AbstractFloat, S<:Integer, R<:Integer}
     if !(combination in Set(["none","IV","mediation","orig"]))
         error("combination parameter must be one of \"none\", \"IV\", \"mediation\", or \"orig\"")
     end
@@ -139,13 +149,13 @@ function findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{R}; combination="none") 
         # println(row)
         colG = pairGX[col,1]
         colX = pairGX[col,2]
-        PP[Not(colX),:,col] = pprob_col(Y[:,Not(colX)], Y[:,colX], G[:,colG])
+        PP[Not(colX),:,col] = pprob_col(Y[:,Not(colX)], Y[:,colX], G[:,colG]; method = method)
     end
     return combineprobs(PP; combination = combination)
 end
 
 """
-    findr(dX::T, dG::T, dE::T, colX=2, colG=1, combination="IV") where T<:AbstractDataFrame
+    findr(dX::T, dG::T, dE::T; colX=2, colG=1, method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
 
 Wrapper for `findr(X, G, pairGX)` when the inputs are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` and `Posterior probability` columns. When DataFrames are used, only combined posterior probabilities can be returned (`combination="IV"` (default), `"mediation"`, or `"orig"`).
 
@@ -157,17 +167,20 @@ The input dataframes are:
 - `colG` - name or number of variant ID column in `dE`, default 1
 - `colX` - name or number of gene ID column in `dE`, default 2
 
+The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+
 See also [`stackprobs`](@ref).
 """
-function findr(dX::T, dG::T, dE::T; colG=1, colX=2, combination="IV") where T<:AbstractDataFrame
+function findr(dX::T, dG::T, dE::T; colG=1, colX=2, method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
     if combination == "none"
         error("Returning posterior probabilities for individual tests is not supported with DataFrame inputs. Set combination argument to one of \"IV\", \"mediation\", or \"orig\", or use matrix inputs.")
     elseif combination in Set(["IV","mediation","orig"])
         # Create the array with SNP-Gene pairs
         pairGX = getpairs(dX, dG, dE; colG = colG, colX = colX)
         # Call Findr on numeric data
-        PP = findr(Matrix(dX), Matrix(dG), pairGX; combination=combination)
-        return stackprobs(PP, names(dX)[pairGX[:,2]], names(dX))   
+        PP = findr(Matrix(dX), Matrix(dG), pairGX; method = method, combination = combination)
+        dP = stackprobs(PP, names(dX)[pairGX[:,2]], names(dX)) 
+        return globalfdr!(dP, FDR = FDR, sorted = sorted)  
     else
         error("Combination parameter must be one of \"IV\", \"mediation\", or \"orig\"")
     end
@@ -176,7 +189,7 @@ end
 
 
 """
-    findr(X1::Matrix{T},X2::Array{T},G::Array{S},pairGX::Matrix{R}; combination="none")  where {T<:AbstractFloat, S<:Integer}
+    findr(X1::Matrix{T},X2::Array{T},G::Array{S},pairGX::Matrix{R}; method="moments", combination="none")  where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero causal relations from columns of input matrix `X2` to columns of input matrix `X1`. The probabilities are estimated for a subset of columns of `X2` that have a (discrete) instrumental variable in input matrix `G`. The matching between columns of `X2` and columns of `G` is given by `pairGX`, a two-column array where the first column corresponds to a column index in `G` and the second to a column index in `X2`.
 
@@ -189,12 +202,14 @@ Posterior probabilities are computed for the following tests
 
 which can be combined into the mediation test (``P_2 P_3``; `combination="mediation"`), the instrumental variable or non-independence test (``P_2 P_5``; `combination="IV"`), or Findr's original combination (``\\frac{1}{2}(P_2 P_5 + P_4)``; `combination="orig"`). By default, individual probability matrices for all tests are returned (`combination="none"`).
 
+The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+
 All return matrices have size ncols(X1) x ncols(X2).
 
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. I intend to use CategoricalArrays in the future.
 """
-function findr(X1::Matrix{T}, X2::Array{T}, G::Array{S}, pairGX::Matrix{R}; combination="none")  where {T<:AbstractFloat, S<:Integer, R<:Integer}
+function findr(X1::Matrix{T}, X2::Array{T}, G::Array{S}, pairGX::Matrix{R}; method="moments", combination="none")  where {T<:AbstractFloat, S<:Integer, R<:Integer}
     if !(combination in Set(["none","IV","mediation","orig"]))
         error("combination parameter must be one of \"none\", \"IV\", \"mediation\", or \"orig\"")
     end
@@ -208,28 +223,31 @@ function findr(X1::Matrix{T}, X2::Array{T}, G::Array{S}, pairGX::Matrix{R}; comb
         # println(row)
         colG = pairGX[col,1]
         colX = pairGX[col,2]
-        PP[:,:,col] = pprob_col(Y1, Y2[:,colX], G[:,colG])
+        PP[:,:,col] = pprob_col(Y1, Y2[:,colX], G[:,colG]; method = method)
     end
     return combineprobs(PP; combination = combination)
 end
 
 
 """
-    findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, combination="IV") where T<:AbstractDataFrame
+    findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
 
 Wrapper for `findr(Matrix(dX1), Matrix(dX2), Matrix(dG))` when the inputs `dX1`, `dX2`, and `dG` are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` and `Posterior probability` columns. When DataFrames are used, only a combined posterior probabilities can be returned (`combination="IV"` (default), `"mediation"`, or `"orig"`).
 
+The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+    
 See also [`stackprobs`](@ref).
 """
-function findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, combination="IV") where T<:AbstractDataFrame
+function findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
     if combination == "none"
         error("Returning posterior probabilities for individual tests is not supported with DataFrame inputs. Set combination argument to one of \"IV\", \"mediation\", or \"orig\", or use matrix inputs.")
     elseif combination in Set(["IV","mediation","orig"])
         # Create the array with SNP-Gene pairs
         pairGX = getpairs(dX2, dG, dE; colG = colG, colX = colX)
         # Call Findr on numeric data
-        PP = findr(Matrix(dX1), Matrix(dX2), Matrix(dG), pairGX; combination=combination)
-        return stackprobs(PP, names(dX2)[pairGX[:,2]], names(dX1))
+        PP = findr(Matrix(dX1), Matrix(dX2), Matrix(dG), pairGX; method = method, combination = combination)
+        dP = stackprobs(PP, names(dX2)[pairGX[:,2]], names(dX1))
+        return globalfdr!(dP, FDR = FDR, sorted = sorted)
     else
         error("Combination parameter must be one of \"IV\", \"mediation\", or \"orig\"")
     end

@@ -86,11 +86,11 @@ function globalfdr(P::Array{T},FDR) where T<:AbstractFloat
 end
 
 """
-    globalfdr!(dP::T,FDR) where T<:AbstractDataFrame
+    globalfdr!(dP::T;FDR=1.0, sorted=true) where T<:AbstractDataFrame
 
 For a DataFrame `dP` of posterior probabilities (local precision values), compute their corresponding q-values `Q` and keep only the rows with `Q` less than a desired global false discovery rate `FDR`. `dP` is assumed to be the output of a `findr` run with columns `Source`, `Target`, and `Posterior probability`. The output DataFrame mirrors the structure of `dP`, keeping only the selected rows, and with an additional column `q-value`. The output is sorted by `q-value` if the optional argument `sorted` is `true` (default).
 """
-function globalfdr!(dP::T,FDR=1.0; sorted=true) where T<:AbstractDataFrame
+function globalfdr!(dP::T; FDR=1.0, sorted=true) where T<:AbstractDataFrame
     # test if dP already has a q-value column, this allows repeated calling of the function for additional filtering or sorting
     if ∉("q-value",names(dP))
         qval = qvalue(dP."Posterior probability")
