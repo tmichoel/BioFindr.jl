@@ -38,15 +38,17 @@ include("utils.jl")
 # Main Findr function calls
 
 """
-    findr(X::Matrix{T}; method="moments") where T<:AbstractFloat
+    findr(X::Matrix{T}; method="moments", combination="none") where T<:AbstractFloat
 
 Compute posterior probabilities for nonzero pairwise correlations between columns of input matrix `X`. The probabilities are directed (asymmetric) in the sense that they are estimated from a column-specific background distribution.
 
-The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 
-See also [`findr(dX::DataFrame)`](@ref)-
+The optional parameter `combination` determines whether the output must be symmetrized. Possible values are `none` (default), `prod`, `avg`, or `anti`. 
+
+See also [`findr(dX::DataFrame)`](@ref), [`symprobs`](@ref)-
 """
-function findr(X::Matrix{T}; method="moments") where T<:AbstractFloat
+function findr(X::Matrix{T}; method="moments", combination="none") where T<:AbstractFloat
     # Inverse-normal transformation and standardization for each columns of X
     Y = supernormalize(X)
     # Matrix to store posterior probabilities
@@ -56,20 +58,20 @@ function findr(X::Matrix{T}; method="moments") where T<:AbstractFloat
     Threads.@threads for col = axes(Y,2)
         PP[Not(col),col] = pprob_col(Y[:,Not(col)],Y[:,col]; method = method)
     end
-    return PP
+    return symprobs(PP, combination = combination)
 end
 
 """
-    findr(dX::T; method="moments", FDR=1.0, sorted=true) where T<:AbstractDataFrame
+    findr(dX::T; method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
 
 Wrapper for `findr(Matrix(dX))` when the input `dX` is in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` and `Posterior probability` columns.
 
 The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 
-See also [`stackprobs`](@ref).
+See also [`stackprobs`](@ref), [`globalfdr!`](@ref).
 """
-function findr(dX::T; method="moments", FDR=1.0, sorted=true) where T<:AbstractDataFrame
-    dP = stackprobs(findr(Matrix(dX); method = method), names(dX), names(dX))
+function findr(dX::T; method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
+    dP = stackprobs(findr(Matrix(dX); method = method, combination = combination), names(dX), names(dX))
     globalfdr!(dP, FDR = FDR, sorted = sorted)
 end
 
@@ -107,7 +109,7 @@ Wrapper for `findr(Matrix(dX), Matrix(dG))` when the inputs `dX` and `dG` are in
 
 The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 
-See also [`stackprobs`](@ref). 
+See also [`stackprobs`](@ref), [`globalfdr!`](@ref). 
 """
 function findr(dX::T, dG::T; method="moments", FDR=1.0, sorted=true) where T<:AbstractDataFrame
     dP = stackprobs(findr(Matrix(dX), Matrix(dG); method = method), names(dG), names(dX))
@@ -116,7 +118,7 @@ end
 
 
 """
-    findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{S}; ; method="moments", combination="none") where {T<:AbstractFloat, S<:Integer}
+    findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{S}; method="moments", combination="none") where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero causal relations between columns of input matrix `X`. The probabilities are estimated for a subset of columns of `X` that have a (discrete) instrumental variable in input matrix `G`. The matching between columns of `X` and columns of `G` is given by `pairGX`, a two-column array where the first column corresponds to a column index in `G` and the second to a column index in `X`.
 
@@ -136,7 +138,7 @@ All return matrices have size ncols(X) x ncols(G).
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. I intend to use CategoricalArrays in the future.
 """
-function findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{R}; method="moments", combination="none") where {T<:AbstractFloat, S<:Integer, R<:Integer}
+function findr(X::Matrix{T},G::Array{S},pairGX::Matrix{R}; method="moments", combination="none") where {T<:AbstractFloat, S<:Integer, R<:Integer}
     if !(combination in Set(["none","IV","mediation","orig"]))
         error("combination parameter must be one of \"none\", \"IV\", \"mediation\", or \"orig\"")
     end
@@ -169,7 +171,7 @@ The input dataframes are:
 
 The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 
-See also [`stackprobs`](@ref).
+See also [`stackprobs`](@ref), [`globalfdr!`](@ref).
 """
 function findr(dX::T, dG::T, dE::T; colG=1, colX=2, method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
     if combination == "none"
@@ -235,8 +237,10 @@ end
 Wrapper for `findr(Matrix(dX1), Matrix(dX2), Matrix(dG))` when the inputs `dX1`, `dX2`, and `dG` are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` and `Posterior probability` columns. When DataFrames are used, only a combined posterior probabilities can be returned (`combination="IV"` (default), `"mediation"`, or `"orig"`).
 
 The optional parameters `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+
+
     
-See also [`stackprobs`](@ref).
+See also [`stackprobs`](@ref), [`globalfdr!`](@ref).
 """
 function findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
     if combination == "none"

@@ -27,6 +27,35 @@ function getpairs(dX::T, dG::T, dE::T; colG=1, colX=2) where T<:AbstractDataFram
 end
 
 """
+    symprobs(P; combination="prod")
+
+Symmetrize a square matrix of posterior probabilities `P`. The optional parameter `combination` defines the symmetrization method:
+
+- `none`: do nothing (default)
+- `prod`: ``P'_{ij}=P_{ij}P_{ji}``
+- `mean`: ``P'_{ij}=\\frac{1}{2}(P_{ij} + P_{ji})``
+- `anti`: ``P'_{ij}=\\frac{1}{2}(P_{ij} + 1 - P_{ji})``
+
+Note that the `anti` option defines "antisymmetric" probabilities, ``P'_{ij} +  P'_{ji} = 1``, where evidence *for* a causal interaction ``i\\to j`` is also considered evidence *against* the opposite interaction ``j\\to i``.
+"""
+function symprobs(P::Matrix{T}; combination="none") where T<:AbstractFloat
+    if size(P,1) != size(P,2)
+        error("Input matrix must be square")
+    end
+    if combination == "none"
+        return P
+    elseif combination == "prod"
+        return P .* P'
+    elseif combination == "mean"
+        return 0.5 .* (P .+ P')
+    elseif combination == "anti"
+        return 0.5 .* (P .+ 1 .- P')
+    else
+        error("Combination parameter must be one of \"prod\", \"mean\", or \"anti\"")
+    end
+end
+
+"""
     combineprobs(P; combination="none")
 
 Combine posterior probabilities `P` for multiple likelihood likelihood ratio tests in a single probability (local precision) value.
@@ -58,7 +87,7 @@ function stackprobs(P,colnames,rownames;nodiag=true)
     dP = DataFrame(P, colnames)
     # Add column with row names
     insertcols!(dP, 1, "Target" => rownames)
-    dP = stack(dP, Not(:Target), variable_name=:Source, value_name=:"Posterior probability")
+    dP = stack(dP, Not(:Target), variable_name=:Source, value_name=:"Probability")
     if nodiag
         # remove rows where source and target are the same
         filter!(row -> row.Target != row.Source, dP)
@@ -86,19 +115,19 @@ function globalfdr(P::Array{T},FDR) where T<:AbstractFloat
 end
 
 """
-    globalfdr!(dP::T;FDR=1.0, sorted=true) where T<:AbstractDataFrame
+    globalfdr!(dP::T; FDR=1.0, sorted=true) where T<:AbstractDataFrame
 
-For a DataFrame `dP` of posterior probabilities (local precision values), compute their corresponding q-values `Q` and keep only the rows with `Q` less than a desired global false discovery rate `FDR`. `dP` is assumed to be the output of a `findr` run with columns `Source`, `Target`, and `Posterior probability`. The output DataFrame mirrors the structure of `dP`, keeping only the selected rows, and with an additional column `q-value`. The output is sorted by `q-value` if the optional argument `sorted` is `true` (default).
+For a DataFrame `dP` of posterior probabilities (local precision values), compute their corresponding q-values and keep only the rows with q-value less than a desired global false discovery rate `FDR` (default value 1, no selection). `dP` is assumed to be the output of a `findr` run with columns `Source`, `Target`, and `Posterior probability`. The output DataFrame mirrors the structure of `dP`, keeping only the selected rows, and with an additional column `q-value`. The output is sorted by `q-value` if the optional argument `sorted` is `true` (default). If `dP` already contains a column `q-value`, only the filtering and optional sorting are performed. 
 """
 function globalfdr!(dP::T; FDR=1.0, sorted=true) where T<:AbstractDataFrame
     # test if dP already has a q-value column, this allows repeated calling of the function for additional filtering or sorting
     if ∉("q-value",names(dP))
-        qval = qvalue(dP."Posterior probability")
-        insertcols!(dP,"q-value" => qval)
+        qval = qvalue(dP."Probability")
+        insertcols!(dP,"qvalue" => qval)
     end
-    subset!(dP, :"q-value" => x -> x .<= FDR)
+    subset!(dP, :"qvalue" => x -> x .<= FDR)
     if sorted
-        sort!(dP, :"q-value")
+        sort!(dP, :"qvalue")
     end
 end
 
@@ -118,13 +147,17 @@ function qvalue(P::Vector{T}) where T<:AbstractFloat
     Iinv = invperm(I)
     # accumulate 1 - mean(Pvec[I])
     qval = 1 .- (cumsum(P[I])./(1:length(P)))
-    # q-values must be ordered
+    # q-values must be ordered, if not, set qval[k] = minimum(qval[k:end]) using efficient operations
     if !issorted(qval)
-        error("sorting")
-        for k = eachindex(qval)
-            qval[k] = minimum(qval[k:end])
-        end
+        @warn "Average local precisions needed sorting"
+        reverse!(qval)
+        accumulate!(min,qval,qval)
+        reverse!(qval)
+        # for k = eachindex(qval)
+        #     qval[k] = minimum(qval[k:end])
+        # end
     end
+    @assert issorted(qval)
     # return to original order
-    qval[Iinv]
+    qval = qval[Iinv]
 end

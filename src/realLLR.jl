@@ -4,6 +4,8 @@
 Compute the log-likelihood ratios for Findr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
 `Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
+
+See also [`supernormalize`](@ref).
 """
 function realLLR_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
     ρ = vec(cov(Y,Ycol,corrected=false))
@@ -22,6 +24,8 @@ Compute the log-likelihood ratios for the Findr causal tests for a given column 
 - Test 5 (**Pleiotropy test**)
 
 `Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
+
+See also [`supernormalize`](@ref), [`llrstats_col`](@ref).
 """
 function realLLR_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
     # compute the sufficient statistics
@@ -54,6 +58,8 @@ end
 Compute the log-likelihood ratios for Findr test 2 (**Linkage test**)  for a given categorical vector `E` against all columns of matrix `Y`.
 
 `Y` is assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
+
+See also [`supernormalize`](@ref), [`llrstats_col`](@ref).
 """
 function realLLR_col(Y::Matrix{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
     # compute the sufficient statistics
@@ -75,6 +81,8 @@ The sufficient statistics are:
 - the covariance `ρ` between the given `Ycol` and all columns of `Y`
 - the weighted average variances `σ1` of each column of matrix `Y` over the groups (unique values) in `E`
 - the weighted average covariance `σ2` between `Ycol` and all  columns of `Y` over the groups (unique values) of `E`
+
+See also [`groupmeans`](@ref).
 """
 function llrstats_col(Y,Ycol,E)
     ρ = vec(cov(Y,Ycol,corrected=false))
@@ -99,6 +107,8 @@ Compute the sufficient statistics to compute the log-likelihood ratios for Findr
 `Y` is assumed to have undergone supernormalization with each col having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 
 The sufficient statistics are the weighted average variances `σ1` of each column of matrix `Y` over the groups (unique values) in `E`.
+
+See also [`groupmeans`](@ref).
 """
 function llrstats_col(Y,E)
     gs, μ = groupmeans(Y,E)

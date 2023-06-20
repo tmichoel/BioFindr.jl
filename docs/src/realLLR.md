@@ -5,7 +5,7 @@ CurrentModule = Findr
 # Likelihood ratio tests
 
 
-Consider correlated genes ``A``, ``B``, and a third variable ``E`` upstream of ``A`` and ``B``, such as a significant eQTL of ``A``. The eQTLs can be obtained either *de novo* using eQTL identification tools such as matrix-eQTL [^Shabalin2012] or kruX [^Qi2014], or from published analyses. Throughout this article, we assume that ``E`` is a significant eQTL of ``A``, whereas extension to other data types is straightforward. We use ``A_i`` and ``B_i`` for the expression levels of gene ``A`` and ``B`` respectively, which are assumed to have gone through the supernormalization, and optionally the genotypes of the best eQTL of ``A`` as ``E_i``, where ``i=1,\dots,n`` across samples. Genotypes are assumed to have a total of ``n_a`` alleles, so ``E_i\in\{0,\dots,n_a\}``. We define the null and alternative hypotheses for a total of six tests, as shown in the table below. 
+Consider correlated genes ``A``, ``B``, and a third variable ``E`` upstream of ``A`` and ``B``, such as a significant eQTL of ``A``. The eQTLs can be obtained either *de novo* using eQTL identification tools such as matrix-eQTL [^Shabalin2012] or kruX [^Qi2014], or from published analyses. Throughout this documentation, we assume that ``E`` is a significant eQTL of ``A``, whereas extension to other data types is straightforward. We use ``A_i`` and ``B_i`` for the expression levels of gene ``A`` and ``B`` respectively, which are assumed to have gone through the supernormalization, and optionally the genotypes of the best eQTL of ``A`` as ``E_i``, where ``i=1,\dots,n`` across samples. Genotypes are assumed to have a total of ``n_a`` categories, so ``E_i\in\{0,\dots,n_a\}``. We define the null and alternative hypotheses for a total of six tests, as shown in the table below. 
 
 [^Shabalin2012]: Shabalin AA. [Matrix eQTL: ultra fast eQTL analysis via large matrix operations](https://doi.org/10.1093/bioinformatics/bts163), Bioinformatics, Volume 28, Issue 10, May 2012, Pages 1353–1358, 
 
@@ -14,7 +14,7 @@ Consider correlated genes ``A``, ``B``, and a third variable ``E`` upstream of `
 !!! note "Six likelihood ratio tests are performed to test the regulation A → B, numbered, named, and defined as shown."
     ![Six likelihood ratio tests](pcbi.1005703.g001.png)
 
-    &copy; 2017 Wang, Michoel. [DOI:10.1371/journal.pcbi.1005703.g001](https://doi.org/10.1371/journal.pcbi.1005703.g001). Reused under the terms of the [Creative Commons Attribution License](http://creativecommons.org/licenses/by/4.0/)
+    Copyright 2017 Wang, Michoel. [DOI:10.1371/journal.pcbi.1005703.g001](https://doi.org/10.1371/journal.pcbi.1005703.g001). Reused under the terms of the [Creative Commons Attribution License](http://creativecommons.org/licenses/by/4.0/)
 
 LLRs of every test are calculated separately as follows:
 
@@ -59,20 +59,20 @@ and the LLR is simply
 \mathrm{LLR}^{\mathrm{(0)}}=-\frac{n}{2}\log(1-\hat{\rho}^2).
 ```
 
-```@docs
-realLLR_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
-```
 
 In the absence of genotype information, we use nonzero correlation between ``A`` and ``B`` as the indicator for ``A\rightarrow B`` regulation, giving the posterior probability
-
-The LLR for the correlation test of a specific gene ``A`` against all other genes ``B`` is implemented as a method of the `realLLR_col` function:
 
 ```math
 P(A - B)=P(\mathcal{H}_{\mathrm{alt}}^{\mathrm{(0)}} \mid \mathrm{LLR}^{\mathrm{(0)}}).
 ```
 
+The LLR for the correlation test of a specific gene ``A`` against all other genes ``B`` is implemented as a method of the `realLLR_col` function:
 
-## Primary (linkage) test 
+```@docs
+realLLR_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
+```
+
+## Primary linkage test 
 
 Verify that ``E`` regulates ``A`` from ``{\mathcal H}_{\mathrm{alt}}^{\mathrm{(1)}}\equiv E\rightarrow A`` and ``{\mathcal H}_{\mathrm{null}}^{\mathrm{(1)}}\equiv E\qquad A``. For ``{\mathcal H}_{\mathrm{alt}}^{\mathrm{(1)}}``, we model ``E\rightarrow A`` as ``A`` follows a normal distribution whose mean is determined by ``E`` categorically, i.e.
 
@@ -106,7 +106,7 @@ P(E\rightarrow A)=P({\mathcal H}_{\mathrm{alt}}^{\mathrm{(1)}}\mid\mathrm{LLR}^{
 
 The LLR for the primary linkage test can be obtained by selecting the appropriate element from the results of the secondary linkage test.
 
-## Secondary (linkage) test 
+## Secondary linkage test 
 
 The secondary test is identical with the primary test, except it verifies that ``E`` regulates ``B``. Hence repeat the primary test on ``E`` and ``B`` and obtain the MLEs:
 
