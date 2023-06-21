@@ -7,16 +7,15 @@ The *LBeta distribution* with parameters ``\\alpha`` and ``\\beta`` is defined a
 
 where ``Y\\sim\\operatorname{Beta}(\\alpha/2, \\beta/2)``
 """
-# struct LBeta{T<:Real} <: ContinuousUnivariateDistribution 
-#     α :: T
-#     β :: T
-# end
-
 struct LBeta <: ContinuousUnivariateDistribution
     α :: Float64
     β :: Float64
 end
 
+# struct LBeta{T<:Real} <: ContinuousUnivariateDistribution 
+#     α :: T
+#     β :: T
+# end
 
 """
     params(d)
@@ -94,6 +93,22 @@ function Distributions.fit(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Real
 end
 
 """
+    fit_mom(LBeta, m1, m2)
+
+Fit an `LBeta` distribution to given first and second moments `m1` and `m2` of the corresponding Beta distribution. This requires that `m1` and `m2` satisfy the following relations (see also the [Beta distribution wiki](https://en.wikipedia.org/wiki/Beta_distribution#Two_unknown_parameters)):
+
+``m_1>m_2 \\wedge m_2>m_1^2``
+
+An [AssertionError](https://docs.julialang.org/en/v1/base/base/#Core.AssertionError) is thrown if the condition evaluates to `false`.
+"""
+function fit_mom(LBeta, m1, m2)
+    @assert m1>m2 && m2>m1^2 "Invalid Beta distribution moments."
+    α = 2 * m1 * (m1 - m2) / (m2 - m1^2)
+    β = 2 * (1 - m1) * (m1 - m2) / (m2 - m1^2)
+    return LBeta(α,β)
+end
+
+"""
     fit_mle(LBeta, x)
 
 Fit an `LBeta` distribution to data `x` using maximum-likelihood estimation by exploiting its relationship to the Beta distribution.
@@ -107,16 +122,7 @@ function Distributions.fit_mle(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Re
     return LBeta(lbp...)
 end
 
-"""
-    fit_mom(LBeta, m1, m2)
 
-Fit an `LBeta` distribution to given first and second moments `m1` and `m2` of the corresponding Beta distribution.
-"""
-function fit_mom(LBeta, m1, m2)
-    α = 2 * m1 * (m1 - m2) / (m2 - m1^2)
-    β = 2 * (1 - m1) * (m1 - m2) / (m2 - m1^2)
-    return LBeta(α,β)
-end
 
 """
     fit_weighted(LBeta, x, w)
@@ -139,7 +145,6 @@ function fit_weighted(::Type{<:LBeta}, x::AbstractArray{T}, w::AbstractWeights) 
         α = 0.
         β = 0.
     end
-    
     lbp = 2 .* [α,β] # multiply fitted Beta param to obtain LBeta parameters
     return LBeta(lbp...)
 end
