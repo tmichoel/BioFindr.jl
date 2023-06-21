@@ -72,15 +72,16 @@ end
 """
     llrstats_col(Y,Ycol,E)
 
-Compute the sufficient statistics to compute the log-likelihood ratios for Findr tests 2-5  for a given column vector `Ycol` (gene) of gene expression values with categorical instrument `E` against all columns of `Y`.
+Compute the sufficient statistics for the log-likelihood ratios for Findr tests 2-5  for a given column vector `Ycol` with categorical instrument `E` against all columns of `Y`.
 
 `Ycol` and `Y` are assumed to have undergone supernormalization with each col having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 
 The sufficient statistics are:
 
-- the covariance `ρ` between the given `Ycol` and all columns of `Y`
-- the weighted average variances `σ1` of each column of matrix `Y` over the groups (unique values) in `E`
-- the weighted average covariance `σ2` between `Ycol` and all  columns of `Y` over the groups (unique values) of `E`
+- the covariance ``\\hat{\\rho}`` between `Ycol` and all columns of `Y`, returned in the first output argument,
+- the weighted average variances ``\\hat{\\sigma}_B^2`` of each column of matrix `Y` over the groups (unique values) in `E`, returned as the first column of the second output argument,
+- the weighted average covariances ``\\sigma_{AB}`` between `Ycol` and all  columns of `Y` over the groups (unique values) of `E`, returned as the second column of the second output argument,
+- the weighted average variance ``\\hat{\\sigma}_A^2`` of `Ycol` over the groups (unique values) in `E`, returned as the third output argument.
 
 See also [`groupmeans`](@ref).
 """
@@ -102,11 +103,11 @@ end
 """
     llrstats_col(Y,E)
 
-Compute the sufficient statistics to compute the log-likelihood ratios for Findr tests 2  for a given categorical vector `E` against all columns of `Y`.
+Compute the sufficient statistics for the log-likelihood ratios for Findr tests 2  for a given categorical vector `E` against all columns of `Y`.
 
 `Y` is assumed to have undergone supernormalization with each col having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 
-The sufficient statistics are the weighted average variances `σ1` of each column of matrix `Y` over the groups (unique values) in `E`.
+The sufficient statistics are the weighted average variances ``\\hat{\\sigma}_B^2`` of each column of matrix `Y` over the groups (unique values) in `E`.
 
 See also [`groupmeans`](@ref).
 """
@@ -122,7 +123,7 @@ end
 """
     groupmeans(Y,Ycol,E)
 
-Compute the size and mean of each column of matrix `Y` and of the column vector `Ycol` for each of the groups (unique values) in categorical vector `E`.
+Compute the size ``n_j`` for each of the groups (unique values) in categorical vector `E` (first output argument), and the means ``\\hat{\\nu_j}`` of each column of matrix `Y` (second output argument) and ``\\hat{\\mu_j}`` of `Ycol` (third output argument) for each of the groups in `E`.
 """
 function groupmeans(Y,Ycol,E)
     uE = unique(E)
@@ -141,7 +142,7 @@ end
 """
     groupmeans(Y,E)
 
-Compute the size and mean of each column of matrix `Y` for each of the groups (unique values) in categorical vector `E`.
+Compute the size ``n_j`` for each of the groups (unique values) in categorical vector `E` (first output argument), and the means ``\\hat{\\nu_j}`` of each column of matrix `Y` (second output argument) for each of the groups in `E`.
 """
 function groupmeans(Y,E)
     uE = unique(E)

@@ -19,10 +19,14 @@ p(\mathrm{LLR}) = P({\mathcal H}_{\mathrm{null}}) p(\mathrm{LLR}\mid{\mathcal H}
 The priors ``P({\mathcal H}_{\mathrm{null}})`` and ``P({\mathcal H}_{\mathrm{alt}})`` sum to unity and correspond to the proportions of null and alternative hypotheses in the mixture distribution. For any test ``i=0,\dots,5``, Bayes' theorem then yields its posterior probability as
 
 ```math
-P({\mathcal H}_{\mathrm{alt}}^{(i)}\mid\mathrm{LLR}^{(i)}) = \frac{p(\mathrm{LLR}^{(i)}\mid{\mathcal H}_{\mathrm{alt}}^{(i)})}{p(\mathrm{LLR}^{(i)})}P({\mathcal H}_{\mathrm{alt}}^{(i)}).
+\begin{aligned}
+P({\mathcal H}_{\mathrm{alt}}^{(i)}\mid\mathrm{LLR}^{(i)}) 
+&= \frac{p(\mathrm{LLR}^{(i)}\mid{\mathcal H}_{\mathrm{alt}}^{(i)})}{p(\mathrm{LLR}^{(i)})}P({\mathcal H}_{\mathrm{alt}}^{(i)})\\
+&= 1 - \frac{p(\mathrm{LLR}^{(i)}\mid{\mathcal H}_{\mathrm{null}}^{(i)})}{p(\mathrm{LLR}^{(i)})}P({\mathcal H}_{\mathrm{null}}^{(i)})
+\end{aligned}
 ```
 
-Based on this, we can define the posterior probabilities of the selected hypotheses according to the table in the [General inference algorithm](@ref) section, i.e. the alternative for tests 0, 1, 2, 4, 5
+Based on this, we can define the posterior probabilities of the selected hypotheses according to the table in the [Likelihood ratio tests](@ref) section, i.e. the alternative for tests 0, 1, 2, 4, 5
 and the null for test 3 as
 
 ```math
@@ -36,13 +40,35 @@ Distributions can be estimated either separately for every ``(E,A)`` pair or by 
 
 Lastly, in a typical application of Findr, inputs of ``(E,A)`` pairs will have been pre-determined as the set of significant eQTL-gene pairs from a genome-wide eQTL associaton analysis. In such cases, we may naturally assume ``P_1=1`` for all considered pairs, and skip the primary test.
 
-## Estimation
+Posterior probabilities are computed in the [`pprob_col`](@ref) function:
 
-To estimate posterior probabilities, the original method[^Wang2017] approximated PDFs with histograms. This requires proper choices of histogram bin widths, ``P({\mathcal H}_{\mathrm{null}})``, and techniques to ensure the conversion from LLR to posterior probability is monotonically increasing and smooth.
+```@docs
+pprob_col
+```
+
+Computation of the posterior probabilities requires estimation of the prior probability ``P({\mathcal H}_{\mathrm{null}})`` and fitting the mixture distribution ``p(\mathrm{LLR})`` from a set of random samples ``x_1, x_2,\dots,x_m``.
+
+## Estimating ``P({\mathcal H}_{\mathrm{null}})``
+
+To estimate ``\pi_0\equiv P({\mathcal H}_{\mathrm{null}})`` we convert the samples ``x_1, x_2,\dots,x_m`` to p-values under the null hypothesis,
+
+```math
+p_i = P(X\geq x_i \mid {\mathcal H}_{\mathrm{null}}) = \int_{x_i}^\infty p(x \mid \alpha_0,\beta_0) = \mathrm{ccdf}(x_i\mid \alpha_0,\beta_0) 
+```
+
+where ``\mathrm{ccdf}`` denotes the complementary CDF. The histogram of p-values would show the [characteristic shape of a set of anti-conservative p-values](http://varianceexplained.org/statistics/interpreting-pvalue-histogram/) and ``\pi_0`` can be estimated by a [robust bootstrap procedure](http://varianceexplained.org/files/pi0boot.pdf):
+
+```@docs
+pi0est
+```
+
+## [Method of moments estimation of the mixture distribution](@id mom_postprobs)
+
+To fit the mixture distribution, the original method[^Wang2017] approximated PDFs with histograms. This requires proper choices of histogram bin widths, ``P({\mathcal H}_{\mathrm{null}})``, and techniques to ensure the conversion from LLR to posterior probability is monotonically increasing and smooth.
 
 [^Wang2017]: Wang L, Michoel T (2017) [Efficient and accurate causal inference with hidden confounders from genome-transcriptome variation data](https://doi.org/10.1371/journal.pcbi.1005703). PLoS Comput Biol 13(8): e1005703.
 
-[Findr.jl](https://github.com/tmichoel/Findr.jl) uses an alternative, parametric approach, where the basic hypothesis is that the alternative distribution ``p(\mathrm{LLR}\mid{\mathcal H}_{\mathrm{alt}})`` for each test also follows an [`LBeta`](@ref) distribution, that is, belongs to the same 2-parameter family of distributions as the null distributions. 
+[Findr.jl](https://github.com/tmichoel/Findr.jl) uses an alternative, parametric approach, where the basic assumption is that the alternative distribution ``p(\mathrm{LLR}\mid{\mathcal H}_{\mathrm{alt}})`` for each test also follows an [`LBeta`](@ref) distribution, that is, belongs to the same 2-parameter family of distributions as the null distributions. 
 
 Let us denote the random variable ``X=\mathrm{LLR}`` taking values ``x\geq 0``, and ``\pi_0=P({\mathcal H}_{\mathrm{null}})``. Our assumption is that
 
@@ -58,23 +84,7 @@ p(x) = \pi_0 p(x \mid \alpha_0,\beta_0) + (1-\pi_0) p(x\mid \alpha,\beta)
 
 where ``\mathcal{D}`` denotes an [`LBeta`](@ref) distribution with its PDF  ``p(x\mid \alpha,\beta)`` defined in [Null distributions of the log-likelihood ratios](@ref). 
 
-Since the parameters ``\alpha_0`` and ``\beta_0`` of the null distribution are know exactly (see [Null distributions of the log-likelihood ratios](@ref)), it reamins to estimate ``\pi_0``, ``\alpha``, and ``\beta`` from a set of random samples ``x_1, x_2,\dots,x_n`` of ``X``.
-
-### Estimating ``\pi_0``
-
-To estimate ``\pi_0`` we convert the samples ``x_1, x_2,\dots,x_n`` to p values under the null hypothesis,
-
-```math
-p_i = P(X\geq x_i \mid {\mathcal H}_{\mathrm{null}}) = \int_{x_i}^\infty p(x \mid \alpha_0,\beta_0) = \mathrm{ccdf}(x_i\mid \alpha_0,\beta_0) 
-```
-
-where ``\mathrm{ccdf}`` denotes the complementary CDF. The histogram of p-values would show the [characteristic shape of a set of anti-conservative p-values](http://varianceexplained.org/statistics/interpreting-pvalue-histogram/) and ``\pi_0`` can be estimated by a [robust bootstrap procedure](http://varianceexplained.org/files/pi0boot.pdf):
-
-```@docs
-pi0est
-```
-
-### Estimating ``\alpha`` and ``\beta``
+Since the parameters ``\alpha_0`` and ``\beta_0`` of the null distribution are know exactly (see [Null distributions of the log-likelihood ratios](@ref)) and ``\pi_0`` can be estimated from the null p-values (see [`pi0est`](@ref)), it reamins to estimate ``\alpha``, and ``\beta`` from a set of random samples ``x_1, x_2,\dots,x_m`` of ``X``.
 
 To estimate ``\alpha`` and ``\beta`` we make use of the relation between the [`LBeta`](@ref) and Beta distributions (see [Null distributions of the log-likelihood ratios](@ref)). Define the random variable
 
@@ -82,7 +92,7 @@ To estimate ``\alpha`` and ``\beta`` we make use of the relation between the [`L
 Y = 1 - e^{-2 X}
 ```
 
-Since each component of the mixture distribution of ``X`` follows an [`LBeta`](@ref) distribution, it follows that ``Y`` follows a mixture of Beta distributions,
+Since by assumption each component of the mixture distribution of ``X`` follows an [`LBeta`](@ref) distribution, it follows that ``Y`` follows a mixture of Beta distributions,
 
 ```math
 Y \sim \pi_0 B\Bigl(\frac{\alpha_0}{2},\frac{\beta_0}{2}\Bigr) + (1 - \pi_0) B\Bigl(\frac{\alpha}{2},\frac{\beta}{2}\Bigr)
@@ -100,7 +110,7 @@ This result can be derived as follows. The function ``g(x)= 1-e^{-2x}`` increase
 \end{aligned}
 ```
 
-where ``F_0`` and ``F_1`` are the CDFs of random variables with distributions ``\mathcal{D}(\alpha_0,\beta_0)`` and ``\mathcal{D}(\alpha,\beta)``, respectively, and ``G_0`` and ``G_1`` are the CDFs of random variables with distributions ``B(\alpha_0/2,\beta_0/2)`` and ``B(\alpha/2,\beta/2)``. The last step used the transformation between [`LBeta`](@ref) and Beta distribution derived in  [Null distributions of the log-likelihood ratios](@ref).
+where ``F_0`` and ``F_1`` are the CDFs of random variables with distributions ``\mathcal{D}(\alpha_0,\beta_0)`` and ``\mathcal{D}(\alpha,\beta)``, respectively, and ``G_0`` and ``G_1`` are the CDFs of random variables with distributions ``B(\alpha_0/2,\beta_0/2)`` and ``B(\alpha/2,\beta/2)``. The last step used the transformation between [`LBeta`](@ref) and Beta distributions derived in  [Null distributions of the log-likelihood ratios](@ref).
 
 The parameters of a Beta distribution relate to [its first and second moment](https://en.wikipedia.org/wiki/Beta_distribution#Higher_moments) as follows: if ``Z\sim B(a,b)``, then
 
@@ -116,9 +126,10 @@ Conversely, if first and second moments ``m_1`` and ``m_2`` are given, these equ
 ```math
 \begin{aligned}
     a &= \frac{m_1(m_1-m_2)}{(m_2-m_1^2)}\\
-    b &= \frac{(1-m_1)(m_1-m_2)}{(m_2-m_1^2)}
+    b &= \frac{(1-m_1)(m_1-m_2)}{(m_2-m_1^2)},
 \end{aligned}
 ```
+which requires ``m_1>m_2>m_1^2``
 
 Multiplying by two then gives the parameters of an [`LBeta`](@ref) distribution given the moments of the corresponding Beta distribution:
 
@@ -150,18 +161,18 @@ or
 \end{aligned}
 ```
 
-Given samples ``x_1, x_2,\dots,x_n`` we transform them to
+Given samples ``x_1, x_2,\dots,x_m`` we transform them to
 
 ```math
 y_i = 1 - e^{-2 x_i}
 ```
 
-and replace ``\mathbb{E}(Y)`` and ``\mathbb{E}(Y^2)`` in these equations by their estimates ``\frac{1}{n}\sum_i y_i`` and ``\frac{1}{n}\sum_i y_i^2``, respectively. Likewise we replace ``\pi_0`` by its estimate ``\hat{\pi}_0`` obtained as explained above (see [`pi0est`](@ref)). Since ``\alpha_0`` and ``\beta_0`` are known exactly, we obtain estimates ``\hat{m}_1`` and ``\hat{m}_2`` for the moments of a Beta distribution with parameters ``\alpha/2`` and ``\beta/2``. Plugging these moment estimates in the [`fit_mom`](@ref) function gives estimates ``\hat{\alpha}`` and ``\hat{\beta}`` for the corresponding [`LBeta`](@ref).
+and replace ``\mathbb{E}(Y)`` and ``\mathbb{E}(Y^2)`` in these equations by their estimates ``\frac{1}{n}\sum_i y_i`` and ``\frac{1}{n}\sum_i y_i^2``, respectively. Likewise we replace ``\pi_0`` by its estimate ``\hat{\pi}_0`` obtained as explained above (see [`pi0est`](@ref)). Since ``\alpha_0`` and ``\beta_0`` are known exactly, we obtain estimates ``\hat{m}_1`` and ``\hat{m}_2`` for the moments of a Beta distribution with parameters ``\alpha/2`` and ``\beta/2``. Plugging these moment estimates in the [`fit_mom`](@ref) function gives estimates ``\hat{\alpha}`` and ``\hat{\beta}`` for the corresponding [`LBeta`](@ref) distribution.
 
 To make this estimated distribution a valid alternative distribution component of the LLRs mixture distribution, we need to ensure the validity of two edge cases:
 
-- In the limit $\mathrm{LLR}\to 0^+$, all cases must come from the null distribution. This will be the case if $\hat{\alpha} \geq \alpha_0$, and if this is not the case, we set $\hat{\alpha} = \alpha_0$.
-- In the limit $\mathrm{LLR}\to \infty$, all cases must come from the alternative distribution. This will be the case if $\hat{\beta} \leq \beta_0$, and if this is not the case, we set $\hat{\beta} = \beta_0$.
+- In the limit ``\mathrm{LLR}\to 0^+``, all cases must come from the null distribution. This will be the case if ``\hat{\alpha} \geq \alpha_0``, and if this is not the case, we set ``\hat{\alpha} = \alpha_0``.
+- In the limit ``\mathrm{LLR}\to \infty``, all cases must come from the alternative distribution. This will be the case if ``\hat{\beta} \leq \beta_0``, and if this is not the case, we set ``\hat{\beta} = \beta_0``.
 
 The entire procedure is implemented in the `fit_mixdist_mom` function:
 
@@ -169,18 +180,22 @@ The entire procedure is implemented in the `fit_mixdist_mom` function:
 fit_mixdist_mom
 ```
 
-## Diagnostics
+## [Kernel density estimation of the mixture distribution](@id kde_postprobs)
 
-An important advantage of having a parametric solution for the observed LLR distributions, in the form of a [mixture model object](https://juliastats.org/Distributions.jl/stable/mixture/), is that its fit to the data can be evaluated easily. In this case, p-values for the real data under the real distribution must be uniformly distributed. Formally, if $X$ is a continuous, univariate random variable with CDF $F_X$, then the transformed random variable
+The method of moments mixture distribution works very well in practice (by visual inspection of histograms and fitted distributions), but there is no theory to support it. Moreover the condition on the moments to produce valid distribution parameters (See [`fit_mom`](@ref)) is sometimes violated (typically when ``\pi_0\approx 1``). Hence [Findr.jl](https://github.com/tmichoel/Findr.jl) also implements an alternative [kernel density estimation](https://en.wikipedia.org/wiki/Kernel_density_estimation) method, comparable to the one implemented in the [qvalue package for R](https://github.com/StoreyLab/qvalue).
 
-$$
-P = 1 - F_X(X) \sim U(0,1)
-$$
+```@docs
+fit_mixdist_KDE
+```
 
-where $U(0,1)$ is the [uniform distribution](https://en.wikipedia.org/wiki/Continuous_uniform_distribution) on the unit interval.
+To mitigate edge effects due to LLRs being restricted to the half-open interval ``[0,\infty)``, the kernel density estimation of ``p(\mathrm{LLR})`` operates on transformed values:
 
-## Comparison
+```@docs
+fit_kde
+```
 
-Old method | New method
-:-------------: | :-------------:
-![Test](eg4.png) | ![Test](eg4_new.png)
+Nevertheless, the KDE of ``p(\mathrm{LLR})`` will still fluctuate wildly near ```\mathrm{LLR}\approx 0``. Given a set of samples ``x_1,\dots,x_m`` with KDE estimated PDF values ``\tilde{p}(x_1), \dots, \tilde{p}(x_m)``, [`fit_mixdist_KDE`](@ref) calculates smoothened and monotonically increasing estimayes ``p(x_1),\dots, p(x_m)`` as
+
+```math
+p(x_i) = \max\left(0, \min_{j\geq i} \tilde{p}(x_j) \right)
+```

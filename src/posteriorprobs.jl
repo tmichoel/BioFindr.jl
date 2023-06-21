@@ -5,7 +5,9 @@ Compute the posterior probabilities for Findr test 0 (**correlation test**) for 
 
 `Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 
-The optional parameters `method` determines the mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+
+See also [`supernormalize`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
 function pprob_col(Y::Matrix{T},Ycol::Vector{T}; method="moments") where T<:AbstractFloat
     # number of samples
@@ -35,16 +37,18 @@ end
 
 Compute the posterior probabilities for the Findr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y`: 
 
-    - Test 2 (**Linkage test**) 
-    - Test 3 (**Mediation test**)
-    - Test 4 (**Relevance test**)
-    - Test 5 (**Pleiotropy test**)
+- Test 2 (**Linkage test**) 
+- Test 3 (**Mediation test**)
+- Test 4 (**Relevance test**)
+- Test 5 (**Pleiotropy test**)
     
 `Y` is assumed to have undergone supernormalization with each column having mean zero and variance one.
 
 For test 2, 4, and 5 the posterior probabilities are the probabilities of the alternative hypothesis being true. For test 3 they are the probabilities of the null hypothesis being true.
 
-The optional parameters `method` determines the mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+
+See also [`supernormalize`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
 function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
     # number of samples and groups
@@ -114,7 +118,9 @@ Compute the posterior probabilities for differential expression of columns of ma
     
 `Y` is assumed to have undergone supernormalization with each column having mean zero and variance one.
 
-The optional parameters `method` determines the mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+
+See also [`supernormalize`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
 function pprob_col(Y::Matrix{T},E::Vector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
     # number of samples and groups
@@ -157,7 +163,7 @@ The input variable `test` can take the values:
 
 With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to `:corr`, the correlation test with `ns` samples is used and the third argument is ignored.
 
-See also [`fit_mom`](@ref)
+See also [`pi0est`](@ref), [`fit_mom`](@ref), [`LBeta`](@ref), [`nulldist`](@ref), [`nullpval`](@ref).
 """
 function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
     # set null distribution and estimate proportion of true nulls
@@ -220,6 +226,8 @@ Return posterior probabilities for a vector of log-likelihood ratio values `llr`
 - ':pleio' - **pleiotropy test** (test 5)
 
 With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to ":corr", the correlation test with `ns` samples is used and the third argument is ignored.
+
+See also [`pi0est`](@ref), [`fit_kde`](@ref), [`nulldist`](@ref), [`nullpval`](@ref).
 """
 function fit_mixdist_KDE(llr,ns,ng=1,test=:corr)
     # Set the null distribution
@@ -249,13 +257,13 @@ end
 """
     fit_kde(llr)
 
-Fit a distribution function to a vector of log-likelihood ratio values `llr` using kernel density estimation. To avoid boundary effects in the KDE, the log-likelihoods (which take values in ``[0,\\infty)``) are first transformed to a vector of `z`,
+Fit a distribution function to a vector of log-likelihood ratio values `llr` using kernel density estimation. To avoid boundary effects in the KDE, the log-likelihoods (which take values in ``[0,\\infty)``) are first transformed to a vector
     
 ``
-z = \\log \\left( e^{2 LLR} - 1 \\right)
+z = \\log \\left( e^{2 \\mathrm{LLR}} - 1 \\right)
 ``
 
-which takes values in ``(-\\infty,\\infty)``. KDE is applied to `z`, and the probability density function (pdf) for `llr` is obtained from the pdf for `z` by the usual transformation rule for functions of random variables.
+which takes values in ``(-\\infty,\\infty)``. KDE is applied to the transformed variables, and the probability density function (pdf) for `llr` is obtained from the pdf for ``z`` by the usual transformation rule for functions of random variables.
 """
 function fit_kde(llr)
     # Transform llr values to avoid edge effects in density estimation
@@ -340,7 +348,7 @@ end
 """
     pi0est(pval)
 
-Estimate the proportion π0 of truly null features in a vector `pval` of p-values using a [bootstrap method](http://varianceexplained.org/files/pi0boot.pdf).
+Estimate the proportion ``\\pi_0`` of truly null features in a vector `pval` of p-values using a [bootstrap method](http://varianceexplained.org/files/pi0boot.pdf).
 """
 function pi0est(pval)
     λ = 0:0.05:0.95

@@ -18,7 +18,7 @@ Consider correlated genes ``A``, ``B``, and a third variable ``E`` upstream of `
 
 LLRs of every test are calculated separately as follows:
 
-## Correlation test
+## [Correlation test](@id corr_test_realLLR)
 
 Define the null hypothesis as ``A`` and ``B`` are independent, and the alternative hypothesis as they are correlated:
 
@@ -72,7 +72,7 @@ The LLR for the correlation test of a specific gene ``A`` against all other gene
 realLLR_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
 ```
 
-## Primary linkage test 
+## [Primary linkage test](@id prim_test_realLLR) 
 
 Verify that ``E`` regulates ``A`` from ``{\mathcal H}_{\mathrm{alt}}^{\mathrm{(1)}}\equiv E\rightarrow A`` and ``{\mathcal H}_{\mathrm{null}}^{\mathrm{(1)}}\equiv E\qquad A``. For ``{\mathcal H}_{\mathrm{alt}}^{\mathrm{(1)}}``, we model ``E\rightarrow A`` as ``A`` follows a normal distribution whose mean is determined by ``E`` categorically, i.e.
 
@@ -124,14 +124,14 @@ and the LLR as
 ``{\mathcal H}_{\mathrm{alt}}^{\mathrm{(2)}}`` is chosen to verify that ``E`` regulates ``B``.
 
 
-In differential expression analysis, the linkage test is used standalone, and then its LLR for testing a specific group ``E`` against all genes ``B`` is implemented as a method of the `realLLR_col` function:
+In [Differential expression analysis](@ref), the linkage test is used standalone, and then its LLR for testing a specific grouping vector ``E`` against all genes ``B`` is implemented as a method of the `realLLR_col` function:
 
 
 ```@docs
 realLLR_col(Y::Matrix{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
 ```
 
-In causal inference analysis, the LLR for linkage test is computed together with the other tests for efficiency (see below).
+In [Causal inference](@ref), the LLR for the linkage test is computed together with the other tests for efficiency (see below).
 
 ## Conditional independence test
 
@@ -172,7 +172,7 @@ For ``{\mathcal H}_{\mathrm{alt}}^{\mathrm{(3)}}``, the bivariate normal distrib
     \right).
 ```
     
-For ``{\mathcal H}_{\mathrm{null}}^{\mathrm{(3)}}``, the distributions follow Eq [\[eq-ba-hm-d1\]](#eq-ba-hm-d1){reference-type="ref" reference="eq-ba-hm-d1"}, as well as
+For ``{\mathcal H}_{\mathrm{null}}^{\mathrm{(3)}}``, the distributions follow ``A_i\mid E_i`` as in the [Primary linkage test](@ref prim_test_realLLR), as well as
 
 ```math
 B_i\mid A_i\sim N(\rho A_i,\sigma_B^2).
@@ -190,7 +190,7 @@ where
 \sigma_{AB} \equiv 1-\sum_{j=0}^{n_a}\frac{n_j}{n}\hat{\mu}_j\hat{\nu}_j,
 ``` 
 
-and ``\hat\rho`` is defined in the [Null distributions of the log-likelihood ratios](@ref) section.
+and ``\hat\rho=\frac{1}{n}\sum_{i=1}^n A_iB_i`` is the same as in the [Correlation test](@ref corr_test_realLLR).
 
 ## Relevance test
 
@@ -220,7 +220,7 @@ We can hence solve its LLR as
 
 with all MLEs as defined before.
 
-## Pleiotropy test
+## Controlled or pleiotropy test
 
 Based on the positives of the secondary test, we can further distinguish the alternative hypothesis 
 
@@ -244,7 +244,16 @@ with all MLEs as defined before. Note that this test was called the **controlled
 
 ## Implementation
 
-The LLRs for the secondary linkage, conditional independence, relevance, and pleiotrropy tests of a specific gene ``A`` against all other genes ``B`` are implemented as a method of the `realLLR_col` function:
+The LLRs for the secondary linkage, conditional independence, relevance, and pleiotrropy tests of a specific gene ``A`` against all other genes ``B`` can all be computed from the same sufficient statistics ``\hat{\rho}, \hat{\sigma}_A^2, \hat{\sigma}_B^2, \sigma_{AB}``. Moreover note the relations
+
+```math
+\begin{aligned}
+\mathrm{LLR}^{\mathrm{(3)}} &= \mathrm{LLR}^{\mathrm{(4)}} + \frac{n}{2}\ln (1-\hat{\rho}^2)\\
+\mathrm{LLR}^{\mathrm{(5)}} &= \mathrm{LLR}^{\mathrm{(4)}} + \frac{n}{2}\ln \hat{\sigma}_B^2 = \mathrm{LLR}^{\mathrm{(4)}} - \mathrm{LLR}^{\mathrm{(2)}}
+\end{aligned}
+```
+
+Hence for efficiency these LLRs are computed jointly by a method of the `realLLR_col` function:
 
 
 ```@docs

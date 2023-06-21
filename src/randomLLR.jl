@@ -10,7 +10,7 @@ Return an LBeta distribution that is the null distribution of the log-likelihood
 - :relev - **relevance test** (test 4)
 - :pleio - **pleiotropy test** (test 5)
 
-With only one input argument, the null distribution for the correlation test with `ns` samples is returned. With two input arguments, or  with three arguments and `test` equal to `:corr`, the null distribution for the correlation test with `ns` samples is returned and the second argument is ignored
+With only one input argument, the null distribution for the correlation test with `ns` samples is returned. With two input arguments, or  with three arguments and `test` equal to `:corr`, the null distribution for the correlation test with `ns` samples is returned and the second argument is ignored.
 """
 function nulldist(ns,ng=1,test=:corr)
     if test==:corr

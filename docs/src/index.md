@@ -19,7 +19,7 @@ If you are familiar with the [original Findr software](https://github.com/lingfe
 
 - Input and output are structured by **columns**, that is, in the gene expression and genotype data, columns are genes or SNPs and rows are samples, and in the posterior probability matrices, each column contains the probabilities of a causal relation from the gene corresponding to that column to all other genes. This is the opposite of the [original software](https://github.com/lingfeiwang/findr) where variables corresponded to rows. This is to boost performance as Julia stores arrays in [column-major](https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-column-major) format. If you call `findr` with [DataFrame](https://dataframes.juliadata.org/stable/) inputs, you need not worry about any of this, as the output is returned in the form of a [DataFrame](https://dataframes.juliadata.org/stable/) with `Source`, `Target`, `Probability`, and optionally, `q-value` columns.
 
-- [Estimation](@ref) of observed distribution of log-likelihood ratios uses either a new, parametric method of moments, or a [kernel density estimation](https://en.wikipedia.org/wiki/Kernel_density_estimation) method, replacing the previous histogram-based method. 
+- Estimation of observed distribution of log-likelihood ratios uses either a [new, parametric method of moments](@ref mom_postprobs), or a [kernel density estimation method](@ref kde_postprobs), replacing the previous histogram-based method. 
 
 ## Table of contents
 

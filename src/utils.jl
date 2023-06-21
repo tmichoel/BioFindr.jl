@@ -59,6 +59,15 @@ end
     combineprobs(P; combination="none")
 
 Combine posterior probabilities `P` for multiple likelihood likelihood ratio tests in a single probability (local precision) value.
+
+The optional parameter `combination` defines the combination test:
+
+- `none`: do nothing, return the input `P` (default)
+- `mediation`: the mediation test (``P_2 P_3``)
+- `IV`: the instrumental variable or non-independence test (``P_2 P_5``)
+- `orig`: Findr's original combination (``\\frac{1}{2}(P_2 P_5 + P_4)``
+
+The input must be a three-dimensional array where the second dimension has size 4 and indexes the individual Findr tests (test 2-5). The output is a matrix of size `size(P,1) x size(P,3)`.
 """
 function combineprobs(P; combination="none")
     if combination == "none"
@@ -80,7 +89,9 @@ end
 """
     stackprobs(P,colnames,rownames;nodiag=true)
 
-Convert a matrix of pairwise posterior probabilities `P` with column and row names `colnames` and `rownames`, respectively, to a stacked dataframe with `Source`, `Target`, and `Posterior probability` columns, corresponding respectively to a column name, a row name, and the value of `P` in the corresponding row and column pair.
+Convert a matrix of pairwise posterior probabilities `P` with column and row names `colnames` and `rownames`, respectively, to a stacked dataframe with `Source`, `Target`, and `Probability` columns, corresponding respectively to a column name, a row name, and the value of `P` in the corresponding row and column pair.
+
+The optional parameter `nodiag` determines if self-interactions (equal row and column name) are excluded (`nodiag=true`, default) or not (`nodiag=false`).
 """
 function stackprobs(P,colnames,rownames;nodiag=true)
     # First put the matrix of probabilities in a dataframe
@@ -117,11 +128,11 @@ end
 """
     globalfdr!(dP::T; FDR=1.0, sorted=true) where T<:AbstractDataFrame
 
-For a DataFrame `dP` of posterior probabilities (local precision values), compute their corresponding q-values and keep only the rows with q-value less than a desired global false discovery rate `FDR` (default value 1, no selection). `dP` is assumed to be the output of a `findr` run with columns `Source`, `Target`, and `Posterior probability`. The output DataFrame mirrors the structure of `dP`, keeping only the selected rows, and with an additional column `q-value`. The output is sorted by `q-value` if the optional argument `sorted` is `true` (default). If `dP` already contains a column `q-value`, only the filtering and optional sorting are performed. 
+For a DataFrame `dP` of posterior probabilities (local precision values), compute their corresponding q-values and keep only the rows with q-value less than a desired global false discovery rate `FDR` (default value 1, no selection). `dP` is assumed to be the output of a `findr` run with columns `Source`, `Target`, and `Probability`. The output DataFrame mirrors the structure of `dP`, keeping only the selected rows, and with an additional column `qvalue`. The output is sorted by `qvalue` if the optional argument `sorted` is `true` (default). If `dP` already contains a column `qvalue`, only the filtering and optional sorting are performed. 
 """
 function globalfdr!(dP::T; FDR=1.0, sorted=true) where T<:AbstractDataFrame
     # test if dP already has a q-value column, this allows repeated calling of the function for additional filtering or sorting
-    if ∉("q-value",names(dP))
+    if ∉("qvalue",names(dP))
         qval = qvalue(dP."Probability")
         insertcols!(dP,"qvalue" => qval)
     end

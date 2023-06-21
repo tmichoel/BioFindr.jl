@@ -4,7 +4,7 @@ CurrentModule = Findr
 
 # Null distributions of the log-likelihood ratios
 
-The null distribution of LLR, ``p(\mathrm{LLR}\mid{\mathcal H}_{\mathrm{null}})``, may be obtained either by simulation or analytically. Simulation, such as random permutations from real data or the generation of random data from statistics of real data, can deal with a much broader range of scenarios in which analytical expressions are unattainable. However, the drawbacks are obvious: simulation can take hundreds of times longer than analytical methods to reach a satisfiable precision. Here we obtained analytical expressions of ``p(\mathrm{LLR}\mid{\mathcal H}_{\mathrm{null}})`` for all the [Likelihood ratio tests](@ref).
+The null distribution of an LLR, ``p(\mathrm{LLR}\mid{\mathcal H}_{\mathrm{null}})``, may be obtained either by simulation or analytically. Simulation, such as random permutations from real data or the generation of random data from statistics of real data, can deal with a much broader range of scenarios in which analytical expressions are unattainable. However, the drawbacks are obvious: simulation can take hundreds of times longer than analytical methods to reach a satisfiable precision. Here we obtained analytical expressions of ``p(\mathrm{LLR}\mid{\mathcal H}_{\mathrm{null}})`` for all the [Likelihood ratio tests](@ref).
 
 ## Correlation test
 
@@ -35,7 +35,7 @@ Since ``\tilde{B}_i\sim\mathrm{i.i.d\ }N(0,1)``, we can easily verify that ``X_1
 X_1\sim N(0,1),\hspace{3em}X_2\sim N(0,1),\hspace{3em}X_3\sim\chi^2(n-2).
 ```
 
-Expressing the LLR for the correlation test (see  [Likelihood ratio tests](@ref)) in terms of ``X_1,X_2,X_3`` gives  
+Expressing the [LLR for the correlation test](@ref corr_test_realLLR) in terms of ``X_1,X_2,X_3`` gives  
 
 ```math
 \mathrm{LLR}^{\mathrm{(0)}}=-\frac{n}{2}\ln(1-Y),
