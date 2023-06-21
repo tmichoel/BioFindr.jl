@@ -1,86 +1,93 @@
-"""
-    LBeta(α,β)
-    
-The *LBeta distribution* with parameters ``\\alpha`` and ``\\beta`` is defined as the distribution of a random variable 
 
-``X=-\\frac{1}{2}(\\ln(1-Y))``
-
-where ``Y\\sim\\operatorname{Beta}(\\alpha, \\beta)``
 """
-struct LBeta{T<:Real} <: ContinuousUnivariateDistribution 
-    α :: T
-    β :: T
+    nulldist(ns,[ng,test])
+
+Return an LBeta distribution that is the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
+
+- :corr - **correlation test** (test 0)
+- :link - **linkage test** (test 1/2)
+- :med - **mediation test** (test 3)
+- :relev - **relevance test** (test 4)
+- :pleio - **pleiotropy test** (test 5)
+
+With only one input argument, the null distribution for the correlation test with `ns` samples is returned. With two input arguments, or  with three arguments and `test` equal to `:corr`, the null distribution for the correlation test with `ns` samples is returned and the second argument is ignored.
+"""
+function nulldist(ns,ng=1,test=:corr)
+    if test==:corr
+        return LBeta(1,ns-2)
+    elseif test==:link
+        return LBeta(ng-1,ns-ng)
+    elseif test==:med
+        return LBeta(ng-1,ns-ng-1)
+    elseif test==:relev
+        return LBeta(ng,ns-ng-1)
+    elseif test==:pleio
+        return LBeta(1,ns-ng-1)
+    else
+        error("the third argument must be a symbol from the set {:corr,:link,:med,:relev,:pleio}")
+    end
 end
 
 """
-    params(d)
+    nullpval(llr,ns,[ng,test])
 
-Get the parameters of an LBeta distribution.
-"""
-Distributions.params(d::LBeta) = (d.α, d.β)
+Return p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
 
-"""
-    pdf(d,x)
+- :corr - **correlation test** (test 0)
+- :link - **linkage test** (test 1/2)
+- :med - **mediation test** (test 3)
+- :relev - **relevance test** (test 4)
+- :pleio - **pleiotropy test** (test 5)
 
-Evaluate the probability density function of an LBeta distribution with support on ``x\\geq 0``. 
+With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to `:corr`, the correlation test with `ns` samples is used and the third argument is ignored.
 """
-function Distributions.pdf(d::LBeta, x::Real)
-    α = params(d)[1]
-    β = params(d)[2]
-    return x >= 0 ? 2*(1-exp(-2x))^(0.5α-1)*exp(-β*x)/beta(0.5α,0.5β) : 0.
+function nullpval(llr,ns,ng=1,test=:corr)
+    # create null distribution
+    nulld = nulldist(ns,ng,test)
+    # check for Inf and NaN
+    #tf = llr.==Inf | isnan(llr) 
+    # compute p-values
+    ccdf(nulld,llr)
 end
 
 """
-    cdf(d,x)
+    nulllog10pval(llr,ns,[ng,test])
 
-Evaluate the cumulative distribution function of an LBeta distribution using its relation to the Beta distribution. 
+Return negative log10 p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
+
+- :corr - **correlation test** (test 0)
+- :link - **linkage test** (test 1/2)
+- :med - **mediation test** (test 3)
+- :relev - **relevance test** (test 4)
+- :pleio - **pleiotropy test** (test 5)
+
+With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to `:corr`, the correlation test with `ns` samples is used and the third argument is ignored.
 """
-function Distributions.cdf(d::LBeta, x::Real)
-    bd = Beta(params(d)...) 
-    return cdf(bd, 1-exp(-2x))
+function nulllog10pval(llr,ns,ng=1,test=:corr)
+    # create null distribution
+    nulld = nulldist(ns,ng,test)
+    # compute negative log10 p-values
+    -logccdf(nulld,llr)/log(10) 
 end
 
 """
-    randomLLR0(ns)
+    nullpdf(llr,ns,[ng,test])
 
-Return an LBeta distributed random variable for the null distribution of the log-likelihood ratio for Findr test 0 with sample size `ns`. 
-"""
-function randomLLR0(ns)
-    return LBeta(1,ns-2)
-end
+Return probability distribution function evaluations for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
 
-"""
-    randomLLR1(ns,ng)
+- :corr - **correlation test** (test 0)
+- :link - **linkage test** (test 1/2)
+- :med - **mediation test** (test 3)
+- :relev - **relevance test** (test 4)
+- :pleio - **pleiotropy test** (test 5)
 
-Return an LBeta distributed random variable for the null distribution of the log-likelihood ratio for Findr test 1 with sample size `ns` and number of genotype groups `ng`. 
+With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test` equal to `:corr`, the correlation test with `ns` samples is used and the third argument is ignored.
 """
-function randomLLR1(ns,ng)
-    return LBeta(ng-1,ns-ng)
-end
-
-"""
-    randomLLR3(ns,ng)
-
-Return an LBeta distributed random variable for the null distribution of the log-likelihood ratio for Findr test 3 with sample size `ns` and number of genotype groups `ng`. 
-"""
-function randomLLR3(ns,ng)
-    return LBeta(ng-1,ns-ng-1)
-end
-
-"""
-    randomLLR4(ns,ng)
-
-Return an LBeta distributed random variable for the null distribution of the log-likelihood ratio for Findr test 4 with sample size `ns` and number of genotype groups `ng`. 
-"""
-function randomLLR4(ns,ng)
-    return LBeta(ng,ns-ng-1)
-end
-
-"""
-    randomLLR5(ns,ng)
-
-Return an LBeta distributed random variable for the null distribution of the log-likelihood ratio for Findr test 5 with sample size `ns` and number of genotype groups `ng`. 
-"""
-function randomLLR5(ns,ng)
-    return LBeta(1,ns-ng-1)
+function nullpdf(llr,ns,ng=1,test=:corr)
+    # create null distribution
+    nulld = nulldist(ns,ng,test)
+    # check for Inf and NaN
+    #tf = llr.==Inf | isnan(llr) 
+    # compute p-values
+    pdf.(nulld,llr)
 end
