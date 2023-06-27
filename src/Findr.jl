@@ -61,6 +61,21 @@ function findr(X::Matrix{T}; method="moments", combination="none") where T<:Abst
     return symprobs(PP, combination = combination)
 end
 
+function findrpval(X::Matrix{T}) where T<:AbstractFloat
+    # Inverse-normal transformation and standardization for each columns of X
+    Y = supernormalize(X)
+    ns = size(Y,1)
+    # Matrix to store posterior probabilities
+    ncols = size(Y,2)
+    PP = ones(ncols,ncols) # this sets the diagonal elements to one
+    # Compute LLRs and p-values for each column separately
+    Threads.@threads for col = axes(Y,2)
+        llr = realLLR_col(Y[:,Not(col)],Y[:,col])
+        PP[Not(col),col] = nulllog10pval(llr,ns)
+    end
+    return PP
+end
+
 """
     findr(dX::T; method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
 
