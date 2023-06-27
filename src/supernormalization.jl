@@ -5,7 +5,7 @@ Convert each column of matrix or dataframe `X` of reals into standard normally d
 
 Note that after the inverse normal transformation, each column has mean zero and identical variance (if we use ordinal ranking). Hence rescaling can be done once on the whole matrix.
 
-The formula and default value for the paramater `c` come from this paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2921808/
+The formula and default value for the paramater `c` come from [this paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2921808/)
 """
 function supernormalize(X, c=0.375)
     nd = Normal()
