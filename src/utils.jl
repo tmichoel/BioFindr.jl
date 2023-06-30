@@ -39,7 +39,7 @@ Symmetrize a square matrix of posterior probabilities `P`. The optional paramete
 Note that the `anti` option defines "antisymmetric" probabilities, ``P'_{ij} +  P'_{ji} = 1``, where evidence *for* a causal interaction ``i\\to j`` is also considered evidence *against* the opposite interaction ``j\\to i``.
 """
 function symprobs(P::Matrix{T}; combination="none") where T<:AbstractFloat
-    if size(P,1) != size(P,2)
+    if size(P,1) != size(P,2) && combination != "none"
         error("Input matrix must be square")
     end
     if combination == "none"

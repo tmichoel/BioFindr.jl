@@ -35,12 +35,16 @@ include("bayesiannets.jl")
 
 include("utils.jl")
 
-# Main Findr function calls
+#########################################
+#   Methods for coexpression analysis   #
+#########################################
 
 """
-    findr(X::Matrix{T}; method="moments", combination="none") where T<:AbstractFloat
+    findr(X::Matrix{T}; cols=[], method="moments", combination="none") where T<:AbstractFloat
 
 Compute posterior probabilities for nonzero pairwise correlations between columns of input matrix `X`. The probabilities are directed (asymmetric) in the sense that they are estimated from a column-specific background distribution.
+
+The optional parameter `cols` determines whether we consider all columns as source nodes (`cols=[]`, default), or only a subset of columns determines by the indices in the vector `cols`.
 
 The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 
@@ -48,36 +52,26 @@ The optional parameter `combination` determines whether the output must be symme
 
 See also [`findr(::DataFrame)`](@ref), [`symprobs`](@ref), [`supernormalize`](@ref), [`pprob_col`](@ref).
 """
-function findr(X::Matrix{T}; method="moments", combination="none") where T<:AbstractFloat
+function findr(X::Matrix{T}; cols=[], method="moments", combination="none") where T<:AbstractFloat
     # Inverse-normal transformation and standardization for each columns of X
     Y = supernormalize(X)
+    # check if we need to use all columns or only a subset as source nodes
+    if isempty(cols)
+        cols = axes(Y,2) # use all columns
+    end
     # Matrix to store posterior probabilities
-    ncols = size(Y,2)
-    PP = ones(ncols,ncols) # this sets the diagonal elements to one
+    nall = size(Y,2)
+    ncols = length(cols)
+    PP = ones(nall,ncols) # this sets the diagonal elements to one
     # Compute posterior probabilities for each column separately
-    Threads.@threads for col = axes(Y,2)
-        PP[Not(col),col] = pprob_col(Y[:,Not(col)],Y[:,col]; method = method)
+    Threads.@threads for i in eachindex(cols) 
+        PP[Not(cols[i]),i] = pprob_col(Y[:,Not(cols[i])],Y[:,cols[i]]; method = method)
     end
     return symprobs(PP, combination = combination)
 end
 
-function findrpval(X::Matrix{T}) where T<:AbstractFloat
-    # Inverse-normal transformation and standardization for each columns of X
-    Y = supernormalize(X)
-    ns = size(Y,1)
-    # Matrix to store posterior probabilities
-    ncols = size(Y,2)
-    PP = ones(ncols,ncols) # this sets the diagonal elements to one
-    # Compute LLRs and p-values for each column separately
-    Threads.@threads for col = axes(Y,2)
-        llr = realLLR_col(Y[:,Not(col)],Y[:,col])
-        PP[Not(col),col] = nulllog10pval(llr,ns)
-    end
-    return PP
-end
-
 """
-    findr(dX::T; method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
+    findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
 
 Wrapper for `findr(Matrix(dX))` when the input `dX` is in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target`, (Posterior) `Probability`, and `qvalue` columns.
 
@@ -91,10 +85,19 @@ The optional parameter `combination` determines whether the output must be symme
 
 See also [`findr(::Matrix)`](@ref), [`symprobs`](@ref), [`stackprobs`](@ref), [`globalfdr!`](@ref).
 """
-function findr(dX::T; method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
-    dP = stackprobs(findr(Matrix(dX); method = method, combination = combination), names(dX), names(dX))
+function findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
+    colnames = intersect(colnames, names(dX))
+    cols = indexin(colnames, names(dX))
+    PP = findr(Matrix(dX); cols = cols, method = method, combination = combination)
+    dP = stackprobs(PP, colnames, names(dX))
     globalfdr!(dP, FDR = FDR, sorted = sorted)
 end
+
+
+####################################################
+#   Methods for differential expression analysis   #
+####################################################
+
 
 """
     findr(X::Matrix{T},G::Array{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
@@ -140,6 +143,10 @@ function findr(dX::T, dG::T; method="moments", FDR=1.0, sorted=true) where T<:Ab
     dP = stackprobs(findr(Matrix(dX), Matrix(dG); method = method), names(dG), names(dX))
     globalfdr!(dP, FDR = FDR, sorted = sorted)
 end
+
+#####################################
+#   Methods for causal inference    #
+#####################################
 
 
 """
@@ -295,5 +302,27 @@ function findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, method="moments", c
         error("Combination parameter must be one of \"IV\", \"mediation\", or \"orig\"")
     end
 end
+
+
+#####################################################################
+#   Methods to extract p-values instead of posterior probabilities  #
+#####################################################################
+
+
+function findrpval(X::Matrix{T}) where T<:AbstractFloat
+    # Inverse-normal transformation and standardization for each columns of X
+    Y = supernormalize(X)
+    ns = size(Y,1)
+    # Matrix to store posterior probabilities
+    ncols = size(Y,2)
+    pv = ones(ncols,ncols) # this sets the diagonal elements to one
+    # Compute LLRs and p-values for each column separately
+    Threads.@threads for col = axes(Y,2)
+        llr = realLLR_col(Y[:,Not(col)],Y[:,col])
+        pv[Not(col),col] = nulllog10pval(llr,ns)
+    end
+    return pv
+end
+
 
 end
