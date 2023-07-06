@@ -88,8 +88,13 @@ The optional parameter `combination` determines whether the output must be symme
 See also [`findr(::Matrix)`](@ref), [`symprobs`](@ref), [`stackprobs`](@ref), [`globalfdr!`](@ref).
 """
 function findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
-    colnames = intersect(colnames, names(dX))
-    cols = indexin(colnames, names(dX))
+    if !isempty(colnames)
+        colnames = intersect(colnames, names(dX))
+        cols = indexin(colnames, names(dX))
+    else
+        colnames = names(dX)
+        cols = []
+    end
     PP = findr(Matrix(dX); cols = cols, method = method, combination = combination)
     dP = stackprobs(PP, colnames, names(dX))
     globalfdr!(dP, FDR = FDR, sorted = sorted)
