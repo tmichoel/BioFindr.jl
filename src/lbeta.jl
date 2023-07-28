@@ -22,7 +22,10 @@ end
 
 Get the parameters of an LBeta distribution.
 """
-Distributions.params(d::LBeta) = (d.α, d.β)
+#Distributions.params(d::LBeta) = (d.α, d.β)
+function params(d::LBeta)  
+    (d.α, d.β)
+end
 
 
 """
@@ -85,9 +88,9 @@ Fit an `LBeta` distribution to data `x` using the method of moments by exploitin
 
 See https://github.com/JuliaStats/Distributions.jl/blob/master/src/univariate/continuous/beta.jl
 """
-function Distributions.fit(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Real
+function fit(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Real
     z = 1 .-  exp.(-2 .* x) # if `x` is LBeta distributed, then `z` is Beta distributed
-    bd = Distributions.fit(Beta,z)
+    bd = fit(Beta,z)
     lbp = 2 .* params(bd) # multiply fitted Beta param to obtain LBeta parameters
     return LBeta(lbp...)
 end
@@ -148,30 +151,3 @@ function fit_weighted(::Type{<:LBeta}, x::AbstractArray{T}, w::AbstractWeights) 
     lbp = 2 .* [α,β] # multiply fitted Beta param to obtain LBeta parameters
     return LBeta(lbp...)
 end
-
-# """
-#     beta_mixture_model(z)
-# """
-# @model function beta_mixture_model(z,α0,β0,π0)
-#     if z === missing
-#         z = Vector{Float64}(undef,1)
-#     end
-
-#     # Draw the parameters of the alternative distribution from an uninformative prior with constraints imposed by the null distribution
-#     α ~ FlatPos(α0)
-#     β ~ Uniform(0.,β0)
-
-#     # Latent variable distribution
-#     latent = Categorical([π0; 1-π0])
-
-#     # Construct Beta distributions for the null and alternative
-#     beta_components = [Beta(0.5α0, 0.5β0); Beta(0.5α, 0.5β)]
-
-#     # Draw assignments for each observation
-#     N = length(z)
-#     u = Vector{Int}(undef, N)
-#     for i = eachindex(z)
-#         u[i] ~ latent
-#         z[i] ~ beta_components[u[i]]
-#     end
-# end
