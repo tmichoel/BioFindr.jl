@@ -160,7 +160,7 @@ function qvalue(P::Vector{T}) where T<:AbstractFloat
     qval = 1 .- (cumsum(P[I])./(1:length(P)))
     # q-values must be ordered, if not, set qval[k] = minimum(qval[k:end]) using efficient operations
     if !issorted(qval)
-        @warn "Average local precisions needed sorting"
+        @info "Average local precisions needed sorting"
         reverse!(qval)
         accumulate!(min,qval,qval)
         reverse!(qval)

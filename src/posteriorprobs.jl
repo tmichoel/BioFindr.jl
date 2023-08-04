@@ -21,7 +21,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T}; method="moments") where T<:Abst
             pp, _ = fit_mixdist_mom(llr,ns)
         catch e
             # Fall back on KDE method in case of failure
-            @warn "Encountered $e, using KDE instead of moments method."
+            @info "Encountered $e, using KDE instead of moments method."
             pp = fit_mixdist_KDE(llr,ns)
         end        
     elseif method == "kde"
@@ -65,7 +65,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") 
             pp[:,1], _ = fit_mixdist_mom(llr2,ns,ng,:link)
         catch e
             # Fall back on KDE method in case of failure
-            @warn "Encountered $e, using KDE instead of moments method."
+            @info "Encountered $e, using KDE instead of moments method."
             pp[:,1] = fit_mixdist_KDE(llr2,ns,ng,:link)
         end
         
@@ -75,7 +75,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") 
             pp[:,2], _ = fit_mixdist_mom(llr3,ns,ng,:med)
         catch e
             # Fall back on KDE method in case of failure
-            @warn "Encountered $e, using KDE instead of moments method."
+            @info "Encountered $e, using KDE instead of moments method."
             pp[:,2] = fit_mixdist_KDE(llr3,ns,ng,:med)
         end      
         
@@ -85,7 +85,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") 
             pp[:,3], _ = fit_mixdist_mom(llr4,ns,ng,:relev)
         catch e
             # Fall back on KDE method in case of failure
-            @warn "Encountered $e, using KDE instead of moments method."
+            @info "Encountered $e, using KDE instead of moments method."
             pp[:,3] = fit_mixdist_KDE(llr4,ns,ng,:relev)
         end   
         try
@@ -93,7 +93,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") 
             pp[:,4], _ = fit_mixdist_mom(llr5,ns,ng,:pleio)
         catch e
             # Fall back on KDE method in case of failure
-            @warn "Encountered $e, using KDE instead of moments method."
+            @info "Encountered $e, using KDE instead of moments method."
             pp[:,4] = fit_mixdist_KDE(llr5,ns,ng,:pleio)
         end        
     elseif method == "kde"
@@ -135,7 +135,7 @@ function pprob_col(Y::Matrix{T},E::Vector{S}; method="moments") where {T<:Abstra
             pp, _ = fit_mixdist_mom(llr2,ns,ng,:link)
         catch e
             # Fall back on KDE method in case of failure
-            @warn "Encountered $e, using KDE instead of moments method."
+            @info "Encountered $e, using KDE instead of moments method."
             pp = fit_mixdist_KDE(llr2,ns,ng,:link)
         end
     elseif method == "kde"

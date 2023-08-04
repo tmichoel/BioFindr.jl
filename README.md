@@ -6,6 +6,7 @@ If you're new to Findr, the separate [tutorials website](https://tmichoel.github
 
 More details about the methods and their implementation can be found in the [documentation](https://tmichoel.github.io/Findr.jl).
 
+:warning: **This package is under development. A release version will be created once a test suite and tutorials are in place.**
 
 [^Wang2017]: Wang L, Michoel T (2017) [Efficient and accurate causal inference with hidden confounders from genome-transcriptome variation data](https://doi.org/10.1371/journal.pcbi.1005703). PLoS Comput Biol 13(8): e1005703.
 
