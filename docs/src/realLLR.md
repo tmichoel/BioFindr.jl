@@ -23,7 +23,7 @@ LLRs of every test are calculated separately as follows:
 Define the null hypothesis as ``A`` and ``B`` are independent, and the alternative hypothesis as they are correlated:
 
 ```math
-{\mathcal H}_{\mathrm{null}}^{\mathrm{(0)}}=A\qquad B,\hspace{4em}{\mathcal H}_{\mathrm{alt}}^{\mathrm{(0)}}=A \to B.
+{\mathcal H}_{\mathrm{null}}^{\mathrm{(0)}}=A\qquad B,\hspace{4em}{\mathcal H}_{\mathrm{alt}}^{\mathrm{(0)}}=A - B.
 ```
 
 The superscript ``(0)`` is the numbering of the test. Both hypotheses are modeled with gene expression levels following bivariate normal distributions, as

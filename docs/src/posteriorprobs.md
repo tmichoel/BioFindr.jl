@@ -84,7 +84,7 @@ p(x) = \pi_0 p(x \mid \alpha_0,\beta_0) + (1-\pi_0) p(x\mid \alpha,\beta)
 
 where ``\mathcal{D}`` denotes an [`LBeta`](@ref) distribution with its PDF  ``p(x\mid \alpha,\beta)`` defined in [Null distributions of the log-likelihood ratios](@ref). 
 
-Since the parameters ``\alpha_0`` and ``\beta_0`` of the null distribution are know exactly (see [Null distributions of the log-likelihood ratios](@ref)) and ``\pi_0`` can be estimated from the null p-values (see [`pi0est`](@ref)), it reamins to estimate ``\alpha``, and ``\beta`` from a set of random samples ``x_1, x_2,\dots,x_m`` of ``X``.
+Since the parameters ``\alpha_0`` and ``\beta_0`` of the null distribution are know exactly (see [Null distributions of the log-likelihood ratios](@ref)) and ``\pi_0`` can be estimated from the null p-values (see [`pi0est`](@ref)), it remains to estimate ``\alpha``, and ``\beta`` from a set of random samples ``x_1, x_2,\dots,x_m`` of ``X``.
 
 To estimate ``\alpha`` and ``\beta`` we make use of the relation between the [`LBeta`](@ref) and Beta distributions (see [Null distributions of the log-likelihood ratios](@ref)). Define the random variable
 
@@ -194,7 +194,7 @@ To mitigate edge effects due to LLRs being restricted to the half-open interval 
 fit_kde
 ```
 
-Nevertheless, the KDE of ``p(\mathrm{LLR})`` will still fluctuate wildly near ```\mathrm{LLR}\approx 0``. Given a set of samples ``x_1,\dots,x_m`` with KDE estimated PDF values ``\tilde{p}(x_1), \dots, \tilde{p}(x_m)``, [`fit_mixdist_KDE`](@ref) calculates smoothened and monotonically increasing estimayes ``p(x_1),\dots, p(x_m)`` as
+Nevertheless, the KDE of ``p(\mathrm{LLR})`` will still fluctuate wildly near ``\mathrm{LLR}\approx 0``. Given a set of samples ``x_1,\dots,x_m`` with KDE estimated PDF values ``\tilde{p}(x_1), \dots, \tilde{p}(x_m)``, [`fit_mixdist_KDE`](@ref) calculates smoothened and monotonically increasing estimayes ``p(x_1),\dots, p(x_m)`` as
 
 ```math
 p(x_i) = \max\left(0, \min_{j\geq i} \tilde{p}(x_j) \right)
