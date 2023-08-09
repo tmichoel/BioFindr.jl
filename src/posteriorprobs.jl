@@ -27,7 +27,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T}; method="moments") where T<:Abst
     elseif method == "kde"
         pp = fit_mixdist_KDE(llr,ns)
     else
-        error("Optional `method` parameter must be equal to `moments` or `KDE`.")
+        error("Optional `method` parameter must be equal to `moments` or `kde`.")
     end
     return pp
 end
@@ -105,7 +105,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") 
         pp[:,3] = fit_mixdist_KDE(llr4,ns,ng,:relev)
         pp[:,4] = fit_mixdist_KDE(llr5,ns,ng,:pleio)
     else
-        error("Optional `method` parameter must be equal to `moments` or `KDE`.")
+        error("Optional `method` parameter must be equal to `moments` or `kde`.")
     end
     return pp
 end
@@ -141,7 +141,7 @@ function pprob_col(Y::Matrix{T},E::Vector{S}; method="moments") where {T<:Abstra
     elseif method == "kde"
         pp = fit_mixdist_KDE(llr2,ns,ng,:link)
     else
-        error("Optional `method` parameter must be equal to `moments` or `KDE`.")
+        error("Optional `method` parameter must be equal to `moments` or `kde`.")
     end
     return pp
 end
@@ -201,7 +201,10 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
         pnull = pdf.(dnull, llr)
         palt = pdf.(dalt, llr) 
         pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt)
-
+        
+        # At rare occurences of llr=0, pp must be 0
+        pp[llr .<= 0] .= 0.
+        
         # Set mixture distribution
         dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
     else
@@ -243,6 +246,9 @@ function fit_mixdist_KDE(llr,ns,ng=1,test=:corr)
     # Compute the posterior probabilities of the alternative hypothesis being true
     pp = 1 .- π0 * pnull ./ preal
 
+    # At rare occurences of llr=0, pnull=Inf and preal=NaN, but pp must be 0
+    pp[llr .<= 0] .= 0.
+
     # Smoothen posterior probs and make monotonically increasing
     perm = sortperm(llr, rev=true);
     inv_perm = invperm(perm);
@@ -269,8 +275,8 @@ function fit_kde(llr)
     # Transform llr values to avoid edge effects in density estimation
     z = log.(exp.(2 .* llr) .- 1)
     
-    # Apply kernel density estimation to transformed values
-    dfit = kde(z)
+    # Apply kernel density estimation to transformed values, make sure to exclude rare occurences of llr=0
+    dfit = kde(z[llr .> 0])
 
     # Evaluate pdf at llr values using rule for transformations of random variables
     pd = 2 * pdf(dfit, z) .* (1 .+ exp.(-z))
