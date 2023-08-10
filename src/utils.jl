@@ -5,17 +5,11 @@ Get pairs of indices of matching columns from dataframes `dX` and `dG`, with col
 """
 function getpairs(dX::T, dG::T, dE::T; colG=1, colX=2) where T<:AbstractDataFrame
     # Extract dX ID column from dE
-    if typeof(colX) <: Int
-        idX = dE[!,colX]
-    else
-        idX = dE.colX
-    end
+    idX = select(dE, colX)[:,1]
+
     # Extract dG ID column from dE
-    if typeof(colG) <: Int
-        idG = dE[!,colG]
-    else
-        idG = dE.colG
-    end
+    idG = select(dE, colG)[:,1]
+
     # Create the array with idG-idX pairs
     pairsGX = zeros(Int64,nrow(dE),2);
     for rowE = axes(pairsGX,1)
