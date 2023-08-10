@@ -17,11 +17,11 @@ findr(X::Matrix{T}) where T<:AbstractFloat
 findr(dX::T) where T<:AbstractDataFrame
 ```
 
-## Differential expression analysis
+## Association analysis
 
 The secondary linkage test is introduced to test association between genetic variants and gene expression levels, and can be used more generally to analyze differential expression of genes across groups defined by any kind of categorical variable. Its predicted posterior probability for differential expression is ``P_2``.
 
-Differential expression analysis can be performed by calling `findr` with two arguments, matrices or dataframes of gene expression and categorical values, respectively:
+Association analysis can be performed by calling `findr` with two arguments, matrices or dataframes of continuous gene expression values and categorical genotype or more general grouping values, respectively:
 
 ```@docs
 findr(X::Matrix{T}, G::Array{S}) where {T<:AbstractFloat, S<:Integer}
