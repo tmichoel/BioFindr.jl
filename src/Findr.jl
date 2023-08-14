@@ -12,7 +12,12 @@ using KernelDensity
 using LinearAlgebra
 using InvertedIndices
 
+
+# Export statements
+export findr
+
 # Define test names as variables
+
 corr = "corr"
 link = "link"
 med = "med"
