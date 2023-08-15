@@ -6,7 +6,7 @@ CurrentModule = Findr
 
 This is the documentation for [Findr.jl](https://github.com/tmichoel/Findr.jl), an implementation of the [Findr software](https://github.com/lingfeiwang/findr) in [Julia](https://julialang.org/). 
 
-The methods implemented in Findr were developed by [Lingfei Wang](https://github.com/lingfeiwang) and [Tom Michoel](https://github.com/tmichoel), and were first described in the paper ["Efficient and accurate causal inference with hidden confounders from genome-transcriptome variation data"](https://doi.org/10.1371/journal.pcbi.1005703).[^Wang2017]
+The methods implemented in Findr were developed by [Lingfei Wang](https://github.com/lingfeiwang) and [Tom Michoel](https://tmichoel.github.io), and were first described in the paper ["Efficient and accurate causal inference with hidden confounders from genome-transcriptome variation data"](https://doi.org/10.1371/journal.pcbi.1005703).[^Wang2017]
 
 This documentation copies both the structure and (most of) the contents of the [Materials and methods section](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005703#sec009) of the original paper, directly linking the mathematical description of the method to the documentation and source code of its implementation. Maybe this is how methods papers in computational biology should be written in the first place?
 
