@@ -170,7 +170,13 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
     dnull = nulldist(ns, ng, test) 
     π0 = pi0est( nullpval(llr, ns, ng, test) )
 
-    if π0 < 1. #< 0.95
+    #=
+     If π0=1, in theory we should return the null distribution, but in practice a π0=1 estimate may miss for instance a single non-null value. Therefore throw error such that caller can decide how to handle this
+    =#
+
+    @assert π0<1. "Estimated prior probability π0=1"
+
+    #if π0 < 1. #< 0.95
         # first and second moment for the Beta distribution corresponding to the null distribution
         bp = 0.5 .* params(dnull)
         bm1 = bp[1] / sum(bp)
@@ -207,10 +213,10 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
         
         # Set mixture distribution
         dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
-    else
-        pp = zeros(size(llr))
-        dreal = dnull
-    end
+    # else
+    #     pp = zeros(size(llr))
+    #     dreal = dnull
+    # end
 
     # Return posterior probabilities and estimated mixture distribution
     return pp, dreal
