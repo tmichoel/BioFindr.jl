@@ -10,7 +10,7 @@ The methods implemented in Findr were developed by [Lingfei Wang](https://github
 
 This documentation copies both the structure and (most of) the contents of the [Materials and methods section](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005703#sec009) of the original paper, directly linking the mathematical description of the method to the documentation and source code of its implementation. Maybe this is how methods papers in computational biology should be written in the first place?
 
-If you haven't used Findr before, the [FindrTutorials website](https://tmichoel.github.io/FindrTutorials) may be useful **(under development, link not active yet)**.
+If you haven't used Findr before, the [FindrTutorials website](https://tmichoel.github.io/FindrTutorials) may be useful.
 
 If you are familiar with the [original Findr software](https://github.com/lingfeiwang/findr), you should be aware that
 [Findr.jl](https://github.com/tmichoel/Findr.jl) is not a literal translation. In particular, pay attention to the following differences:
