@@ -18,12 +18,3 @@ function supernormalize(X, c=0.375)
     Y = Y/σ
     return Y
 end
-
-# function supernormalize(X, c=0.375)
-#     nd = Normal()
-#     n = nrow(X)
-#     Y = mapcols( x ->  quantile( nd, (ordinalrank(x) .- c) ./ (n-2c+1) ), X)
-#     # σ = std(Y[:,1];corrected=false)
-#     # Y = Y/σ
-#     return Y
-# end

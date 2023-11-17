@@ -26,6 +26,8 @@ pleio = "pleio"
 
 # Load the different code files
 
+include("generate_test_data.jl");
+
 include("supernormalization.jl")
 
 include("lbeta.jl")
