@@ -21,7 +21,7 @@ StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 [compat]
 DataFrames = "1"
 Distributions = "0.25"
-Documenter = "0.27"
+Documenter = "0.27, 1"
 InvertedIndices = "1"
 KernelDensity = "0.6"
 LiveServer = "1"
