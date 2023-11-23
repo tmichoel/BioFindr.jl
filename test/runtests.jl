@@ -2,6 +2,7 @@ using Findr
 using Test
 using Distributions
 using StatsBase
+using SpecialFunctions
 
 
 
