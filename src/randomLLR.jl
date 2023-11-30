@@ -47,7 +47,7 @@ function nullpval(llr,ns,ng=1,test=:corr)
     # check for Inf and NaN
     #tf = llr.==Inf | isnan(llr) 
     # compute p-values
-    ccdf(nulld,llr)
+    ccdf.(nulld,llr)
 end
 
 """
