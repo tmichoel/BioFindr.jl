@@ -29,3 +29,37 @@ end
     # Test if nullpval throws an error for invalid test argument
     @test_throws ErrorException Findr.nullpval(llr, ns, ng, :invalid)
 end
+
+# Test nulllog10pval function
+@testset "nulllog10pval tests" begin
+    ns = 100
+    ng = 10
+    llr = exp.(rand(ns))
+
+    # Test if nullpval returns correct p-values
+    @test all(Findr.nulllog10pval(llr, ns, ng, :corr) .== -logccdf.(Findr.LBeta(1, ns-2), llr)/log(10)) 
+    @test all(Findr.nulllog10pval(llr, ns, ng, :link) .== -logccdf.(Findr.LBeta(ng-1, ns-ng), llr)/log(10)) 
+    @test all(Findr.nulllog10pval(llr, ns, ng, :med) .== -logccdf.(Findr.LBeta(ng-1, ns-ng-1), llr)/log(10))
+    @test all(Findr.nulllog10pval(llr, ns, ng, :relev) .== -logccdf.(Findr.LBeta(ng, ns-ng-1), llr)/log(10)) 
+    @test all(Findr.nulllog10pval(llr, ns, ng, :pleio) .== -logccdf.(Findr.LBeta(1, ns-ng-1), llr)/log(10))
+
+    # Test if nullpval throws an error for invalid test argument
+    @test_throws ErrorException Findr.nulllog10pval(llr, ns, ng, :invalid)
+end
+
+# Test nullpdf function
+@testset "nullpdf tests" begin
+    ns = 100
+    ng = 10
+    llr = exp.(rand(ns))
+
+    # Test if nullpval returns correct p-values
+    @test all(Findr.nullpdf(llr, ns, ng, :corr) .== Findr.pdf.(Findr.LBeta(1, ns-2), llr))
+    @test all(Findr.nullpdf(llr, ns, ng, :link) .== Findr.pdf.(Findr.LBeta(ng-1, ns-ng), llr))
+    @test all(Findr.nullpdf(llr, ns, ng, :med) .== Findr.pdf.(Findr.LBeta(ng-1, ns-ng-1), llr))
+    @test all(Findr.nullpdf(llr, ns, ng, :relev) .== Findr.pdf.(Findr.LBeta(ng, ns-ng-1), llr))
+    @test all(Findr.nullpdf(llr, ns, ng, :pleio) .== Findr.pdf.(Findr.LBeta(1, ns-ng-1), llr))
+
+    # Test if nullpval throws an error for invalid test argument
+    @test_throws ErrorException Findr.nullpdf(llr, ns, ng, :invalid)
+end

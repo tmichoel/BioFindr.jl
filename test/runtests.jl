@@ -1,8 +1,10 @@
 using Findr
 using Test
 using Distributions
+using Statistics
 using StatsBase
 using SpecialFunctions
+using KernelDensity
 
 
 
