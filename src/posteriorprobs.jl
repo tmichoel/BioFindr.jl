@@ -18,7 +18,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T}; method="moments") where T<:Abst
     if method == "moments"
         # Method of moments can fail if moments don't satisfy a positivity condition
         try
-            pp, _ = fit_mixdist_mom(llr,ns)
+            pp, - = fit_mixdist_mom(llr,ns)
         catch e
             # Fall back on KDE method in case of failure
             # @info "Encountered $e, using KDE instead of moments method."
@@ -72,11 +72,11 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") 
         # posterior probabilities for test 3, here we swap the role of null and alternative
         try
             # Method of moments can fail if moments don't satisfy a positivity condition
-            pp[:,2], _ = fit_mixdist_mom(llr3,ns,ng,:med)
+            pp[:,2] = 1.0 .- fit_mixdist_mom(llr3,ns,ng,:med)[1]
         catch e
             # Fall back on KDE method in case of failure
             # @info "Encountered $e, using KDE instead of moments method."
-            pp[:,2] = fit_mixdist_KDE(llr3,ns,ng,:med)
+            pp[:,2] = 1.0 .- fit_mixdist_KDE(llr3,ns,ng,:med)
         end      
         
         # posterior probabilities for test 4 and 5
@@ -100,7 +100,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") 
         # posterior probabilities for test 2
         pp[:,1] = fit_mixdist_KDE(llr2,ns,ng,:link)
         # posterior probabilities for test 3, here we swap the role of null and alternative
-        pp[:,2] = fit_mixdist_KDE(llr3,ns,ng,:med)
+        pp[:,2] = 1.0 .- fit_mixdist_KDE(llr3,ns,ng,:med)
         # posterior probabilities for test 4 and 5
         pp[:,3] = fit_mixdist_KDE(llr4,ns,ng,:relev)
         pp[:,4] = fit_mixdist_KDE(llr5,ns,ng,:pleio)
