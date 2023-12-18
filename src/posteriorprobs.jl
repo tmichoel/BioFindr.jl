@@ -177,42 +177,42 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
     @assert π0<1. "Estimated prior probability π0=1"
 
     #if π0 < 1. #< 0.95
-        # first and second moment for the Beta distribution corresponding to the null distribution
-        bp = 0.5 .* params(dnull)
-        bm1 = bp[1] / sum(bp)
-        bm2 = bm1 * (bp[1] + 1) / (sum(bp) + 1)
+    # first and second moment for the Beta distribution corresponding to the null distribution
+    bp = 0.5 .* params(dnull)
+    bm1 = bp[1] / sum(bp)
+    bm2 = bm1 * (bp[1] + 1) / (sum(bp) + 1)
 
-        # transform llr to (mixture of) Beta distributed values
-        z = 1 .-  exp.(-2 .* llr)
+    # transform llr to (mixture of) Beta distributed values
+    z = 1 .-  exp.(-2 .* llr)
 
-        # get first and second moment for the Beta distribution corresponding to the alternative distribution
-        m1 = ( mean(z) - π0 * bm1 ) / (1 - π0)
-        m2 = ( mean(z.^2) - π0 * bm2 ) / (1 - π0)
+    # get first and second moment for the Beta distribution corresponding to the alternative distribution
+    m1 = ( mean(z) - π0 * bm1 ) / (1 - π0)
+    m2 = ( mean(z.^2) - π0 * bm2 ) / (1 - π0)
 
-        # fit the alternative distribution
-        dalt = fit_mom(LBeta, m1, m2)
-        
-        # do some sanity checks:
-        #   - in the limit llr -> 0, dnull must dominate
-        #   - in the limint llr -> Inf, dalt must dominate
-        #   - 
-        if dalt.α < dnull.α
-            dalt = LBeta(dnull.α,dalt.β)
-        end
-        if dalt.β > dnull.β 
-            dalt = LBeta(dalt.α,dnull.β)
-        end
+    # fit the alternative distribution
+    dalt = fit_mom(LBeta, m1, m2)
+    
+    # do some sanity checks:
+    #   - in the limit llr -> 0, dnull must dominate
+    #   - in the limint llr -> Inf, dalt must dominate
+    #   - 
+    if dalt.α < dnull.α
+        dalt = LBeta(dnull.α,dalt.β)
+    end
+    if dalt.β > dnull.β 
+        dalt = LBeta(dalt.α,dnull.β)
+    end
 
-        # evaluate null and alternative distributions and compute posterior probabilities
-        pnull = pdf.(dnull, llr)
-        palt = pdf.(dalt, llr) 
-        pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt)
-        
-        # At rare occurences of llr=0, pp must be 0
-        pp[llr .<= 0] .= 0.
-        
-        # Set mixture distribution
-        dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
+    # evaluate null and alternative distributions and compute posterior probabilities
+    pnull = pdf.(dnull, llr)
+    palt = pdf.(dalt, llr) 
+    pp = (1-π0) .*  palt./ (π0 .* pnull .+ (1-π0) .* palt)
+    
+    # At rare occurences of llr=0, pp must be 0
+    pp[llr .<= 0] .= 0.
+    
+    # Set mixture distribution
+    dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
     # else
     #     pp = zeros(size(llr))
     #     dreal = dnull

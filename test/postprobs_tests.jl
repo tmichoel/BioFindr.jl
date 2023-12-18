@@ -5,8 +5,11 @@ fB = 0.2
 ns = 100
 ng = 3
 maf = 0.3
-bGA = 2.
-bAB = 2.
+bGA = 1.
+bAB = 1.
+ϵ = 0.5
+δ = 0.5
+ρ = 0.1
 supernormalize = true
 E, Ycol, Y, istarget = Findr.generate_test_data(nA, nB, fB, ns, ng, maf, bGA, bAB, supernormalize)
 
@@ -38,13 +41,13 @@ end
     # test method of moments
     pp_mom = Findr.pprob_col(Y,Ycol,E,method="moments");
     @test all(pp_mom[:,1] .≈ Findr.fit_mixdist_mom(llr2,ns,ng,:link)[1])
-    @test all(pp_mom[:,2] .≈ Findr.fit_mixdist_mom(llr3,ns,ng,:med)[1])
+    @test all(pp_mom[:,2] .≈ 1 .- Findr.fit_mixdist_mom(llr3,ns,ng,:med)[1])
     @test all(pp_mom[:,3] .≈ Findr.fit_mixdist_mom(llr4,ns,ng,:relev)[1])
     @test all(pp_mom[:,4] .≈ Findr.fit_mixdist_mom(llr5,ns,ng,:pleio)[1])
     # test kde method
     pp_kde = Findr.pprob_col(Y,Ycol,E,method="kde");
     @test all(pp_kde[:,1] .≈ Findr.fit_mixdist_KDE(llr2,ns,ng,:link))
-    @test all(pp_kde[:,2] .≈ Findr.fit_mixdist_KDE(llr3,ns,ng,:med))
+    @test all(pp_kde[:,2] .≈ 1 .- Findr.fit_mixdist_KDE(llr3,ns,ng,:med))
     @test all(pp_kde[:,3] .≈ Findr.fit_mixdist_KDE(llr4,ns,ng,:relev))
     @test all(pp_kde[:,4] .≈ Findr.fit_mixdist_KDE(llr5,ns,ng,:pleio))
 end
