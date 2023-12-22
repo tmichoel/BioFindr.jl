@@ -176,7 +176,6 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
 
     @assert π0<1. "Estimated prior probability π0=1"
 
-    #if π0 < 1. #< 0.95
     # first and second moment for the Beta distribution corresponding to the null distribution
     bp = 0.5 .* params(dnull)
     bm1 = bp[1] / sum(bp)
@@ -195,7 +194,6 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
     # do some sanity checks:
     #   - in the limit llr -> 0, dnull must dominate
     #   - in the limint llr -> Inf, dalt must dominate
-    #   - 
     if dalt.α < dnull.α
         dalt = LBeta(dnull.α,dalt.β)
     end
@@ -213,10 +211,6 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
     
     # Set mixture distribution
     dreal = MixtureModel(LBeta[dnull, dalt],[π0, 1-π0])
-    # else
-    #     pp = zeros(size(llr))
-    #     dreal = dnull
-    # end
 
     # Return posterior probabilities and estimated mixture distribution
     return pp, dreal
