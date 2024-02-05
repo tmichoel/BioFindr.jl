@@ -1,16 +1,16 @@
-using Findr
+using BioFindr
 using Documenter
 
-DocMeta.setdocmeta!(Findr, :DocTestSetup, :(using Findr); recursive=true)
+DocMeta.setdocmeta!(BioFindr, :DocTestSetup, :(using BioFindr); recursive=true)
 
 makedocs(;
-    modules=[Findr],
+    modules=[BioFindr],
     authors="tmichoel <11647967+tmichoel@users.noreply.github.com> and contributors",
-    repo="https://github.com/tmichoel/Findr.jl/blob/{commit}{path}#{line}",
-    sitename="Findr.jl",
+    repo="https://github.com/tmichoel/BioFindr.jl/blob/{commit}{path}#{line}",
+    sitename="BioFindr.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://tmichoel.github.io/Findr.jl",
+        canonical="https://tmichoel.github.io/BioFindr.jl",
         edit_link="main",
         assets=String[],
     ),
@@ -28,6 +28,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/tmichoel/Findr.jl",
+    repo="github.com/tmichoel/BioFindr.jl",
     devbranch="main",
 )

@@ -1,5 +1,5 @@
 ```@meta
-CurrentModule = Findr
+CurrentModule = BioFindr
 ```
 
 # Tests to evaluate
@@ -38,7 +38,7 @@ The traditional causal inference test, as explained in [^Chen2007], suggested th
 P_{\text{med}} \equiv P_1P_2P_3
 ```
 
-Findr expects a set of significant eQTLs and their associated genes as input, and therefore ``P_1=1`` is assured and not calculated separately in Findr. Note that ``P_{\text{med}}`` is the estimated local precision, i.e. the probability that tests 2 and 3 are both true. Correspondinly, its local FDR (the probability that one of them is false) is ``1-P_{\text{med}}``.
+BioFindr expects a set of significant eQTLs and their associated genes as input, and therefore ``P_1=1`` is assured and not calculated separately in BioFindr. Note that ``P_{\text{med}}`` is the estimated local precision, i.e. the probability that tests 2 and 3 are both true. Correspondinly, its local FDR (the probability that one of them is false) is ``1-P_{\text{med}}``.
 
 
 [^Chen2007]: Chen L, Emmert-Streib F, Storey J. [Harnessing naturally randomized transcription to infer regulatory relationships among genes](https://doi.org/10.1186/gb-2007-8-10-r219). Genome Biol 8, R219 (2007).
@@ -51,7 +51,7 @@ The pleiotropy test is introduced to test if an ``E\to B`` association is not in
 P_{\text{IV}} \equiv P_1P_2P_5
 ```
 
-As before, ``P_1=1`` is assured and not calculated separately in Findr. ``P_{\text{IV}}`` is again the estimated local precision, i.e. the probability that tests 2 and 5 are both true, and its local FDR (the probability that one of them is false) is ``1-P_{\text{IV}}``.
+As before, ``P_1=1`` is assured and not calculated separately in BioFindr. ``P_{\text{IV}}`` is again the estimated local precision, i.e. the probability that tests 2 and 5 are both true, and its local FDR (the probability that one of them is false) is ``1-P_{\text{IV}}``.
 
 ### Relevance
 

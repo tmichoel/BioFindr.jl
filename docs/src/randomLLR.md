@@ -1,5 +1,5 @@
 ```@meta
-CurrentModule = Findr
+CurrentModule = BioFindr
 ```
 
 # Null distributions of the log-likelihood ratios

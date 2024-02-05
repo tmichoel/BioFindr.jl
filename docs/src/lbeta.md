@@ -1,3 +1,3 @@
 ```@meta
-CurrentModule = Findr
+CurrentModule = BioFindr
 ```

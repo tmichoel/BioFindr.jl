@@ -2,7 +2,7 @@
 """
     nulldist(ns,[ng,test])
 
-Return an LBeta distribution that is the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
+Return an LBeta distribution that is the null distribution of the log-likelihood ratio for a given BioFindr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
 
 - :corr - **correlation test** (test 0)
 - :link - **linkage test** (test 1/2)
@@ -31,7 +31,7 @@ end
 """
     nullpval(llr,ns,[ng,test])
 
-Return p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
+Return p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given BioFindr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
 
 - :corr - **correlation test** (test 0)
 - :link - **linkage test** (test 1/2)
@@ -53,7 +53,7 @@ end
 """
     nulllog10pval(llr,ns,[ng,test])
 
-Return negative log10 p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
+Return negative log10 p-values for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given BioFindr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
 
 - :corr - **correlation test** (test 0)
 - :link - **linkage test** (test 1/2)
@@ -73,7 +73,7 @@ end
 """
     nullpdf(llr,ns,[ng,test])
 
-Return probability distribution function evaluations for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given Findr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
+Return probability distribution function evaluations for a vector of log-likelihood ratio values `llr` under the null distribution of the log-likelihood ratio for a given BioFindr test with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
 
 - :corr - **correlation test** (test 0)
 - :link - **linkage test** (test 1/2)

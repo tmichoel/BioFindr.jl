@@ -1,7 +1,7 @@
 """
     realLLR_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
 
-Compute the log-likelihood ratios for Findr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
+Compute the log-likelihood ratios for BioFindr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
 `Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 
@@ -16,7 +16,7 @@ end
 """
     realLLR_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
 
-Compute the log-likelihood ratios for the Findr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y` : 
+Compute the log-likelihood ratios for the BioFindr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y` : 
 
 - Test 2 (**Linkage test**) 
 - Test 3 (**Mediation test**)
@@ -55,7 +55,7 @@ end
 """
     realLLR_col(Y::Array{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
 
-Compute the log-likelihood ratios for Findr test 2 (**Linkage test**)  for a given categorical vector `E` against all columns of matrix `Y`.
+Compute the log-likelihood ratios for BioFindr test 2 (**Linkage test**)  for a given categorical vector `E` against all columns of matrix `Y`.
 
 `Y` is assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 
@@ -72,7 +72,7 @@ end
 """
     llrstats_col(Y,Ycol,E)
 
-Compute the sufficient statistics for the log-likelihood ratios for Findr tests 2-5  for a given column vector `Ycol` with categorical instrument `E` against all columns of `Y`.
+Compute the sufficient statistics for the log-likelihood ratios for BioFindr tests 2-5  for a given column vector `Ycol` with categorical instrument `E` against all columns of `Y`.
 
 `Ycol` and `Y` are assumed to have undergone supernormalization with each col having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 
@@ -103,7 +103,7 @@ end
 """
     llrstats_col(Y,E)
 
-Compute the sufficient statistics for the log-likelihood ratios for Findr tests 2  for a given categorical vector `E` against all columns of `Y`.
+Compute the sufficient statistics for the log-likelihood ratios for BioFindr tests 2  for a given categorical vector `E` against all columns of `Y`.
 
 `Y` is assumed to have undergone supernormalization with each col having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 

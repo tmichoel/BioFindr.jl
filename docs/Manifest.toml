@@ -256,7 +256,7 @@ git-tree-sha1 = "802bfc139833d2ba893dd9e62ba1767c88d708ae"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
 version = "0.13.5"
 
-[[deps.Findr]]
+[[deps.BioFindr]]
 deps = ["Distributions", "Documenter", "Revise", "SpecialFunctions", "Statistics", "StatsBase", "StatsPlots"]
 path = ".."
 uuid = "77580646-997d-4218-a3cc-42097ecd1c68"

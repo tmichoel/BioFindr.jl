@@ -1,4 +1,4 @@
-module Findr
+module BioFindr
 
 # External packages
 
@@ -203,7 +203,7 @@ Posterior probabilities are computed for the following tests
  - Test 4 (**Relevance test**)
  - Test 5 (**Pleiotropy test**)
 
-which can be combined into the mediation test (``P_2 P_3``; `combination="mediation"`), the instrumental variable or non-independence test (``P_2 P_5``; `combination="IV"`), or Findr's original combination (``\\frac{1}{2}(P_2 P_5 + P_4)``; `combination="orig"`). By default, individual probability matrices for all tests are returned (`combination="none"`).
+which can be combined into the mediation test (``P_2 P_3``; `combination="mediation"`), the instrumental variable or non-independence test (``P_2 P_5``; `combination="IV"`), or BioFindr's original combination (``\\frac{1}{2}(P_2 P_5 + P_4)``; `combination="orig"`). By default, individual probability matrices for all tests are returned (`combination="none"`).
 
 The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 
@@ -261,7 +261,7 @@ function findr(dX::T, dG::T, dE::T; colG=1, colX=2, method="moments", combinatio
     elseif combination in Set(["IV","mediation","orig"])
         # Create the array with SNP-Gene pairs
         pairGX = getpairs(dX, dG, dE; colG = colG, colX = colX)
-        # Call Findr on numeric data
+        # Call BioFindr on numeric data
         PP = findr(Matrix(dX), Matrix(dG), pairGX; method = method, combination = combination)
         dP = stackprobs(PP, names(dX)[pairGX[:,2]], names(dX)) 
         globalfdr!(dP, FDR = FDR, sorted = sorted)
@@ -285,7 +285,7 @@ Posterior probabilities are computed for the following tests
  - Test 4 (**Relevance test**)
  - Test 5 (**Pleiotropy test**)
 
-which can be combined into the mediation test (``P_2 P_3``; `combination="mediation"`), the instrumental variable or non-independence test (``P_2 P_5``; `combination="IV"`), or Findr's original combination (``\\frac{1}{2}(P_2 P_5 + P_4)``; `combination="orig"`). By default, individual probability matrices for all tests are returned (`combination="none"`).
+which can be combined into the mediation test (``P_2 P_3``; `combination="mediation"`), the instrumental variable or non-independence test (``P_2 P_5``; `combination="IV"`), or BioFindr's original combination (``\\frac{1}{2}(P_2 P_5 + P_4)``; `combination="orig"`). By default, individual probability matrices for all tests are returned (`combination="none"`).
 
 The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 
@@ -337,7 +337,7 @@ function findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, method="moments", c
     elseif combination in Set(["IV","mediation","orig"])
         # Create the array with SNP-Gene pairs
         pairGX = getpairs(dX2, dG, dE; colG = colG, colX = colX)
-        # Call Findr on numeric data
+        # Call BioFindr on numeric data
         PP = findr(Matrix(dX1), Matrix(dX2), Matrix(dG), pairGX; method = method, combination = combination)
         dP = stackprobs(PP, names(dX2)[pairGX[:,2]], names(dX1))
         globalfdr!(dP, FDR = FDR, sorted = sorted)

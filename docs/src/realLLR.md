@@ -1,5 +1,5 @@
 ```@meta
-CurrentModule = Findr
+CurrentModule = BioFindr
 ```
 
 # Likelihood ratio tests

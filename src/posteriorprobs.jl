@@ -1,7 +1,7 @@
 """
     pprob_col(Y::Matrix{T},Ycol::Vector{T}; method="moments") where T<:AbstractFloat
 
-Compute the posterior probabilities for Findr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
+Compute the posterior probabilities for BioFindr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
 `Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 
@@ -35,7 +35,7 @@ end
 """
     pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}   
 
-Compute the posterior probabilities for the Findr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y`: 
+Compute the posterior probabilities for the BioFindr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y`: 
 
 - Test 2 (**Linkage test**) 
 - Test 3 (**Mediation test**)
@@ -114,7 +114,7 @@ end
 """
     pprob_col(Y::Matrix{T},E::Vector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
 
-Compute the posterior probabilities for differential expression of columns of matrix `Y` in the groups defined by  categorical vector `E` using Findr test 2 (**Linkage test**) 
+Compute the posterior probabilities for differential expression of columns of matrix `Y` in the groups defined by  categorical vector `E` using BioFindr test 2 (**Linkage test**) 
     
 `Y` is assumed to have undergone supernormalization with each column having mean zero and variance one.
 
@@ -151,7 +151,7 @@ end
 """
     fit_mixdist_mom(llr,ns,ng=1,test=:corr)
 
-Fit a two-component mixture distribution of two LBeta distributions to a vector of log-likelihood ratios `llr` using a method-of-moments algorithm. The first component is the true null distribution for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an [`LBeta`](@ref) distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the [`pi0est`](@ref) function. Hence only the parameters of the alternative component need to be estimated.
+Fit a two-component mixture distribution of two LBeta distributions to a vector of log-likelihood ratios `llr` using a method-of-moments algorithm. The first component is the true null distribution for a given BioFindr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an [`LBeta`](@ref) distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the [`pi0est`](@ref) function. Hence only the parameters of the alternative component need to be estimated.
 
 The input variable `test` can take the values:
 
@@ -218,7 +218,7 @@ end
 """
     fit_mixdist_KDE(llr,ns,[ng,test])
 
-Return posterior probabilities for a vector of log-likelihood ratio values `llr` for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
+Return posterior probabilities for a vector of log-likelihood ratio values `llr` for a given BioFindr `test` with sample size `ns` and number of genotype groups `ng`. The input variable `test` can take the values:
 
 - ':corr' - **correlation test** (test 0)
 - ':link' - **linkage test** (test 1/2)
@@ -284,7 +284,7 @@ end
 """
     fit_mixdist_EM(llr,ns,ng=1,test=:corr; maxiter=1000, tol=1e-3)
 
-Fit a two-component mixture distribution of two LBeta distributions to a vector of log-likelihood ratios `llr` using an EM algorithm. The first component is the true null distribution for a given Findr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an LBeta distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the `pi0est` function. Hence only the parameters of the alternative component need to be estimated.
+Fit a two-component mixture distribution of two LBeta distributions to a vector of log-likelihood ratios `llr` using an EM algorithm. The first component is the true null distribution for a given BioFindr `test` with sample size `ns` and number of genotype groups `ng`. The second component is the alternative distribution, assumed to follow an LBeta distribution. The prior probability `pi0` of an observation belonging to the null component is fixed and determined by the `pi0est` function. Hence only the parameters of the alternative component need to be estimated.
 
 The EM algorithm outputs posterior probabilities of the alternative hypothesis being true, in the form of the estimated recognition distribution. The optional parameters `maxiter` (default value 1000) and `tol` (default value 1e-3) control the convergence of the EM algorithm.
 

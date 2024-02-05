@@ -1,19 +1,19 @@
 ```@meta
-CurrentModule = Findr
+CurrentModule = BioFindr
 ```
 
-# Findr.jl Documentation
+# BioFindr.jl Documentation
 
-This is the documentation for [Findr.jl](https://github.com/tmichoel/Findr.jl), an implementation of the [Findr software](https://github.com/lingfeiwang/findr) in [Julia](https://julialang.org/). 
+This is the documentation for [BioFindr.jl](https://github.com/tmichoel/BioFindr.jl), an implementation of the [Findr software](https://github.com/lingfeiwang/findr) in [Julia](https://julialang.org/). 
 
-The methods implemented in Findr were developed by [Lingfei Wang](https://github.com/lingfeiwang) and [Tom Michoel](https://tmichoel.github.io), and were first described in the paper ["Efficient and accurate causal inference with hidden confounders from genome-transcriptome variation data"](https://doi.org/10.1371/journal.pcbi.1005703).[^Wang2017]
+The methods implemented in BioFindr were developed by [Lingfei Wang](https://github.com/lingfeiwang) and [Tom Michoel](https://tmichoel.github.io), and were first described in the paper ["Efficient and accurate causal inference with hidden confounders from genome-transcriptome variation data"](https://doi.org/10.1371/journal.pcbi.1005703).[^Wang2017]
 
 This documentation copies both the structure and (most of) the contents of the [Materials and methods section](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005703#sec009) of the original paper, directly linking the mathematical description of the method to the documentation and source code of its implementation. Maybe this is how methods papers in computational biology should be written in the first place?
 
-If you haven't used Findr before, the [FindrTutorials website](https://tmichoel.github.io/FindrTutorials) may be useful.
+If you haven't used BioFindr before, the [BioFindrTutorials website](https://tmichoel.github.io/BioFindrTutorials) may be useful.
 
 If you are familiar with the [original Findr software](https://github.com/lingfeiwang/findr), you should be aware that
-[Findr.jl](https://github.com/tmichoel/Findr.jl) is not a literal translation. In particular, pay attention to the following differences:
+[BioFindr.jl](https://github.com/tmichoel/BioFindr.jl) is not a literal translation. In particular, pay attention to the following differences:
 
 - The main `findr` interface function for [Causal inference](@ref) takes as input expression and genotype matrices or [DataFrames](https://dataframes.juliadata.org/stable/), and a list or [DataFrame](https://dataframes.juliadata.org/stable/) of pairs to match eQTLs with a subset of genes. This avoids the need to reshape the gene expression data every time `findr` is called with a different set of eQTLs.
 

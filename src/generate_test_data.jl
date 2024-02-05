@@ -1,7 +1,7 @@
 """
     generate_test_data(nA, nB, fB, ns, ng, maf, bGA, bAB, supernormalize)
 
-Generate test data for Findr with `nA` causal variables, `nB` potential target variables of which a random fraction `fB` are true targets for each causal variable, `ns` samples, `ng` genotype (instrumental variable) groups with minor allele frequence `maf`, and effect sizes `bGA` and `bAB`. Variables are sampled from a linear model with independent Gaussian noise with variance `ϵ` and correlated Gaussian noise with variance `δ` and covariance `δρ`. If `supernormalize` is `true`, the data is supernormalized.
+Generate test data for BioFindr with `nA` causal variables, `nB` potential target variables of which a random fraction `fB` are true targets for each causal variable, `ns` samples, `ng` genotype (instrumental variable) groups with minor allele frequence `maf`, and effect sizes `bGA` and `bAB`. Variables are sampled from a linear model with independent Gaussian noise with variance `ϵ` and correlated Gaussian noise with variance `δ` and covariance `δρ`. If `supernormalize` is `true`, the data is supernormalized.
 """
 function generate_test_data(nA=2,nB=1000,fB=0.05,ns=100,ng=3,maf=0.3,bGA=1.,bAB=1., ϵ=0.5, δ=0.5, ρ=0.1, supernormalize=true)
     # sample one instrumental variable per causal variable
@@ -38,8 +38,8 @@ function generate_test_data(nA=2,nB=1000,fB=0.05,ns=100,ng=3,maf=0.3,bGA=1.,bAB=
 
     # supernormalize data
     if supernormalize
-        XA = Findr.supernormalize(XA);
-        XB = Findr.supernormalize(XB);
+        XA = BioFindr.supernormalize(XA);
+        XB = BioFindr.supernormalize(XB);
     end
     return G, XA, XB, istarget
 end

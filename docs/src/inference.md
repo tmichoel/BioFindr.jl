@@ -1,11 +1,11 @@
 ```@meta
-CurrentModule = Findr
+CurrentModule = BioFindr
 ```
 
 
 # General inference algorithm
 
-Consider a set of observations sampled from a mixture distribution of a null and an alternative hypothesis. For instance in gene regulation, every observation can correspond to expression levels of a pair of genes wich are sampled from a bivariate normal distribution with zero (null hypothesis) or non-zero (alternative hypothesis) correlation coefficient. In Findr, we predict the probability that any sample follows the alternative hypothesis with the following algorithm (based on and modified from [^Chen2007]):
+Consider a set of observations sampled from a mixture distribution of a null and an alternative hypothesis. For instance in gene regulation, every observation can correspond to expression levels of a pair of genes wich are sampled from a bivariate normal distribution with zero (null hypothesis) or non-zero (alternative hypothesis) correlation coefficient. In BioFindr, we predict the probability that any sample follows the alternative hypothesis with the following algorithm (based on and modified from [^Chen2007]):
 
 **1\.**  For robustness against outliers, we convert every continuous variable into standard normally distributed $N(0,1)$ values using a rank-based inverse normal transformation across all samples. We name this step as *supernormalization*.
 

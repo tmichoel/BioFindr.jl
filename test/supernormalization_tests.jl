@@ -5,7 +5,7 @@ ns = 100;
 X₁ = vec(1:ns);
 
 # supernormalize X\_1
-Y₁ = Findr.supernormalize(X₁);
+Y₁ = BioFindr.supernormalize(X₁);
 
 # supernormalized data must have mean 0, std 1
 @testset "Summary statistics" begin
@@ -17,12 +17,12 @@ end
     # supernormalization must preserve ranking
     @test issorted(Y₁)
     # any random vector of the same size as X\_1 must have the same supernormalization after sorting
-    @test sort(Findr.supernormalize(rand(ns))) ≈ Y₁ atol=1e-10
+    @test sort(BioFindr.supernormalize(rand(ns))) ≈ Y₁ atol=1e-10
 end
 
 # supernormalization must preserve the shape and type of the original data (if the input type is Float)
 X₂ = rand(ns,10);
-Y₂ = Findr.supernormalize(X₂);
+Y₂ = BioFindr.supernormalize(X₂);
 
 @testset "Shape and type" begin
     @test size(Y₂) == size(X₂)

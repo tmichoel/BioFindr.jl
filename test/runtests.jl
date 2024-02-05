@@ -1,4 +1,4 @@
-using Findr
+using BioFindr
 using Test
 using Distributions
 using Statistics
@@ -9,7 +9,7 @@ using Printf
 using Random
 
 
-@testset "Findr.jl" begin
+@testset "BioFindr.jl" begin
     # Write your tests here.
    
     @testset "Supernormalization" begin

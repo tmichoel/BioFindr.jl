@@ -57,6 +57,6 @@ jobs:
       - run: |
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
-            using Findr
-            DocMeta.setdocmeta!(Findr, :DocTestSetup, :(using Findr); recursive=true)
-            doctest(Findr)'
+            using BioFindr
+            DocMeta.setdocmeta!(BioFindr, :DocTestSetup, :(using BioFindr); recursive=true)
+            doctest(BioFindr)'

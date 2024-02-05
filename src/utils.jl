@@ -59,9 +59,9 @@ The optional parameter `combination` defines the combination test:
 - `none`: do nothing, return the input `P` (default)
 - `mediation`: the mediation test (``P_2 P_3``)
 - `IV`: the instrumental variable or non-independence test (``P_2 P_5``)
-- `orig`: Findr's original combination (``\\frac{1}{2}(P_2 P_5 + P_4)``
+- `orig`: BioFindr's original combination (``\\frac{1}{2}(P_2 P_5 + P_4)``
 
-The input must be a three-dimensional array where the second dimension has size 4 and indexes the individual Findr tests (test 2-5). The output is a matrix of size `size(P,1) x size(P,3)`.
+The input must be a three-dimensional array where the second dimension has size 4 and indexes the individual BioFindr tests (test 2-5). The output is a matrix of size `size(P,1) x size(P,3)`.
 """
 function combineprobs(P; combination="none")
     if combination == "none"
