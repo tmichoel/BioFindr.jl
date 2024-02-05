@@ -1,4 +1,8 @@
 # Generate supernormalized test data
+
+# We're setting a random seed because the tests should pass for most random data, but occasionally data are generated that fail the LBeta test_moments condition, while this condition must be satisfied to be able to test the fit_mixdist_mom functions. See the [reproducibility section of the Random documentation](https://docs.julialang.org/en/v1/stdlib/Random/#Reproducibility) for justification.
+ 
+Random.seed!(1234)
 nA = 1
 nB = 1000
 fB = 0.2
@@ -13,10 +17,10 @@ bAB = 1.
 supernormalize = true
 E, Ycol, Y, istarget = Findr.generate_test_data(nA, nB, fB, ns, ng, maf, bGA, bAB, supernormalize)
 
- # compute likelihood ratios
- llr = Findr.realLLR_col(Y,Ycol);
- llr1 = Findr.realLLR_col(Y,E);
- llr2, llr3, llr4, llr5 = Findr.realLLR_col(Y,Ycol,E);
+# compute likelihood ratios
+llr = Findr.realLLR_col(Y,Ycol);
+llr1 = Findr.realLLR_col(Y,E);
+llr2, llr3, llr4, llr5 = Findr.realLLR_col(Y,Ycol,E);
 
 @testset "pprob_col test 0" begin
     # test method of moments

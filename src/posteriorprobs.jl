@@ -177,9 +177,7 @@ function fit_mixdist_mom(llr,ns,ng=1,test=:corr)
     @assert π0<1. "Estimated prior probability π0=1"
 
     # first and second moment for the Beta distribution corresponding to the null distribution
-    bp = 0.5 .* params(dnull)
-    bm1 = bp[1] / sum(bp)
-    bm2 = bm1 * (bp[1] + 1) / (sum(bp) + 1)
+    bm1, bm2 = compute_moments(dnull)
 
     # transform llr to (mixture of) Beta distributed values
     z = 1 .-  exp.(-2 .* llr)

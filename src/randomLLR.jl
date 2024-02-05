@@ -67,7 +67,7 @@ function nulllog10pval(llr,ns,ng=1,test=:corr)
     # create null distribution
     nulld = nulldist(ns,ng,test)
     # compute negative log10 p-values
-    -logccdf(nulld,llr)/log(10) 
+    -logccdf.(nulld,llr)/log(10) 
 end
 
 """
@@ -91,3 +91,4 @@ function nullpdf(llr,ns,ng=1,test=:corr)
     # compute p-values
     pdf.(nulld,llr)
 end
+

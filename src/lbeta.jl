@@ -82,17 +82,26 @@ function Distributions.logccdf(d::LBeta, x::Real)
 end
 
 """
-    fit(LBeta, x)
+    compute_moments(d::LBeta)
 
-Fit an `LBeta` distribution to data `x` using the method of moments by exploiting its relationship to the Beta distribution.
-
-See https://github.com/JuliaStats/Distributions.jl/blob/master/src/univariate/continuous/beta.jl
+Compute the first and second moments `m1` and `m2` of the Beta distribution corresponding to the given `LBeta` distribution. 
 """
-function fit(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Real
-    z = 1 .-  exp.(-2 .* x) # if `x` is LBeta distributed, then `z` is Beta distributed
-    bd = fit(Beta,z)
-    lbp = 2 .* params(bd) # multiply fitted Beta param to obtain LBeta parameters
-    return LBeta(lbp...)
+function compute_moments(d::LBeta)
+    α,β = params(d)
+    m1 = α / (α + β)
+    m2 = α * (α + 1) / ((α + β) * (α + β + 1))
+    return m1, m2
+end
+
+"""
+    test_moments(m1,m2)
+
+Test if the given first and second moments `m1` and `m2` satisfy the conditions for a valid Beta distribution. (see also the [Beta distribution wiki](https://en.wikipedia.org/wiki/Beta_distribution#Two_unknown_parameters)):
+
+    ``m_1>m_2 \\wedge m_2>m_1^2``
+"""
+function test_moments(m1,m2)
+    return m1>m2 && m2>m1^2
 end
 
 """
@@ -105,10 +114,25 @@ Fit an `LBeta` distribution to given first and second moments `m1` and `m2` of t
 An [AssertionError](https://docs.julialang.org/en/v1/base/base/#Core.AssertionError) is thrown if the condition evaluates to `false`.
 """
 function fit_mom(LBeta, m1, m2)
-    @assert m1>m2 && m2>m1^2 "Invalid Beta distribution moments."
+    @assert test_moments(m1,m2) "Invalid Beta distribution moments."
     α = 2 * m1 * (m1 - m2) / (m2 - m1^2)
     β = 2 * (1 - m1) * (m1 - m2) / (m2 - m1^2)
     return LBeta(α,β)
+end
+
+
+"""
+    fit(LBeta, x)
+
+Fit an `LBeta` distribution to data `x` using the method of moments by exploiting its relationship to the Beta distribution.
+
+See https://github.com/JuliaStats/Distributions.jl/blob/master/src/univariate/continuous/beta.jl
+"""
+function fit(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Real
+    z = 1 .-  exp.(-2 .* x) # if `x` is LBeta distributed, then `z` is Beta distributed
+    bd = fit(Beta,z)
+    lbp = 2 .* params(bd) # multiply fitted Beta param to obtain LBeta parameters
+    return LBeta(lbp...)
 end
 
 """
