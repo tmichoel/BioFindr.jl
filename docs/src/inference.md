@@ -22,7 +22,7 @@ supernormalize
 **5\.** We consider multiple [Tests to evaluate](@ref), consisting of combinations of the basic [Likelihood ratio tests](@ref), for common tasks in genome-wide studies: 
 
 - [Coexpression analysis](@ref) 
-- [Differential expression analysis](@ref)
+- [Association analysis](@ref)
 - [Causal inference](@ref)
 - [Bipartite causal inference](@ref).
 

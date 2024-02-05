@@ -6,3 +6,9 @@ CurrentModule = BioFindr
 
 ```@index
 ```
+
+# Other functions
+
+```@docs
+test_moments
+```

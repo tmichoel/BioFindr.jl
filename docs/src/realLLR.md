@@ -124,7 +124,7 @@ and the LLR as
 ``{\mathcal H}_{\mathrm{alt}}^{\mathrm{(2)}}`` is chosen to verify that ``E`` regulates ``B``.
 
 
-In [Differential expression analysis](@ref), the linkage test is used standalone, and then its LLR for testing a specific grouping vector ``E`` against all genes ``B`` is implemented as a method of the `realLLR_col` function:
+In [Association analysis](@ref), the linkage test is used standalone, and then its LLR for testing a specific grouping vector ``E`` against all genes ``B`` is implemented as a method of the `realLLR_col` function:
 
 
 ```@docs
@@ -265,4 +265,10 @@ The MLEs of the various model parameters are computed in the `llrstats_col` and 
 ```@docs
 llrstats_col
 groupmeans
+```
+
+A summary of all methods of the `realLLR_col` function:
+
+```@docs
+realLLR_col
 ```
