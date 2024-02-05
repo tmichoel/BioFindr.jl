@@ -15,3 +15,11 @@ globalfdr!
 globalfdr
 qvalue
 ```
+
+# Generating simulated data
+
+BioFindr includes a function `generate_test_data` for generating simple simulated data for testing the package:
+
+```@docs
+generate_test_data
+```

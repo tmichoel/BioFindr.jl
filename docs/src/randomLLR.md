@@ -209,3 +209,14 @@ nullpdf
 nullpval
 nulllog10pval
 ```
+
+## LBeta related functions
+
+Some helper functions to work with `LBeta` distribution objects:
+
+```@docs
+compute_moments
+test_moments
+fit
+fit_mle
+```

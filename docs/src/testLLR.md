@@ -88,3 +88,11 @@ In the general case, we assume that there is one set of genes, of which the set 
 findr(X1::Matrix{T}, X2::Array{T}, G::Array{S}, pairGX::Matrix{R}; combination="none")  where {T<:AbstractFloat, S<:Integer, R<:Integer}
 findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, combination="IV") where T<:AbstractDataFrame
 ```
+
+## Summary
+
+A summary of all possible calls to the `findr` function:
+
+```@docs
+findr
+```
