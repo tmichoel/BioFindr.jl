@@ -148,30 +148,3 @@ function Distributions.fit_mle(::Type{<:LBeta}, x::AbstractArray{T}) where T<:Re
     lbp = 2 .* params(bd) # multiply fitted Beta param to obtain LBeta parameters
     return LBeta(lbp...)
 end
-
-
-
-"""
-    fit_weighted(LBeta, x, w)
-
-Fit an `LBeta` distribution to data `x` where each observation in `x` has a weight `w` between 0 and 1, using the method of moments. The function exploits the relationship to the Beta distribution and is a simple adaptation of the `fit` function in
-
-https://github.com/JuliaStats/Distributions.jl/blob/master/src/univariate/continuous/beta.jl
-"""
-function fit_weighted(::Type{<:LBeta}, x::AbstractArray{T}, w::AbstractWeights) where T<:Real
-    z = 1 .-  exp.(-2 .* x) # if `x` is LBeta distributed, then `z` is Beta distributed
-
-    # the following lines adapted from beta.jl fit function by replacing calls to `mean` and `var` by their weighted versions
-    z_bar = mean(z, w)
-    v_bar = var(z, w; mean=z_bar, corrected=true)
-    if v_bar < z_bar*(1-z_bar)
-        temp = ((z_bar * (1. - z_bar)) / v_bar) - 1.
-        α = z_bar * temp
-        β = (1. - z_bar) * temp
-    else
-        α = 0.
-        β = 0.
-    end
-    lbp = 2 .* [α,β] # multiply fitted Beta param to obtain LBeta parameters
-    return LBeta(lbp...)
-end
