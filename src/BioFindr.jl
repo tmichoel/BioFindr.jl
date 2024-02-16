@@ -11,7 +11,8 @@ using SpecialFunctions
 using KernelDensity
 using LinearAlgebra
 using InvertedIndices
-
+using Graphs
+using MetaGraphsNext
 
 # Export statements
 export findr
