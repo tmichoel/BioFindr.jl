@@ -1,28 +1,4 @@
 """
-    bnfindr(dX::T, dP::T) where T<:AbstractDataFrame
-
-Learn the structure and parameters of a Bayesian network from a dataset `dX` of gene expression data and a dataset `dP` of [`findr`](@ref) results (list of edges and their posterior probability and q-value) using the method of [Wang et al. (2019)](https://doi.org/10.3389/fgene.2019.01196).
-"""
-function bnfindr(dX::T, dP::T) where T<:AbstractDataFrame
-    # Learn the DAG structure from the findr results
-    G, name2idx, idx2name = dagfindr!(dP)
-
-    # Learn the parameters of the Bayesian network by fitting a linear Gaussian CPD to each vertex given its parents
-    for v = 1:nv(G)
-        parents = inneighbors(G, v)
-        if isempty(parents)
-            # Fit a univariate Gaussian distribution to the vertex
-            
-        else
-            # Fit a multivariate Gaussian distribution to the vertex given its parents
-           
-        end
-    end
-end
-
-
-
-"""
     dagfindr(dP::T; method="greedy edges") where T<:AbstractDataFrame
 
 Convert a DataFrame `dP` of [`findr`](@ref) results (list of edges) to a directed acyclic graph (DAG) using the specified `method`. The output is a directed graph
@@ -57,7 +33,7 @@ function dagfindr_greedy_edges!(dP::T) where T<:AbstractDataFrame
     sort!(dP, :"qvalue")
 
     # Add columns with vertex numbers
-    name2idx, idx2name = names2nums!(dP)
+    name2idx = names_to_index!(dP)
 
     # Add a column to store if an edge is added or not
     dP.inDAG_greedy_edges = trues(nrow(dP))
@@ -80,7 +56,7 @@ function dagfindr_greedy_edges!(dP::T) where T<:AbstractDataFrame
         end
     end
 
-    return G, name2idx, idx2name
+    return G, name2idx
 end
 
 """
@@ -96,7 +72,7 @@ function dagfindr_heuristic_sort!(dP::T; epsilon=0.01) where T<:AbstractDataFram
     sort!(dP, :"qvalue")
 
     # Add columns with vertex numbers
-    name2idx, idx2name = names2nums!(dP)
+    name2idx = names_to_index!(dP)
 
     # Add a column to store if an edge is added or not
     dP.inDAG_heuristic_sort = trues(nrow(dP))
@@ -143,7 +119,7 @@ function dagfindr_heuristic_sort!(dP::T; epsilon=0.01) where T<:AbstractDataFram
         end
     end
 
-    return G, name2idx, idx2name
+    return G, name2idx
 end
 
 """
@@ -159,7 +135,7 @@ function dagfindr_greedy_insertion!(dP::T) where T<:AbstractDataFrame
     sort!(dP, :"qvalue")
 
     # Add columns with vertex numbers
-    name2idx, idx2name = names2nums!(dP)
+    name2idx = names_to_index!(dP)
 
     # Add a column to store if an edge is added or not
     dP.inDAG_greedy_insertion = trues(nrow(dP))
@@ -193,7 +169,7 @@ function dagfindr_greedy_insertion!(dP::T) where T<:AbstractDataFrame
         end
     end
 
-    return G, name2idx, idx2name
+    return G, name2idx
 end
 
 function greedy_insertions!(sorted_vertices, weights)
@@ -241,13 +217,14 @@ end
 
 Add columns with vertex numbers to a DataFrame `dP` of edges. The columns `Source_idx` and `Target_idx` are added to `dP` with the vertex numbers corresponding to the names in the `Source` and `Target` columns, respectively. The function returns a dictionary `name2num` to map vertex names to numbers.
 """
-function names2nums!(dP::T) where T<:AbstractDataFrame
-    # Create a dictionary to map names to numbers
+function names_to_index!(dP::T) where T<:AbstractDataFrame
+    # Create a dictionary to map names to numbers, BayesNets wants this as a Dict{Symbol,Int}
     vnames = unique(vcat(dP.Source, dP.Target))
     name2idx = Dict(name => i for (i, name) in enumerate(vnames))
-    idx2name = Dict(i => name for (i, name) in enumerate(vnames))
     # Add columns with vertex numbers
     dP.Source_idx = map(x -> name2idx[x], dP.Source)
     dP.Target_idx = map(x -> name2idx[x], dP.Target)
-    return name2idx, idx2name
+    # BayesNets wants the names as Symbols
+    symb2idx = Dict(Symbol(name) => i for (name, i) in name2idx)
+    return symb2idx
 end
