@@ -1,7 +1,7 @@
 name = "BioFindr"
 uuid = "77580646-997d-4218-a3cc-42097ecd1c68"
 authors = ["tmichoel <11647967+tmichoel@users.noreply.github.com> and contributors"]
-version = "1.0.1"
+version = "1.0.2"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
