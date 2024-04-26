@@ -68,7 +68,7 @@ To fit the mixture distribution, the original method[^Wang2017] approximated PDF
 
 [^Wang2017]: Wang L, Michoel T (2017) [Efficient and accurate causal inference with hidden confounders from genome-transcriptome variation data](https://doi.org/10.1371/journal.pcbi.1005703). PLoS Comput Biol 13(8): e1005703.
 
-[BioFindr.jl](https://github.com/tmichoel/BioFindr.jl) uses an alternative, parametric approach, where the basic assumption is that the alternative distribution ``p(\mathrm{LLR}\mid{\mathcal H}_{\mathrm{alt}})`` for each test also follows an [`LBeta`](@ref) distribution, that is, belongs to the same 2-parameter family of distributions as the null distributions. 
+[BioFindr](https://github.com/tmichoel/BioFindr.jl) uses an alternative, parametric approach, where the basic assumption is that the alternative distribution ``p(\mathrm{LLR}\mid{\mathcal H}_{\mathrm{alt}})`` for each test also follows an [`LBeta`](@ref) distribution, that is, belongs to the same 2-parameter family of distributions as the null distributions. 
 
 Let us denote the random variable ``X=\mathrm{LLR}`` taking values ``x\geq 0``, and ``\pi_0=P({\mathcal H}_{\mathrm{null}})``. Our assumption is that
 
@@ -182,7 +182,7 @@ fit_mixdist_mom
 
 ## [Kernel density estimation of the mixture distribution](@id kde_postprobs)
 
-The method of moments mixture distribution works very well in practice (by visual inspection of histograms and fitted distributions), but there is no theory to support it. Moreover the condition on the moments to produce valid distribution parameters (See [`fit_mom`](@ref)) is sometimes violated (typically when ``\pi_0\approx 1``). Hence [BioFindr.jl](https://github.com/tmichoel/BioFindr.jl) also implements an alternative [kernel density estimation](https://en.wikipedia.org/wiki/Kernel_density_estimation) method, comparable to the one implemented in the [qvalue package for R](https://github.com/StoreyLab/qvalue).
+The method of moments mixture distribution works very well in practice (by visual inspection of histograms and fitted distributions), but there is no theory to support it. Moreover the condition on the moments to produce valid distribution parameters (See [`fit_mom`](@ref)) is sometimes violated (typically when ``\pi_0\approx 1``). Hence [BioFindr](https://github.com/tmichoel/BioFindr.jl) also implements an alternative [kernel density estimation](https://en.wikipedia.org/wiki/Kernel_density_estimation) method, comparable to the one implemented in the [qvalue package for R](https://github.com/StoreyLab/qvalue).
 
 ```@docs
 fit_mixdist_KDE

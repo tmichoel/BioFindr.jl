@@ -2,9 +2,9 @@
 CurrentModule = BioFindr
 ```
 
-# BioFindr.jl Documentation
+# BioFindr Documentation
 
-This is the documentation for [BioFindr.jl](https://github.com/tmichoel/BioFindr.jl), an implementation of the [Findr software](https://github.com/lingfeiwang/findr) in [Julia](https://julialang.org/). 
+This is the documentation for [BioFindr](https://github.com/tmichoel/BioFindr.jl), an implementation of the [Findr software](https://github.com/lingfeiwang/findr) in [Julia](https://julialang.org/). 
 
 The methods implemented in BioFindr were developed by [Lingfei Wang](https://github.com/lingfeiwang) and [Tom Michoel](https://tmichoel.github.io), and were first described in the paper ["Efficient and accurate causal inference with hidden confounders from genome-transcriptome variation data"](https://doi.org/10.1371/journal.pcbi.1005703).[^Wang2017]
 

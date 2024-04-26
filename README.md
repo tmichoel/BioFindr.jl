@@ -1,6 +1,6 @@
-# BioFindr.jl
+# BioFindr
 
-BioFindr.jl is an implementation of the [Findr software](https://github.com/lingfeiwang/findr) in [Julia](https://julialang.org/). See our paper ["Efficient and accurate causal inference with hidden confounders from genome-transcriptome variation data"](https://doi.org/10.1371/journal.pcbi.1005703)[^Wang2017] for  details of the methods implemented in BioFindr.
+BioFindr is an implementation of the [Findr software](https://github.com/lingfeiwang/findr) in [Julia](https://julialang.org/). See our paper ["Efficient and accurate causal inference with hidden confounders from genome-transcriptome variation data"](https://doi.org/10.1371/journal.pcbi.1005703)[^Wang2017] for  details of the methods implemented in BioFindr.
 
 If you're new to BioFindr, the separate [tutorials website](https://tmichoel.github.io/BioFindrTutorials) may be helpful.
 

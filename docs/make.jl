@@ -7,7 +7,7 @@ makedocs(;
     modules=[BioFindr],
     authors="tmichoel <11647967+tmichoel@users.noreply.github.com> and contributors",
     repo="https://github.com/tmichoel/BioFindr.jl/blob/{commit}{path}#{line}",
-    sitename="BioFindr.jl",
+    sitename="BioFindr",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://tmichoel.github.io/BioFindr.jl",
@@ -21,7 +21,7 @@ makedocs(;
         "Null distributions of the LLRs" => "randomLLR.md",
         "Bayesian inference of posterior probabilities" => "posteriorprobs.md",
         "Tests to evaluate" => "testLLR.md",
- #       "Bayesian networks" => "bayesiannets.md",
+        "Bayesian networks" => "bayesiannets.md",
         "Utilities" => "utils.md",
         "List of functions" => "listfunctions.md"       
     ],

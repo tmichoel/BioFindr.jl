@@ -172,6 +172,11 @@ function dagfindr_greedy_insertion!(dP::T) where T<:AbstractDataFrame
     return G, name2idx
 end
 
+"""
+    greedy_insertions!(sorted_vertices, weights)
+
+TBW
+"""
 function greedy_insertions!(sorted_vertices, weights)
     n = length(sorted_vertices)
     updated = true
@@ -204,6 +209,11 @@ function greedy_insertions!(sorted_vertices, weights)
     end
 end
 
+"""
+    edge_weights(dP::T) where T<:AbstractDataFrame
+
+TBW
+"""
 function edge_weights(dP::T) where T<:AbstractDataFrame
     weights = Dict{Tuple{Int,Int},Float64}()
     for row in eachrow(dP)
