@@ -223,7 +223,7 @@ function edge_weights(dP::T) where T<:AbstractDataFrame
 end
 
 """
-    names2nums!(dP::T) where T<:AbstractDataFrame
+    names_to_index!(dP::T) where T<:AbstractDataFrame
 
 Add columns with vertex numbers to a DataFrame `dP` of edges. The columns `Source_idx` and `Target_idx` are added to `dP` with the vertex numbers corresponding to the names in the `Source` and `Target` columns, respectively. The function returns a dictionary `name2num` to map vertex names to numbers.
 """

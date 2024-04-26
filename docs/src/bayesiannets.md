@@ -4,7 +4,7 @@ CurrentModule = BioFindr
 
 # Bayesian network learning
 
-[BioFindr][1] implements the method described in the paper [High-dimensional bayesian network inference from systems genetics data using genetic node ordering](https://doi.org/10.3389/fgene.2019.01196)[^Wang2017] to learn a Bayesian network using a dataframe of posterior probabilities as prior edge weights.
+[BioFindr](https://github.com/tmichoel/BioFindr.jl) implements the method described in the paper [High-dimensional bayesian network inference from systems genetics data using genetic node ordering](https://doi.org/10.3389/fgene.2019.01196)[^Wang2017] to learn a Bayesian network using a dataframe of posterior probabilities as prior edge weights.
 
 ## DAG reconstruction
 
@@ -17,9 +17,7 @@ dagfindr_heuristic_sort!
 dagfindr_greedy_insertion!
 greedy_insertions!
 edge_weights
-names2nums!
+names_to_index!
 ```
 
 [^Wang2019]: Wang L, Audenaert P, Michoel T (2019) [High-dimensional bayesian network inference from systems genetics data using genetic node ordering](https://doi.org/10.3389/fgene.2019.01196). Frontiers in Genetics, Special Topic Machine Learning and Network-Driven Integrative Genomics, 10, 1196.
-
-[1]: https://github.com/tmichoel/BioFindr.jl
