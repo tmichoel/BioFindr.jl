@@ -15,7 +15,7 @@ using Graphs
 using MetaGraphsNext
 
 # Export statements
-export findr
+export findr, dagfindr!
 
 # Define test names as variables
 

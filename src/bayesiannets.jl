@@ -1,5 +1,5 @@
 """
-    dagfindr(dP::T; method="greedy edges") where T<:AbstractDataFrame
+    dagfindr!(dP::T; method="greedy edges") where T<:AbstractDataFrame
 
 Convert a DataFrame `dP` of [`findr`](@ref) results (list of edges) to a directed acyclic graph (DAG) using the specified `method`. The output is a directed graph
 represented as a [`SimpleDiGraph`](https://juliagraphs.org/Graphs.jl/stable/core_functions/simplegraphs/#Graphs.SimpleGraphs.SimpleDiGraph) from the [`Graphs`](https://github.com/JuliaGraphs/Graphs.jl) package. The `method` can be any of
