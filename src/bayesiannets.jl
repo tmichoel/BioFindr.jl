@@ -4,9 +4,9 @@
 Convert a DataFrame `dP` of [`findr`](@ref) results (list of edges) to a directed acyclic graph (DAG) using the specified `method`. The output is a directed graph
 represented as a [`SimpleDiGraph`](https://juliagraphs.org/Graphs.jl/stable/core_functions/simplegraphs/#Graphs.SimpleGraphs.SimpleDiGraph) from the [`Graphs`](https://github.com/JuliaGraphs/Graphs.jl) package. The `method` can be any of
 
-- `"greedy edges"` (default), see [`dag_findr_greedy_edges`](@ref).
-- `"heuristic sort"`, see [`dag_findr_heuristic_sort`](@ref).
-- `"greedy insertion"`, see [`dag_findr_greedy_insertion`](@ref).
+- `"greedy edges"` (default), see [`dagfindr_greedy_edges!`](@ref).
+- `"heuristic sort"`, see [`dagfindr_heuristic_sort!`](@ref).
+- `"greedy insertion"`, see [`dagfindr_greedy_insertion!`](@ref).
 """
 function dagfindr!(dP::T; method="greedy edges") where T<:AbstractDataFrame
     if method == "greedy edges"
@@ -123,7 +123,7 @@ function dagfindr_heuristic_sort!(dP::T; epsilon=0.01) where T<:AbstractDataFram
 end
 
 """
-    dagfindr_greedy_insertion(dP::T) where T<:AbstractDataFrame
+    dagfindr_greedy_insertion!(dP::T) where T<:AbstractDataFrame
 
 Convert a DataFrame of `dP` of [`findr`](@ref) results (list of edges) to a directed acyclic graph (DAG) represented as a [`SimpleDiGraph`](https://juliagraphs.org/Graphs.jl/stable/core_functions/simplegraphs/#Graphs.SimpleGraphs.SimpleDiGraph) from the [`Graphs`](https://github.com/JuliaGraphs/Graphs.jl) package. This function implements the greedy insertion method of Stoop et al. (2023) where vertices are sorted iteratively by inserting vertices in the position in the current ordering yields the maximum possible gain of edge weights, where the gain is counted as the difference between the sum of new edges weight included and the sum of old edge weights lost, where edges are counted only if their source vertex precedes their target vertex in the ordering. The output is a directed graph and a dictionary to map vertex names to numbers.
 """
