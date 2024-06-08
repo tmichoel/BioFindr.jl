@@ -1,17 +1,26 @@
 """
     getpairs(dX::T, dG::T, dE::T; colG=1, colX=2)
 
-Get pairs of indices of matching columns from dataframes `dX` and `dG`, with column names that should be matched listed in dataframe `dE`. The optional parameters `colG` (default value 1) and `colX` (default value 2) indicate which columns of `dE` need to be used for matching, either as a column number (integer) or column name (string).
+Get pairs of indices of matching columns from dataframes `dX` and `dG`, with column names that should be matched listed in dataframe `dE`. The optional parameters `colG` (default value 1) and `colX` (default value 2) indicate which columns of `dE` need to be used for matching, either as a column number (integer) or column name (string). The optional parameter `namesX` can be used to match rows in `dE` to only a subset of the column names of `dX`.
 """
-function getpairs(dX::T, dG::T, dE::T; colG=1, colX=2) where T<:AbstractDataFrame
+function getpairs(dX::T, dG::T, dE::T; colG=1, colX=2, namesX=[]) where T<:AbstractDataFrame
+    # if namesX is empty, use all column names of dX
+    if isempty(namesX)
+        namesX = names(dX)
+    end
+    
     # Extract dX ID column from dE
     idX = select(dE, colX)[:,1]
-
     # Extract dG ID column from dE
     idG = select(dE, colG)[:,1]
 
+    # Keep only rows in idX and idG where idX is in namesX
+    row_select = findall(x -> x in namesX, idX)
+    idX = idX[row_select]
+    idG = idG[row_select]
+
     # Create the array with idG-idX pairs
-    pairsGX = zeros(Int64,nrow(dE),2);
+    pairsGX = zeros(Int64,length(idX),2);
     for rowE = axes(pairsGX,1)
         pairsGX[rowE,1] = findfirst(idG[rowE] .== names(dG))
         pairsGX[rowE,2] = findfirst(idX[rowE] .== names(dX))

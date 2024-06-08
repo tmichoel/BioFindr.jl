@@ -199,10 +199,12 @@ The input dataframes are:
 - `dX` - DataFrame with expression data, columns are genes
 - `dG` - DataFrame with genotype data, columns are variants (SNPs)
 - `dE` - DataFrame with eQTL results, must contain columns with gene and SNP IDs that can be mapped to column names in `dX` and `dG`, respectively
+
+The numeric mapping between column indices in `Matrix(dG)` and `Matrix(dX)` is obtained from these inputs using the [`getpairs`](@ref) function and the optional parameters:
+
 - `colG` - name or number of variant ID column in `dE`, default 1
 - `colX` - name or number of gene ID column in `dE`, default 2
-
-The numeric mapping between column indices in `Matrix(dG)` and `Matrix(dX)` is obtained from these inputs using the [`getpairs`](@ref) function.
+- `namesX` - names of a possible subset of columns in `dX` to be considered as potential causal regulators (default `names(dX)`)
 
 The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 
@@ -212,12 +214,12 @@ The optional parameter `sorted` determines if the output must be sorted by incre
 
 See also [`findr(::Matrix,::Array,::Matrix)`](@ref), [`getpairs`](@ref), [`combineprobs`](@ref), [`stackprobs`](@ref), [`globalfdr!`](@ref).
 """
-function findr(dX::T, dG::T, dE::T; colG=1, colX=2, method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
+function findr(dX::T, dG::T, dE::T; colG=1, colX=2, namesX=[], method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
     if combination == "none"
         error("Returning posterior probabilities for individual tests is not supported with DataFrame inputs. Set combination argument to one of \"IV\", \"mediation\", or \"orig\", or use matrix inputs.")
     elseif combination in Set(["IV","mediation","orig"])
         # Create the array with SNP-Gene pairs
-        pairGX = getpairs(dX, dG, dE; colG = colG, colX = colX)
+        pairGX = getpairs(dX, dG, dE; colG = colG, colX = colX, namesX = namesX)
         # Call BioFindr on numeric data
         PP = findr(Matrix(dX), Matrix(dG), pairGX; method = method, combination = combination)
         dP = stackprobs(PP, names(dX)[pairGX[:,2]], names(dX)) 
@@ -278,7 +280,11 @@ end
 
 Wrapper for `findr(Matrix(dX1), Matrix(dX2), Matrix(dG), pairGX2)` when the inputs `dX1`, `dX2`, and `dG` are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target`, (Posterior) `Probability`, and `qvalue` columns. When DataFrames are used, only combined posterior probabilities can be returned (`combination="IV"` (default), `"mediation"`, or `"orig"`).
 
-The numeric mapping between column indices in `Matrix(dG)` and `Matrix(dX2)` is obtained from the DataFrame inputs using the [`getpairs`](@ref) function.
+The numeric mapping between column indices in `Matrix(dG)` and `Matrix(dX2)` is obtained from these inputs using the [`getpairs`](@ref) function and the optional parameters:
+
+- `colG` - name or number of variant ID column in `dE`, default 1
+- `colX` - name or number of gene ID column in `dE`, default 2
+- `namesX` - names of a possible subset of columns in `dX` to be considered as potential causal regulators (default `names(dX)`)
 
 The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 
@@ -288,12 +294,12 @@ The optional parameter `sorted` determines if the output must be sorted by incre
     
 See also [`findr(::Matrix,::Array,::Array,::Matrix)`](@ref), [`combineprobs`](@ref), [`stackprobs`](@ref), [`globalfdr!`](@ref).
 """
-function findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
+function findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, namesX=[], method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
     if combination == "none"
         error("Returning posterior probabilities for individual tests is not supported with DataFrame inputs. Set combination argument to one of \"IV\", \"mediation\", or \"orig\", or use matrix inputs.")
     elseif combination in Set(["IV","mediation","orig"])
         # Create the array with SNP-Gene pairs
-        pairGX = getpairs(dX2, dG, dE; colG = colG, colX = colX)
+        pairGX = getpairs(dX2, dG, dE; colG = colG, colX = colX, namesX = namesX)
         # Call BioFindr on numeric data
         PP = findr(Matrix(dX1), Matrix(dX2), Matrix(dG), pairGX; method = method, combination = combination)
         dP = stackprobs(PP, names(dX2)[pairGX[:,2]], names(dX1))
