@@ -1,4 +1,16 @@
 """
+    coerce_scitypes!(df, scitype)
+
+Coerce all columns of dataframe `df` to the [scientic type](https://github.com/JuliaAI/ScientificTypes.jl) `scitype`. If `df` contains gene expression data, `scitype` can be  `Continuous` or `Count`. If `df` contains genotype data (or categorical data more generally), `scitype` can be `Multiclass` or `OrderedFactor`. Note though that genotypes are always treated as *unordered* categorical variables in BioFindr, and the ordering of levels for `OrderedFactor` data is not used. Continuous genotypes (e.g. expected allele counts outputted by genotype imputation methods) are not supported and must be converted to integers before calling this function.
+"""
+function coerce_scitypes!(df, scitype)
+    for col in names(df)
+        @assert scitype in [ScientificTypes.Continuous, ScientificTypes.Count, ScientificTypes.Multiclass, ScientificTypes.OrderedFactor]
+        df[!, col] = coerce(df[!, col], scitype)
+    end
+end
+
+"""
     getpairs(dX::T, dG::T, dE::T; colG=1, colX=2)
 
 Get pairs of indices of matching columns from dataframes `dX` and `dG`, with column names that should be matched listed in dataframe `dE`. The optional parameters `colG` (default value 1) and `colX` (default value 2) indicate which columns of `dE` need to be used for matching, either as a column number (integer) or column name (string). The optional parameter `namesX` can be used to match rows in `dE` to only a subset of the column names of `dX`.

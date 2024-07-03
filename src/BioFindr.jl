@@ -13,6 +13,7 @@ using LinearAlgebra
 using InvertedIndices
 using Graphs
 using MetaGraphsNext
+using ScientificTypes
 
 # Export statements
 export findr, dagfindr!
