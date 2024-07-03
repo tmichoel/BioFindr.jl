@@ -18,7 +18,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T}; method="moments") where T<:Abst
     if method == "moments"
         # Method of moments can fail if moments don't satisfy a positivity condition
         try
-            pp, - = fit_mixdist_mom(llr,ns)
+            pp, _ = fit_mixdist_mom(llr,ns)
         catch e
             # Fall back on KDE method in case of failure
             # @info "Encountered $e, using KDE instead of moments method."
