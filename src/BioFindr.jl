@@ -27,11 +27,9 @@ relev = "relev"
 pleio = "pleio"
 
 # Load the different code files
-include("findr_coexpression.jl");
+include("findr.jl");
 
-include("findr_association.jl");
-
-include("findr_causal_inference.jl");
+include("findr_matrix.jl");
 
 include("findr_pvalues.jl");
 
