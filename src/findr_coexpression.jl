@@ -2,36 +2,6 @@
 #   Methods for coexpression analysis   #
 #########################################
 
-"""
-    findr(X::Matrix{T}; cols=[], method="moments", combination="none") where T<:AbstractFloat
-
-Compute posterior probabilities for nonzero pairwise correlations between columns of input matrix `X`. The probabilities are directed (asymmetric) in the sense that they are estimated from a column-specific background distribution.
-
-The optional parameter `cols` (vector of integers) determines whether we consider all columns of `X` as source nodes (`cols=[]`, default), or only a subset of columns determined by the indices in the vector `cols`.
-
-The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
-
-The optional parameter `combination` determines whether the output must be symmetrized. Possible values are `none` (default), `prod`, `mean`, or `anti`. If the optional parameter `cols` is non-empty, symmetrization makes no sense and an error will be thrown unless `combination="none"`.
-
-See also [`findr(::DataFrame)`](@ref), [`symprobs`](@ref), [`supernormalize`](@ref), [`pprob_col`](@ref).
-"""
-function findr(X::Matrix{T}; cols=[], method="moments", combination="none") where T<:AbstractFloat
-    # Inverse-normal transformation and standardization for each columns of X
-    Y = supernormalize(X)
-    # check if we need to use all columns or only a subset as source nodes
-    if isempty(cols)
-        cols = axes(Y,2) # use all columns
-    end
-    # Matrix to store posterior probabilities
-    nall = size(Y,2)
-    ncols = length(cols)
-    PP = ones(nall,ncols) # this sets the diagonal elements to one
-    # Compute posterior probabilities for each column separately
-    Threads.@threads for i in eachindex(cols) 
-        PP[Not(cols[i]),i] = pprob_col(Y[:,Not(cols[i])],Y[:,cols[i]]; method = method)
-    end
-    return symprobs(PP, combination = combination)
-end
 
 """
     findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
@@ -65,7 +35,38 @@ function findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combi
 end
 
 """
-    findr(X1::Matrix{T}, X2::Matrix{T}; method="moments") where T<:AbstractFloat
+    findr_matrix(X::Matrix{T}; cols=[], method="moments", combination="none") where T<:AbstractFloat
+
+Compute posterior probabilities for nonzero pairwise correlations between columns of input matrix `X`. The probabilities are directed (asymmetric) in the sense that they are estimated from a column-specific background distribution.
+
+The optional parameter `cols` (vector of integers) determines whether we consider all columns of `X` as source nodes (`cols=[]`, default), or only a subset of columns determined by the indices in the vector `cols`.
+
+The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+
+The optional parameter `combination` determines whether the output must be symmetrized. Possible values are `none` (default), `prod`, `mean`, or `anti`. If the optional parameter `cols` is non-empty, symmetrization makes no sense and an error will be thrown unless `combination="none"`.
+
+See also [`findr(::DataFrame)`](@ref), [`symprobs`](@ref), [`supernormalize`](@ref), [`pprob_col`](@ref).
+"""
+function findr_matrix(X::Matrix{T}; cols=[], method="moments", combination="none") where T<:AbstractFloat
+    # Inverse-normal transformation and standardization for each columns of X
+    Y = supernormalize(X)
+    # check if we need to use all columns or only a subset as source nodes
+    if isempty(cols)
+        cols = axes(Y,2) # use all columns
+    end
+    # Matrix to store posterior probabilities
+    nall = size(Y,2)
+    ncols = length(cols)
+    PP = ones(nall,ncols) # this sets the diagonal elements to one
+    # Compute posterior probabilities for each column separately
+    Threads.@threads for i in eachindex(cols) 
+        PP[Not(cols[i]),i] = pprob_col(Y[:,Not(cols[i])],Y[:,cols[i]]; method = method)
+    end
+    return symprobs(PP, combination = combination)
+end
+
+"""
+    findr_matrix(X1::Matrix{T}, X2::Matrix{T}; method="moments") where T<:AbstractFloat
 
 Compute posterior probabilities for nonzero pairwise correlations between columns of input matrices `X1` and `X2`. The probabilities are directed (asymmetric) from the columns of `X2` to the columns of `X1` in the sense that they are estimated from a column-specific background distribution for each column of `X2`.
 
@@ -75,7 +76,7 @@ Only use this method if `X1` and `X2` are distinct (no overlapping columns). For
 
 See also [`findr(::DataFrame)`](@ref), [`symprobs`](@ref), [`supernormalize`](@ref), [`pprob_col`](@ref).
 """
-function findr(X1::Matrix{T}, X2::Array{T}; method="moments") where T<:AbstractFloat
+function findr_matrix(X1::Matrix{T}, X2::Array{T}; method="moments") where T<:AbstractFloat
     # Inverse-normal transformation and standardization for each columns of X1 and X2
     Y1 = supernormalize(X1)
     Y2 = supernormalize(X2)

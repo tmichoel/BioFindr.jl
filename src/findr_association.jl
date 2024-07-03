@@ -4,7 +4,7 @@
 
 
 """
-    findr(X::Matrix{T},G::Array{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
+    findr_matrix(X::Matrix{T},G::Array{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero differential expression of colunns of input matrix `X` across groups defined by one or more categorical variables (columns of `G`).
 
@@ -17,7 +17,7 @@ See also [`findr(::DataFrame,::DataFrame)`](@ref), [`supernormalize`](@ref), [`p
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. CategoricalArrays will be supported in the future.
 """
-function findr(X::Matrix{T}, G::Array{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
+function findr_matrix(X::Matrix{T}, G::Array{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
     # Inverse-normal transformation and standardization for each column of X
     Y = supernormalize(X)
     # Matrix to store posterior probabilities

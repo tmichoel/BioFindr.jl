@@ -10,22 +10,33 @@ Based on the six [Likelihood ratio tests](@ref), we use the following tests and 
 
 The correlation test is introduced as a benchmark, against which we can compare other methods involving genotype information. Pairwise correlation is a simple measure for the probability of two genes being functionally related either through direct or indirect regulation, or through coregulation by a third factor. Bayesian inference additionally considers different gene roles. Its predicted posterior probability for regulation is ``P_0``.
 
-Correlation analysis can be performed by calling `findr` with one argument, a matrix or dataframe of gene expression values:
+Correlation analysis can be performed by calling `findr` with one argument, a dataframe of gene expression values:
 
 ```@docs
-findr(X::Matrix{T}) where T<:AbstractFloat
 findr(dX::T) where T<:AbstractDataFrame
 ```
+
+If you prefer to work with matrix-based data, the equivalent function `findr_matrix`:
+
+```@docs
+findr_matrix(X::Matrix{T}) where T<:AbstractFloat
+```
+
 
 ## Association analysis
 
 The secondary linkage test is introduced to test association between genetic variants and gene expression levels, and can be used more generally to analyze differential expression of genes across groups defined by any kind of categorical variable. Its predicted posterior probability for differential expression is ``P_2``.
 
-Association analysis can be performed by calling `findr` with two arguments, matrices or dataframes of continuous gene expression values and categorical genotype or more general grouping values, respectively:
+Association analysis can be performed by calling `findr` with two arguments, dataframes of continuous gene expression values and categorical genotype or more general grouping values, respectively:
 
 ```@docs
-findr(X::Matrix{T}, G::Array{S}) where {T<:AbstractFloat, S<:Integer}
 findr(dX::T, dG::T) where T<:AbstractDataFrame
+```
+
+or with matrix-based inputs:
+
+```@docs
+findr_matrix(X::Matrix{T}, G::Array{S}) where {T<:AbstractFloat, S<:Integer}
 ```
 
 ## Causal inference
@@ -73,11 +84,16 @@ The composite design of the novel test aims not to miss any genuine regulation w
 
 ### Implementation
 
-Causal inference can be performed by calling `findr` with three arguments, matrices or dataframes of gene expression and genotype values, and a mapping of matching ``(E,A)`` pairs; the preferred test can be set through the `combination` parameter:
+Causal inference can be performed by calling `findr` with three arguments, dataframes of gene expression and genotype values, and a mapping of matching ``(E,A)`` pairs; the preferred test can be set through the `combination` parameter:
 
 ```@docs
-findr(X::Matrix{T},G::Matrix{S},pairGX::Matrix{R}; combination="none") where {T<:AbstractFloat, S<:Integer, R<:Integer}
 findr(dX::T, dG::T, dE::T; colG=1, colX=2, combination="IV") where T<:AbstractDataFrame
+```
+
+or with matrix-based input data:
+
+```@docs
+findr_matrix(X::Matrix{T},G::Matrix{S},pairGX::Matrix{R}; combination="none") where {T<:AbstractFloat, S<:Integer, R<:Integer}
 ```
 
 ## Bipartite causal inference
@@ -85,8 +101,13 @@ findr(dX::T, dG::T, dE::T; colG=1, colX=2, combination="IV") where T<:AbstractDa
 In the general case, we assume that there is one set of genes, of which the set of ``A``-genes (genes with matching instrument ``E``) is a subset, and that all possible directed regulations are tested. In some situations we are instead searching for a bipartite network from one set of potential causal factors (e.g. micro-RNAs) to another set of potential targets (e.g. protein-coding genes). In this case, causal inference can be performed by calling `findr` with four arguments that include separate matrices or dataframes of expression values for the potential causes and targets:
 
 ```@docs
-findr(X1::Matrix{T}, X2::Array{T}, G::Array{S}, pairGX::Matrix{R}; combination="none")  where {T<:AbstractFloat, S<:Integer, R<:Integer}
 findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, combination="IV") where T<:AbstractDataFrame
+```
+
+or with matrix-based input data:
+
+```@docs
+findr_matrix(X1::Matrix{T}, X2::Array{T}, G::Array{S}, pairGX::Matrix{R}; combination="none")  where {T<:AbstractFloat, S<:Integer, R<:Integer}
 ```
 
 ## Summary
@@ -95,4 +116,10 @@ A summary of all possible calls to the `findr` function:
 
 ```@docs
 findr
+```
+
+and the `findr_matrix` function:
+
+```@docs
+findr_matrix
 ```

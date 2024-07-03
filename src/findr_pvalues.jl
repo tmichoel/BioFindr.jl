@@ -3,7 +3,7 @@
 #####################################################################
 
 
-function findrpval(X::Matrix{T}) where T<:AbstractFloat
+function findrpval_matrix(X::Matrix{T}) where T<:AbstractFloat
     # Inverse-normal transformation and standardization for each columns of X
     Y = supernormalize(X)
     ns = size(Y,1)
