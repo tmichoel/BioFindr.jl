@@ -28,7 +28,7 @@ function findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combi
         colnames = names(dX)
         cols = []
     end
-    PP = findr(Matrix(dX); cols = cols, method = method, combination = combination)
+    PP = findr_matrix(Matrix(dX); cols = cols, method = method, combination = combination)
     dP = stackprobs(PP, colnames, names(dX))
     globalfdr!(dP, FDR = FDR, sorted = sorted)
     return dP

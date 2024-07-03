@@ -35,7 +35,7 @@ function findr(dX::T, dG::T, dE::T; colG=1, colX=2, namesX=[], method="moments",
         # Create the array with SNP-Gene pairs
         pairGX = getpairs(dX, dG, dE; colG = colG, colX = colX, namesX = namesX)
         # Call BioFindr on numeric data
-        PP = findr(Matrix(dX), Matrix(dG), pairGX; method = method, combination = combination)
+        PP = findr_matrix(Matrix(dX), Matrix(dG), pairGX; method = method, combination = combination)
         dP = stackprobs(PP, names(dX)[pairGX[:,2]], names(dX)) 
         globalfdr!(dP, FDR = FDR, sorted = sorted)
         return dP
@@ -70,7 +70,7 @@ function findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, namesX=[], method="
         # Create the array with SNP-Gene pairs
         pairGX = getpairs(dX2, dG, dE; colG = colG, colX = colX, namesX = namesX)
         # Call BioFindr on numeric data
-        PP = findr(Matrix(dX1), Matrix(dX2), Matrix(dG), pairGX; method = method, combination = combination)
+        PP = findr_matrix(Matrix(dX1), Matrix(dX2), Matrix(dG), pairGX; method = method, combination = combination)
         dP = stackprobs(PP, names(dX2)[pairGX[:,2]], names(dX1))
         globalfdr!(dP, FDR = FDR, sorted = sorted)
         return dP
