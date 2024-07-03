@@ -1,3 +1,8 @@
+##############################################
+# One input dataframe, coexpression analysis #
+##############################################
+
+
 """
     findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
 
@@ -16,6 +21,16 @@ The optional parameter `combination` determines whether the output must be symme
 See also [`findr(::Matrix)`](@ref), [`symprobs`](@ref), [`stackprobs`](@ref), [`globalfdr!`](@ref).
 """
 function findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
+    # verify scientific type of dX:
+    # - all columns must have the same scitype 
+    # - the unique scitype must be continuous for coexpression analysis
+    sct = unique(schema(dX).scitypes)
+    if length(sct) > 1
+        error("All columns of the input DataFrame must have the same scientific type")
+    elseif !(sct[1] <: ScientificTypes.Infinite)
+        error("All columns of the input DataFrame must have a count or continuous scientific type. Use the function BioFindr.coerce_scitypes!(dX, Continuous) to convert the DataFrame to the correct scientific type.")
+    end
+
     if !isempty(colnames)
         colnames = intersect(colnames, names(dX))
         cols = indexin(colnames, names(dX))
