@@ -10,6 +10,32 @@ function coerce_scitypes!(df, scitype)
     end
 end
 
+
+"""
+    test_scitype(df, scitype)
+
+Test if all columns of dataframe `df` have the scientific type `scitype`. If `scitype` is `Continuous` or `Count`, the function will return `true` if all columns are of that type. If `scitype` is `Multiclass` or `OrderedFactor`, the function will return `true` if all columns are of that type, although the columns may have different levels. If the columns have different types, the function will return `false`.
+"""
+function test_scitype(df, scitype)
+    # get the scientific types of the columns of df
+    sct = unique(schema(df).scitypes)
+    if scitype == ScientificTypes.Continuous
+        # all columns should be continuous
+        return all(sct .== ScientificTypes.Continuous)
+    elseif scitype == ScientificTypes.Count
+        # all columns should be count
+        return all(sct .== ScientificTypes.Count)
+    elseif scitype == ScientificTypes.Multiclass
+        # all columns should be multiclass but need not have the same levels
+        return all(sct .<: ScientificTypes.Multiclass)
+    elseif scitype == ScientificTypes.OrderedFactor
+        # all columns should be ordered factor but need not have the same levels
+        return all(sct .<: ScientificTypes.OrderedFactor)
+    else
+        error("scitype must be one of Continuous, Count, Multiclass, or OrderedFactor")
+    end
+end
+
 """
     getpairs(dX::T, dG::T, dE::T; colG=1, colX=2)
 
