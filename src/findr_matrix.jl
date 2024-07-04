@@ -40,7 +40,7 @@ Only use this method if `X1` and `X2` are distinct (no overlapping columns). For
 
 See also [`findr(::DataFrame)`](@ref), [`symprobs`](@ref), [`supernormalize`](@ref), [`pprob_col`](@ref).
 """
-function findr_matrix(X1::Matrix{T}, X2::Array{T}; method="moments") where T<:AbstractFloat
+function findr_matrix(X1::Matrix{T}, X2::Array{T}; method="moments") where T<:Real
     # Inverse-normal transformation and standardization for each columns of X1 and X2
     Y1 = supernormalize(X1)
     Y2 = supernormalize(X2)
@@ -67,7 +67,7 @@ See also [`findr(::DataFrame,::DataFrame)`](@ref), [`supernormalize`](@ref), [`p
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. CategoricalArrays will be supported in the future.
 """
-function findr_matrix(X::Matrix{T}, G::Array{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
+function findr_matrix(X::Matrix{T}, G::Array{S}; method="moments") where {T<:Real, S<:Integer}
     # Inverse-normal transformation and standardization for each column of X
     Y = supernormalize(X)
     # Matrix to store posterior probabilities
@@ -102,7 +102,7 @@ See also [`findr(::DataFrame,::DataFrame,::DataFrame)`](@ref), [`supernormalize`
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. I intend to use CategoricalArrays in the future.
 """
-function findr_matrix(X::Matrix{T},G::Array{S},pairGX::Matrix{R}; method="moments", combination="none") where {T<:AbstractFloat, S<:Integer, R<:Integer}
+function findr_matrix(X::Matrix{T},G::Array{S},pairGX::Matrix{R}; method="moments", combination="none") where {T<:Real, S<:Integer, R<:Integer}
     if !(combination in Set(["none","IV","mediation","orig"]))
         error("combination parameter must be one of \"none\", \"IV\", \"mediation\", or \"orig\"")
     end
@@ -143,7 +143,7 @@ See also [`findr(::DataFrame,::DataFrame,::DataFrame,::DataFrame)`](@ref), [`com
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. I intend to use CategoricalArrays in the future.
 """
-function findr_matrix(X1::Matrix{T}, X2::Array{T}, G::Array{S}, pairGX::Matrix{R}; method="moments", combination="none")  where {T<:AbstractFloat, S<:Integer, R<:Integer}
+function findr_matrix(X1::Matrix{T}, X2::Array{T}, G::Array{S}, pairGX::Matrix{R}; method="moments", combination="none")  where {T<:Real, S<:Integer, R<:Integer}
     if !(combination in Set(["none","IV","mediation","orig"]))
         error("combination parameter must be one of \"none\", \"IV\", \"mediation\", or \"orig\"")
     end
