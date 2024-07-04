@@ -6,7 +6,7 @@
 """
     findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
 
-Wrapper for `findr(Matrix(dX))` when the input `dX` is in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target`, (Posterior) `Probability`, and `qvalue` columns.
+Wrapper for `findr_matrix(Matrix(dX))` when the input `dX` is in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target`, (Posterior) `Probability`, and `qvalue` columns.
 
 The optional parameter `colnames` (vector of strings) determines whether we consider all columns of `dX` as source nodes (`colnames=[]`, default), or only a subset of columns determined by the variable names in the vector `colnames`.
 
@@ -28,7 +28,7 @@ function findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combi
     if length(sct) > 1
         error("All columns of the input DataFrame must have the same scientific type")
     elseif !(sct[1] <: ScientificTypes.Infinite)
-        error("All columns of the input DataFrame must have a count or continuous scientific type. Use the function BioFindr.coerce_scitypes!(dX, Continuous) to convert the DataFrame to the correct scientific type.")
+        error("All columns of the input DataFrame must have a count or continuous scientific type. Use the function BioFindr.coerce_scitypes! to convert the DataFrame to the correct scientific type.")
     end
 
     if !isempty(colnames)
@@ -44,6 +44,9 @@ function findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combi
     return dP
 end
 
+########################################################################
+# Two input dataframes, bipartite coexpression or association analysis #
+########################################################################
 
 """
     findr(dX::T, dG::T; method="moments", FDR=1.0, sorted=true) where T<:AbstractDataFrame
