@@ -10,6 +10,7 @@ The [`findr`](@ref) function expects that input DataFrames use [scientific types
 
 ```@docs
 coerce_scitypes!
+test_scitype
 ```
 
 ## Postprocessing functions
