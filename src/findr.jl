@@ -6,7 +6,7 @@
 """
     findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
 
-Wrapper for `findr_matrix(Matrix(dX))` when the input `dX` is in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target`, (Posterior) `Probability`, and `qvalue` columns.
+Wrapper for `findr_matrix(Matrix(dX))` when the input `dX` is in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target`, (Posterior) `Probability`, and `qvalue` columns. All columns of the input DataFrame must have a count or continuous scientific type. 
 
 The optional parameter `colnames` (vector of strings) determines whether we consider all columns of `dX` as source nodes (`colnames=[]`, default), or only a subset of columns determined by the variable names in the vector `colnames`.
 
@@ -18,16 +18,11 @@ The optional parameter `sorted` determines if the output must be sorted by incre
 
 The optional parameter `combination` determines whether the output must be symmetrized. Possible values are `none` (default), `prod`, `mean`, or `anti`. If the optional parameter `colnames` is non-empty, symmetrization makes no sense and an error will be thrown unless `combination="none"`.
 
-See also [`findr(::Matrix)`](@ref), [`symprobs`](@ref), [`stackprobs`](@ref), [`globalfdr!`](@ref).
+See also [`coerce_scitypes!`](@ref), [`findr_matrix(::Matrix)`](@ref), [`symprobs`](@ref), [`stackprobs`](@ref), [`globalfdr!`](@ref).
 """
 function findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
-    # verify scientific type of dX:
-    # - all columns must have the same scitype 
-    # - the unique scitype must be continuous for coexpression analysis
-    sct = unique(schema(dX).scitypes)
-    if length(sct) > 1
-        error("All columns of the input DataFrame must have the same scientific type")
-    elseif !(sct[1] <: ScientificTypes.Infinite)
+    # verify that scientific type of dX is Continuous or Count
+    if !test_scitype(dX, ScientificTypes.Continuous) && !test_scitype(dX, ScientificTypes.Count)
         error("All columns of the input DataFrame must have a count or continuous scientific type. Use the function BioFindr.coerce_scitypes! to convert the DataFrame to the correct scientific type.")
     end
 
@@ -51,7 +46,7 @@ end
 """
     findr(dX::T, dG::T; method="moments", FDR=1.0, sorted=true) where T<:AbstractDataFrame
 
-Wrapper for `findr(Matrix(dX), Matrix(dG))` when the inputs `dX` and `dG` are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` (Posterior) `Probability`, and `qvalue` columns.
+Wrapper for `findr_matrix(Matrix(dX), Matrix(dG))` when the inputs `dX` and `dG` are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` (Posterior) `Probability`, and `qvalue` columns.
 
 The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
 
@@ -59,11 +54,16 @@ The optional parameter `FDR` can be used to return only a subset of interactions
 
 The optional parameter `sorted` determines if the output must be sorted by increasing q-value / decreasing posterior probability (`sorted=true`, the default) or by causal factor (column names of `dX`) (`sorted=false`)
 
-Note that depending on the type of `Matrix(dG)`, different matrix-based methods are called. If `Matrix(dG)` consists of Floats, posterior probabilities for nonzero pairwise correlations between the variables in `dG` and variables in `dX` are computed. If `Matrix(dG)` consists of integers, posterior probabilities for nonzero differential expression of variables in `dX` across groups defined by the variables in `dG` are computed
+Note that depending on the scitype of `dG`, different matrix-based methods are called. If the scitype `dG` is Count or Continuous, posterior probabilities for nonzero pairwise correlations between the variables in `dG` and variables in `dX` are computed. If the scitype of `dG` is Multiclass or OrderedFactor, posterior probabilities for nonzero differential expression of variables in `dX` across groups defined by the variables in `dG` are computed
 
-See also [`findr(::Matrix,::Array)`], [`stackprobs`](@ref), [`globalfdr!`](@ref). 
+See also [`coerce_scitypes!`](@ref), [`findr_matrix(::Matrix,::Array)`](@ref), [`stackprobs`](@ref), [`globalfdr!`](@ref). 
 """
 function findr(dX::T, dG::T; method="moments", FDR=1.0, sorted=true) where T<:AbstractDataFrame
+    # verify that scientific type of dX is Continuous or Count
+    if !test_scitype(dX, ScientificTypes.Continuous) && !test_scitype(dX, ScientificTypes.Count)
+        error("All columns of the first input DataFrame must have a count or continuous scientific type. Use the function BioFindr.coerce_scitypes! to convert the DataFrame to the correct scientific type.")
+    end
+    # the second
     dP = stackprobs(findr_matrix(Matrix(dX), Matrix(dG); method = method), names(dG), names(dX))
     globalfdr!(dP, FDR = FDR, sorted = sorted)
     return dP
