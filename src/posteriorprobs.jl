@@ -16,12 +16,12 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T}; method="moments") where T<:Abst
     llr = realLLR_col(Y,Ycol) 
     # posterior probabilities
     if method == "moments"
-        # Method of moments can fail if moments don't satisfy a positivity condition
+        # Method of moments can fail if moments don't satisfy a positivity condition; this also catches the case where π0=1
         try
             pp, _ = fit_mixdist_mom(llr,ns)
         catch e
             # Fall back on KDE method in case of failure
-            # @info "Encountered $e, using KDE instead of moments method."
+            # @info "Encountered $e, using KDE instead of moments method.
             pp = fit_mixdist_KDE(llr,ns)
         end        
     elseif method == "kde"
@@ -61,7 +61,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") 
     if method == "moments"
         # posterior probabilities for test 2
         try
-            # Method of moments can fail if moments don't satisfy a positivity condition
+            # Method of moments can fail if moments don't satisfy a positivity condition; this also catches the case where π0=1
             pp[:,1], _ = fit_mixdist_mom(llr2,ns,ng,:link)
         catch e
             # Fall back on KDE method in case of failure
@@ -71,7 +71,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") 
         
         # posterior probabilities for test 3, here we swap the role of null and alternative
         try
-            # Method of moments can fail if moments don't satisfy a positivity condition
+            # Method of moments can fail if moments don't satisfy a positivity condition; this also catches the case where π0=1
             pp[:,2] = 1.0 .- fit_mixdist_mom(llr3,ns,ng,:med)[1]
         catch e
             # Fall back on KDE method in case of failure
@@ -81,7 +81,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") 
         
         # posterior probabilities for test 4 and 5
         try
-            # Method of moments can fail if moments don't satisfy a positivity condition
+            # Method of moments can fail if moments don't satisfy a positivity condition; this also catches the case where π0=1
             pp[:,3], _ = fit_mixdist_mom(llr4,ns,ng,:relev)
         catch e
             # Fall back on KDE method in case of failure
@@ -89,7 +89,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") 
             pp[:,3] = fit_mixdist_KDE(llr4,ns,ng,:relev)
         end   
         try
-            # Method of moments can fail if moments don't satisfy a positivity condition
+            # Method of moments can fail if moments don't satisfy a positivity condition; this also catches the case where π0=1
             pp[:,4], _ = fit_mixdist_mom(llr5,ns,ng,:pleio)
         catch e
             # Fall back on KDE method in case of failure
@@ -235,26 +235,33 @@ function fit_mixdist_KDE(llr,ns,ng=1,test=:corr)
     dnull = nulldist(ns, ng, test)
     π0 = pi0est( nullpval(llr, ns, ng, test) )
     
-    # Evaluate the null distribution p.d.f. on the log-likelihood ratios
-    pnull = pdf.(dnull, llr)
-    
-    # Fit and evaluate the real distribution p.d.f. on the log-likelihood ratios
-    preal = fit_kde(llr)
+    #=
+     If π0=1, a single non-null value may be missed. However in this case KDE also fails sometimes. Therefore give a warning and return the null distribution, i.e. pp=0
+    =#
+    if π0==1
+        @warn "Estimated prior probability π0=1, returning null distribution"
+        return zeros(length(llr))
+    else
+        # Evaluate the null distribution p.d.f. on the log-likelihood ratios
+        pnull = pdf.(dnull, llr)
+            
+        # Fit and evaluate the real distribution p.d.f. on the log-likelihood ratios
+        preal = fit_kde(llr)
 
-    # Compute the posterior probabilities of the alternative hypothesis being true
-    pp = 1 .- π0 * pnull ./ preal
+        # Compute the posterior probabilities of the alternative hypothesis being true
+        pp = 1 .- π0 * pnull ./ preal
 
-    # At rare occurences of llr=0, pnull=Inf and preal=NaN, but pp must be 0
-    pp[llr .<= 0] .= 0.
+        # At rare occurences of llr=0, pnull=Inf and preal=NaN, but pp must be 0
+        pp[llr .<= 0] .= 0.
 
-    # Smoothen posterior probs and make monotonically increasing
-    perm = sortperm(llr, rev=true);
-    inv_perm = invperm(perm);
-    pp[pp .< 0] .= 0;
-    pp = accumulate(min,pp[perm])[inv_perm];
+        # Smoothen posterior probs and make monotonically increasing
+        perm = sortperm(llr, rev=true);
+        inv_perm = invperm(perm);
+        pp[pp .< 0] .= 0;
+        pp = accumulate(min,pp[perm])[inv_perm];
 
-    return pp
-    
+        return pp
+    end    
 end
 
 
