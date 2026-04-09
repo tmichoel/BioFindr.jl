@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.1.0] - 2026-04-09
+
+### Breaking Changes
+
+There are no breaking changes in this release.
+
+### Changes
+
+- Broaden function type signatures from concrete to abstract array/float types for improved interoperability (e.g., with [JuliaCall](https://juliapy.github.io/PythonCall.jl/stable/juliacall/)): `Array{T}` → `AbstractArray{T}`, `Vector{T}` → `AbstractVector{T}`, `Matrix{T}` → `AbstractMatrix{T}` across `realLLR.jl`, `posteriorprobs.jl`, `utils.jl`, `findr_matrix.jl`, and `findr_pvalues.jl` ([#22](https://github.com/tmichoel/BioFindr.jl/pull/22))
+- Fix inconsistency in `findr_matrix` overloads where implementations used `T<:Real` while docstrings declared `T<:AbstractFloat`; all overloads now consistently use `T<:AbstractFloat` ([#22](https://github.com/tmichoel/BioFindr.jl/pull/22))
+- Update dependency manifests
+- Update Julia version in CI workflow
+
+**Full Changelog**: https://github.com/tmichoel/BioFindr.jl/compare/v1.0.5...v1.1.0
+
 ## [v1.0.5] - 2025-05-21
 
 - Catch error in kernel density estimation when π₀=1 by returning zero posterior probabilities
@@ -54,6 +69,7 @@ All notable changes to this project will be documented in this file.
 - Most of the functionality of the [original findr software](https://github.com/lingfeiwang/findr) implemented
 - See the [tutorials](https://tmichoel.github.io/FindrTutorials/) for usage examples and the [docs](https://tmichoel.github.io/Findr.jl/dev/) for more details
 
+[v1.1.0]: https://github.com/tmichoel/BioFindr.jl/releases/tag/v1.1.0
 [v1.0.5]: https://github.com/tmichoel/BioFindr.jl/releases/tag/v1.0.5
 [v1.0.4]: https://github.com/tmichoel/BioFindr.jl/releases/tag/v1.0.4
 [v1.0.3]: https://github.com/tmichoel/BioFindr.jl/releases/tag/v1.0.3
