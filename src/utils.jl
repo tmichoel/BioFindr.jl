@@ -79,7 +79,7 @@ Symmetrize a square matrix of posterior probabilities `P`. The optional paramete
 
 Note that the `anti` option defines "antisymmetric" probabilities, ``P'_{ij} +  P'_{ji} = 1``, where evidence *for* a causal interaction ``i\\to j`` is also considered evidence *against* the opposite interaction ``j\\to i``.
 """
-function symprobs(P::Matrix{T}; combination="none") where T<:AbstractFloat
+function symprobs(P::AbstractMatrix{T}; combination="none") where T<:AbstractFloat
     if size(P,1) != size(P,2) && combination != "none"
         error("Input matrix must be square")
     end
@@ -148,13 +148,13 @@ function stackprobs(P,colnames,rownames;nodiag=true)
 end
 
 """
-    globalfdr(P::Array{T},FDR) where T<:AbstractFloat
+    globalfdr(P::AbstractArray{T},FDR) where T<:AbstractFloat
 
 For an array (matrix or vector) `P` of posterior probabilities (local precision values), compute their corresponding q-values `Q`, and return the indices of `P` with q-value less than a desired global false discovery rate `FDR`.
 
 See also [`qvalue`](@ref)
 """
-function globalfdr(P::Array{T},FDR) where T<:AbstractFloat
+function globalfdr(P::AbstractArray{T},FDR) where T<:AbstractFloat
     Qvec = qvalue(vec(P))
     # return entries with q-value <= FDR
     if isa(P,Vector)  
@@ -184,7 +184,7 @@ function globalfdr!(dP::T; FDR=1.0, sorted=true) where T<:AbstractDataFrame
 end
 
 """
-    qvalue(P::Vector{T}) where T<:AbstractFloat
+    qvalue(P::AbstractVector{T}) where T<:AbstractFloat
 
 Convert a vector `P` of posterior probabilities (local precisions) to a vector of q-values. For a threshold value `c` on the posterior probabilities `P`, the global FDR, ``FDR(c)`` is defined as one minus the average local precision:
 
@@ -192,7 +192,7 @@ Convert a vector `P` of posterior probabilities (local precisions) to a vector o
 
 where ``N_c=\\sharp\\{i\\colon P_i\\leq c\\}`` is the number of selected pairs. The q-value of a given index in `P` is then defined as the smallest FDR at which this pair is still called significant.
 """
-function qvalue(P::Vector{T}) where T<:AbstractFloat
+function qvalue(P::AbstractVector{T}) where T<:AbstractFloat
     # permutation to sort Pvec in descending order
     I = sortperm(P,rev=true)
     # the inverse permutation
