@@ -1,5 +1,5 @@
 """
-    pprob_col(Y::Matrix{T},Ycol::Vector{T}; method="moments") where T<:AbstractFloat
+    pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="moments") where T<:AbstractFloat
 
 Compute the posterior probabilities for BioFindr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
@@ -9,7 +9,7 @@ The optional parameter `method` determines the mixture distribution fitting meth
 
 See also [`supernormalize`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
-function pprob_col(Y::Matrix{T},Ycol::Vector{T}; method="moments") where T<:AbstractFloat
+function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="moments") where T<:AbstractFloat
     # number of samples
     ns = size(Y,1) 
     # log-likelihood ratios
@@ -33,7 +33,7 @@ function pprob_col(Y::Matrix{T},Ycol::Vector{T}; method="moments") where T<:Abst
 end
 
 """
-    pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}   
+    pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}   
 
 Compute the posterior probabilities for the BioFindr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y`: 
 
@@ -50,7 +50,7 @@ The optional parameter `method` determines the mixture distribution fitting meth
 
 See also [`supernormalize`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
-function pprob_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
+function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
     # number of samples and groups
     ns = size(Y,1) 
     ng = length(unique(E))
@@ -112,7 +112,7 @@ end
 
 
 """
-    pprob_col(Y::Matrix{T},E::Vector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
+    pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
 
 Compute the posterior probabilities for differential expression of columns of matrix `Y` in the groups defined by  categorical vector `E` using BioFindr test 2 (**Linkage test**) 
     
@@ -122,7 +122,7 @@ The optional parameter `method` determines the mixture distribution fitting meth
 
 See also [`supernormalize`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
-function pprob_col(Y::Matrix{T},E::Vector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
+function pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
     # number of samples and groups
     ns = size(Y,1) 
     ng = length(unique(E))

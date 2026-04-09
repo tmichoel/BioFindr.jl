@@ -1,5 +1,5 @@
 """
-    findr_matrix(X::Matrix{T}; cols=[], method="moments", combination="none") where T<:AbstractFloat
+    findr_matrix(X::AbstractMatrix{T}; cols=[], method="moments", combination="none") where T<:AbstractFloat
 
 Compute posterior probabilities for nonzero pairwise correlations between columns of input matrix `X`. The probabilities are directed (asymmetric) in the sense that they are estimated from a column-specific background distribution.
 
@@ -11,7 +11,7 @@ The optional parameter `combination` determines whether the output must be symme
 
 See also [`findr(::DataFrame)`](@ref), [`symprobs`](@ref), [`supernormalize`](@ref), [`pprob_col`](@ref).
 """
-function findr_matrix(X::Matrix{T}; cols=[], method="moments", combination="none") where T<:Real
+function findr_matrix(X::AbstractMatrix{T}; cols=[], method="moments", combination="none") where T<:AbstractFloat
     # Inverse-normal transformation and standardization for each columns of X
     Y = supernormalize(X)
     # check if we need to use all columns or only a subset as source nodes
@@ -30,7 +30,7 @@ function findr_matrix(X::Matrix{T}; cols=[], method="moments", combination="none
 end
 
 """
-    findr_matrix(X1::Matrix{T}, X2::Matrix{T}; method="moments") where T<:AbstractFloat
+    findr_matrix(X1::AbstractMatrix{T}, X2::AbstractMatrix{T}; method="moments") where T<:AbstractFloat
 
 Compute posterior probabilities for nonzero pairwise correlations between columns of input matrices `X1` and `X2`. The probabilities are directed (asymmetric) from the columns of `X2` to the columns of `X1` in the sense that they are estimated from a column-specific background distribution for each column of `X2`.
 
@@ -40,7 +40,7 @@ Only use this method if `X1` and `X2` are distinct (no overlapping columns). For
 
 See also [`findr(::DataFrame)`](@ref), [`symprobs`](@ref), [`supernormalize`](@ref), [`pprob_col`](@ref).
 """
-function findr_matrix(X1::Matrix{T}, X2::Array{T}; method="moments") where T<:Real
+function findr_matrix(X1::AbstractMatrix{T}, X2::AbstractArray{T}; method="moments") where T<:AbstractFloat
     # Inverse-normal transformation and standardization for each columns of X1 and X2
     Y1 = supernormalize(X1)
     Y2 = supernormalize(X2)
@@ -54,7 +54,7 @@ function findr_matrix(X1::Matrix{T}, X2::Array{T}; method="moments") where T<:Re
 end
   
 """
-    findr_matrix(X::Matrix{T},G::Array{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
+    findr_matrix(X::AbstractMatrix{T},G::AbstractArray{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero differential expression of colunns of input matrix `X` across groups defined by one or more categorical variables (columns of `G`).
 
@@ -67,7 +67,7 @@ See also [`findr(::DataFrame,::DataFrame)`](@ref), [`supernormalize`](@ref), [`p
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. CategoricalArrays will be supported in the future.
 """
-function findr_matrix(X::Matrix{T}, G::Array{S}; method="moments") where {T<:Real, S<:Integer}
+function findr_matrix(X::AbstractMatrix{T}, G::AbstractArray{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
     # Inverse-normal transformation and standardization for each column of X
     Y = supernormalize(X)
     # Matrix to store posterior probabilities
@@ -80,7 +80,7 @@ function findr_matrix(X::Matrix{T}, G::Array{S}; method="moments") where {T<:Rea
 end
 
 """
-    findr_matrix(X::Matrix{T},G::Matrix{S},pairGX::Matrix{S}; method="moments", combination="none") where {T<:AbstractFloat, S<:Integer}
+    findr_matrix(X::AbstractMatrix{T},G::AbstractMatrix{S},pairGX::AbstractMatrix{S}; method="moments", combination="none") where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero causal relations between columns of input matrix `X`. The probabilities are estimated for relations going from a subset of columns of `X` that have a (discrete) instrumental variable in input matrix `G` to all columns of `X`, while excluding self-interactions (given default value 1). The matching between columns of `X` and columns of `G` is given by `pairGX`, a two-column array where the first column corresponds to a column index in `G` and the second to a column index in `X`.
 
@@ -102,7 +102,7 @@ See also [`findr(::DataFrame,::DataFrame,::DataFrame)`](@ref), [`supernormalize`
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. I intend to use CategoricalArrays in the future.
 """
-function findr_matrix(X::Matrix{T},G::Array{S},pairGX::Matrix{R}; method="moments", combination="none") where {T<:Real, S<:Integer, R<:Integer}
+function findr_matrix(X::AbstractMatrix{T},G::AbstractArray{S},pairGX::AbstractMatrix{R}; method="moments", combination="none") where {T<:AbstractFloat, S<:Integer, R<:Integer}
     if !(combination in Set(["none","IV","mediation","orig"]))
         error("combination parameter must be one of \"none\", \"IV\", \"mediation\", or \"orig\"")
     end
@@ -121,7 +121,7 @@ function findr_matrix(X::Matrix{T},G::Array{S},pairGX::Matrix{R}; method="moment
 end
 
 """
-    findr_matrix(X1::Matrix{T},X2::Array{T},G::Array{S},pairGX::Matrix{R}; method="moments", combination="none")  where {T<:AbstractFloat, S<:Integer}
+    findr_matrix(X1::AbstractMatrix{T},X2::AbstractArray{T},G::AbstractArray{S},pairGX::AbstractMatrix{R}; method="moments", combination="none")  where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero causal relations from columns of input matrix `X2` to columns of input matrix `X1`. The probabilities are estimated for a subset of columns of `X2` that have a (discrete) instrumental variable in input matrix `G`. The matching between columns of `X2` and columns of `G` is given by `pairGX`, a two-column array where the first column corresponds to a column index in `G` and the second to a column index in `X2`.
 
@@ -143,7 +143,7 @@ See also [`findr(::DataFrame,::DataFrame,::DataFrame,::DataFrame)`](@ref), [`com
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. I intend to use CategoricalArrays in the future.
 """
-function findr_matrix(X1::Matrix{T}, X2::Array{T}, G::Array{S}, pairGX::Matrix{R}; method="moments", combination="none")  where {T<:Real, S<:Integer, R<:Integer}
+function findr_matrix(X1::AbstractMatrix{T}, X2::AbstractArray{T}, G::AbstractArray{S}, pairGX::AbstractMatrix{R}; method="moments", combination="none")  where {T<:AbstractFloat, S<:Integer, R<:Integer}
     if !(combination in Set(["none","IV","mediation","orig"]))
         error("combination parameter must be one of \"none\", \"IV\", \"mediation\", or \"orig\"")
     end

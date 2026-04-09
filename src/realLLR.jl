@@ -1,5 +1,5 @@
 """
-    realLLR_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
+    realLLR_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}) where T<:AbstractFloat
 
 Compute the log-likelihood ratios for BioFindr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
@@ -7,14 +7,14 @@ Compute the log-likelihood ratios for BioFindr test 0 (**correlation test**) for
 
 See also [`supernormalize`](@ref).
 """
-function realLLR_col(Y::Array{T},Ycol::Vector{T}) where T<:AbstractFloat
+function realLLR_col(Y::AbstractArray{T},Ycol::AbstractVector{T}) where T<:AbstractFloat
     ρ = vec(cov(Y,Ycol,corrected=false))
     # ρ[col] = 1. # set self to exact value
     -0.5*log.(abs.(1 .- ρ.^2))
 end
 
 """
-    realLLR_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
+    realLLR_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}) where {T<:AbstractFloat, S<:Integer}
 
 Compute the log-likelihood ratios for the BioFindr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y` : 
 
@@ -27,7 +27,7 @@ Compute the log-likelihood ratios for the BioFindr causal tests for a given colu
 
 See also [`supernormalize`](@ref), [`llrstats_col`](@ref).
 """
-function realLLR_col(Y::Array{T},Ycol::Vector{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
+function realLLR_col(Y::AbstractArray{T},Ycol::AbstractVector{T},E::AbstractVector{S}) where {T<:AbstractFloat, S<:Integer}
     # compute the sufficient statistics
     ρ, σ, σcol = llrstats_col(Y,Ycol,E)
 
@@ -53,7 +53,7 @@ end
 
 
 """
-    realLLR_col(Y::Array{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
+    realLLR_col(Y::AbstractArray{T},E::AbstractVector{S}) where {T<:AbstractFloat, S<:Integer}
 
 Compute the log-likelihood ratios for BioFindr test 2 (**Linkage test**)  for a given categorical vector `E` against all columns of matrix `Y`.
 
@@ -61,7 +61,7 @@ Compute the log-likelihood ratios for BioFindr test 2 (**Linkage test**)  for a 
 
 See also [`supernormalize`](@ref), [`llrstats_col`](@ref).
 """
-function realLLR_col(Y::Array{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
+function realLLR_col(Y::AbstractArray{T},E::AbstractVector{S}) where {T<:AbstractFloat, S<:Integer}
     # compute the sufficient statistics
     σ = llrstats_col(Y,E)
 
