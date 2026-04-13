@@ -20,6 +20,7 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="moments
         try
             pp, _ = fit_mixdist_mom(llr,ns)
         catch e
+            e isa AssertionError || rethrow(e)
             # Fall back on KDE method in case of failure
             # @info "Encountered $e, using KDE instead of moments method.
             pp = fit_mixdist_KDE(llr,ns)
@@ -64,6 +65,7 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVecto
             # Method of moments can fail if moments don't satisfy a positivity condition; this also catches the case where π0=1
             pp[:,1], _ = fit_mixdist_mom(llr2,ns,ng,:link)
         catch e
+            e isa AssertionError || rethrow(e)
             # Fall back on KDE method in case of failure
             # @info "Encountered $e, using KDE instead of moments method."
             pp[:,1] = fit_mixdist_KDE(llr2,ns,ng,:link)
@@ -74,6 +76,7 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVecto
             # Method of moments can fail if moments don't satisfy a positivity condition; this also catches the case where π0=1
             pp[:,2] = 1.0 .- fit_mixdist_mom(llr3,ns,ng,:med)[1]
         catch e
+            e isa AssertionError || rethrow(e)
             # Fall back on KDE method in case of failure
             # @info "Encountered $e, using KDE instead of moments method."
             pp[:,2] = 1.0 .- fit_mixdist_KDE(llr3,ns,ng,:med)
@@ -84,6 +87,7 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVecto
             # Method of moments can fail if moments don't satisfy a positivity condition; this also catches the case where π0=1
             pp[:,3], _ = fit_mixdist_mom(llr4,ns,ng,:relev)
         catch e
+            e isa AssertionError || rethrow(e)
             # Fall back on KDE method in case of failure
             # @info "Encountered $e, using KDE instead of moments method."
             pp[:,3] = fit_mixdist_KDE(llr4,ns,ng,:relev)
@@ -92,6 +96,7 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVecto
             # Method of moments can fail if moments don't satisfy a positivity condition; this also catches the case where π0=1
             pp[:,4], _ = fit_mixdist_mom(llr5,ns,ng,:pleio)
         catch e
+            e isa AssertionError || rethrow(e)
             # Fall back on KDE method in case of failure
             # @info "Encountered $e, using KDE instead of moments method."
             pp[:,4] = fit_mixdist_KDE(llr5,ns,ng,:pleio)
@@ -134,6 +139,7 @@ function pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="moments") 
         try
             pp, _ = fit_mixdist_mom(llr2,ns,ng,:link)
         catch e
+            e isa AssertionError || rethrow(e)
             # Fall back on KDE method in case of failure
             # @info "Encountered $e, using KDE instead of moments method."
             pp = fit_mixdist_KDE(llr2,ns,ng,:link)
@@ -296,7 +302,8 @@ function pi0est(pval)
     λ = 0:0.05:0.95
     pval = sort(pval)
     m = length(pval)
-    W = map(x -> sum(pval.>=x),λ)
+    # Use binary search (searchsortedlast) for O(log n) per λ instead of O(n)
+    W = [m - searchsortedlast(pval, x) for x in λ]
     π0 = W ./ (m*(1 .- λ))
     minπ0 = minimum(π0) #quantile(π0,0.1)  # 
     mse = (W ./ (m^2 * (1 .- λ).^2)) .* (1 .- W/m) .+ (π0 .- minπ0).^2

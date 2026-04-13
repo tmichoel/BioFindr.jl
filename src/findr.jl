@@ -63,8 +63,18 @@ function findr(dX::T, dG::T; method="moments", FDR=1.0, sorted=true) where T<:Ab
     if !test_scitype(dX, ScientificTypes.Continuous) && !test_scitype(dX, ScientificTypes.Count)
         error("All columns of the first input DataFrame must have a count or continuous scientific type. Use the function BioFindr.coerce_scitypes! to convert the DataFrame to the correct scientific type.")
     end
-    # the second
-    dP = stackprobs(findr_matrix(Matrix(dX), Matrix(dG); method = method), names(dG), names(dX))
+    # verify that scientific type of dG is valid
+    if !test_scitype(dG, ScientificTypes.Continuous) && !test_scitype(dG, ScientificTypes.Count) &&
+       !test_scitype(dG, ScientificTypes.Multiclass) && !test_scitype(dG, ScientificTypes.OrderedFactor)
+        error("All columns of the second input DataFrame must have a consistent scientific type (Count, Continuous, Multiclass, or OrderedFactor). Use the function BioFindr.coerce_scitypes! to convert the DataFrame to the correct scientific type.")
+    end
+    # convert dG to a numeric matrix: for categorical data, convert to integer codes
+    if test_scitype(dG, ScientificTypes.Multiclass) || test_scitype(dG, ScientificTypes.OrderedFactor)
+        Gmat = Matrix{Int}(hcat([levelcode.(dG[!, col]) for col in names(dG)]...))
+    else
+        Gmat = Matrix(dG)
+    end
+    dP = stackprobs(findr_matrix(Matrix(dX), Gmat; method = method), names(dG), names(dX))
     globalfdr!(dP, FDR = FDR, sorted = sorted)
     return dP
 end

@@ -60,15 +60,23 @@ function getpairs(dX::T, dG::T, dE::T; colG=1, colX=2, namesX=[]) where T<:Abstr
     # Create the array with idG-idX pairs
     pairsGX = zeros(Int64,length(idX),2);
     for rowE = axes(pairsGX,1)
-        pairsGX[rowE,1] = findfirst(idG[rowE] .== names(dG))
-        pairsGX[rowE,2] = findfirst(idX[rowE] .== names(dX))
+        idxG = findfirst(idG[rowE] .== names(dG))
+        idxX = findfirst(idX[rowE] .== names(dX))
+        if isnothing(idxG)
+            error("Variant ID \"$(idG[rowE])\" not found in column names of dG.")
+        end
+        if isnothing(idxX)
+            error("Gene ID \"$(idX[rowE])\" not found in column names of dX.")
+        end
+        pairsGX[rowE,1] = idxG
+        pairsGX[rowE,2] = idxX
     end
     # sort by dX ID to preserve order from gene expression matrix
     pairsGX = pairsGX[sortperm(pairsGX[:,2]),:]
 end
 
 """
-    symprobs(P; combination="prod")
+    symprobs(P; combination="none")
 
 Symmetrize a square matrix of posterior probabilities `P`. The optional parameter `combination` defines the symmetrization method:
 
@@ -201,15 +209,14 @@ function qvalue(P::AbstractVector{T}) where T<:AbstractFloat
     qval = 1 .- (cumsum(P[I])./(1:length(P)))
     # q-values must be ordered, if not, set qval[k] = minimum(qval[k:end]) using efficient operations
     if !issorted(qval)
-        @info "Average local precisions needed sorting"
+        @debug "Average local precisions needed sorting"
         reverse!(qval)
         accumulate!(min,qval,qval)
         reverse!(qval)
-        # for k = eachindex(qval)
-        #     qval[k] = minimum(qval[k:end])
-        # end
     end
     @assert issorted(qval)
+    # clamp to [0, 1] to guard against floating-point precision issues
+    clamp!(qval, 0., 1.)
     # return to original order
     qval = qval[Iinv]
 end

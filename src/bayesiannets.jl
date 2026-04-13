@@ -175,7 +175,9 @@ end
 """
     greedy_insertions!(sorted_vertices, weights)
 
-TBW
+Iteratively improve a topological ordering `sorted_vertices` of vertices by greedy insertion. For each vertex `x` in the current ordering, find the position `y` that maximises the gain in total edge weight when `x` is moved to position `y`. The gain is defined as the sum of weights of edges that go from a lower-ranked vertex to a higher-ranked vertex after the move, minus the corresponding sum before the move. Iteration continues until no improving move is found.
+
+The `weights` dictionary maps `(source_idx, target_idx)` tuples to edge weights (posterior probabilities).
 """
 function greedy_insertions!(sorted_vertices, weights)
     n = length(sorted_vertices)
@@ -212,7 +214,7 @@ end
 """
     edge_weights(dP::T) where T<:AbstractDataFrame
 
-TBW
+Build a dictionary mapping `(Source_idx, Target_idx)` tuples to their `Probability` values from a DataFrame `dP` of edges. The DataFrame must already contain `Source_idx` and `Target_idx` columns (added by [`names_to_index!`](@ref)).
 """
 function edge_weights(dP::T) where T<:AbstractDataFrame
     weights = Dict{Tuple{Int,Int},Float64}()

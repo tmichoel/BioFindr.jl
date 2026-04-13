@@ -9,6 +9,7 @@ using Printf
 using Random
 using ScientificTypes
 using DataFrames
+using Graphs
 
 
 @testset "BioFindr.jl" begin
@@ -36,5 +37,13 @@ using DataFrames
 
     @testset "Utils" begin
         include("utils_tests.jl");
+    end
+
+    @testset "findr and findr_matrix" begin
+        include("findr_tests.jl");
+    end
+
+    @testset "dagfindr!" begin
+        include("dagfindr_tests.jl");
     end
 end

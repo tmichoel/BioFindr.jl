@@ -131,9 +131,10 @@ function groupmeans(Y,Ycol,E)
     μ = zeros(size(Y,2),length(uE))
     μcol = zeros(length(uE))
     Threads.@threads for i = eachindex(uE)
-        gs[i] = sum(E.==uE[i])
-        μ[:,i] = mean(Y[E.==uE[i],:], dims=1)
-        μcol[i] = mean(Ycol[E.==uE[i]])
+        idx = findall(E .== uE[i])
+        gs[i] = length(idx)
+        μ[:,i] = mean(Y[idx,:], dims=1)
+        μcol[i] = mean(Ycol[idx])
     end
     gs, μ, μcol
 end
@@ -149,8 +150,9 @@ function groupmeans(Y,E)
     gs = zeros(Int,length(uE))
     μ = zeros(size(Y,2),length(uE))
     Threads.@threads for i = eachindex(uE)
-        gs[i] = sum(E.==uE[i])
-        μ[:,i] = mean(Y[E.==uE[i],:], dims=1)
+        idx = findall(E .== uE[i])
+        gs[i] = length(idx)
+        μ[:,i] = mean(Y[idx,:], dims=1)
     end
     gs, μ
 end
