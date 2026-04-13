@@ -9,6 +9,7 @@ bGA = 1.0
 bAB = 1.0
 
 G_dag, XA_dag, XB_dag, _ = BioFindr.generate_test_data(nA, nB, fB, ns, ng, maf, bGA, bAB, true)
+# istarget is not used in DAG tests (we only need the data matrices)
 
 # Build a DataFrame of edges from findr as input to dagfindr!
 pairGX = hcat(1:nA, 1:nA)
