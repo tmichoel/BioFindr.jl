@@ -9,6 +9,7 @@ using Printf
 using Random
 using ScientificTypes
 using DataFrames
+using Graphs
 
 
 @testset "BioFindr.jl" begin
@@ -19,7 +20,7 @@ using DataFrames
     end
 
     @testset "Real LLRs" begin
-        include("realLLR_tests.jl");
+        include("real_llr_tests.jl");
     end
 
     @testset "LBeta" begin
@@ -27,7 +28,7 @@ using DataFrames
     end
 
     @testset "Random LLRs" begin
-        include("randomLLR_tests.jl");
+        include("random_llr_tests.jl");
     end
 
     @testset "Posterior probabilities" begin
@@ -36,5 +37,13 @@ using DataFrames
 
     @testset "Utils" begin
         include("utils_tests.jl");
+    end
+
+    @testset "findr and findr_matrix" begin
+        include("findr_tests.jl");
+    end
+
+    @testset "dagfindr!" begin
+        include("dagfindr_tests.jl");
     end
 end

@@ -11,8 +11,10 @@ function supernormalize(X, c=0.375)
     nd = Normal()
     n = size(X,1)
     Y = zeros(size(X))
+    # Pre-compute quantile lookup table: same set of ranks for every column of same length
+    quantile_table = [quantile(nd, (r - c) / (n - 2c + 1)) for r in 1:n]
     Threads.@threads for i = axes(X,2)
-        Y[:,i] = map(x -> quantile(nd,(x-c)/(n-2c+1)), ordinalrank(X[:,i]))
+        Y[:,i] = quantile_table[ordinalrank(X[:,i])]
     end
     σ = std(Y[:,1];corrected=false)
     Y = Y/σ

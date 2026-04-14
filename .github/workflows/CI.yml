@@ -18,42 +18,64 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.12'
+          - '1'
         os:
           - ubuntu-latest
         arch:
           - x64
-          - x86
     steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@v1
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: julia-actions/cache@v1
+      - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v4
         with:
           files: lcov.info
   docs:
     name: Documentation
-    runs-on: ubuntu-latest
     permissions:
+      actions: write
       contents: write
+      pull-requests: read
+      statuses: write
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@v1
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v2
         with:
           version: '1'
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-docdeploy@v1
+      - uses: julia-actions/cache@v3
+      - name: Install dependencies
+        shell: julia --color=yes --project=docs {0}
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path=pwd()))
+          Pkg.instantiate()
+      - name: Build and deploy
+        run: julia --color=yes --project=docs docs/make.jl
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: |
-          julia --project=docs -e '
-            using Documenter: DocMeta, doctest
-            using BioFindr
-            DocMeta.setdocmeta!(BioFindr, :DocTestSetup, :(using BioFindr); recursive=true)
-            doctest(BioFindr)'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+    # name: Documentation
+    # runs-on: ubuntu-latest
+    # permissions:
+    #   contents: write
+    # steps:
+    #   - uses: actions/checkout@v4
+    #   - uses: julia-actions/setup-julia@v2
+    #     with:
+    #       version: '1'
+    #   - uses: julia-actions/julia-buildpkg@v1
+    #   - uses: julia-actions/julia-docdeploy@v1
+    #     env:
+    #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   - run: |
+    #       julia --project=docs -e '
+    #         using Documenter: DocMeta, doctest
+    #         using BioFindr
+    #         DocMeta.setdocmeta!(BioFindr, :DocTestSetup, :(using BioFindr); recursive=true)
+    #         doctest(BioFindr)'

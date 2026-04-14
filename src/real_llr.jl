@@ -1,5 +1,5 @@
 """
-    realLLR_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}) where T<:AbstractFloat
+    real_llr_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}) where T<:AbstractFloat
 
 Compute the log-likelihood ratios for BioFindr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
@@ -7,14 +7,14 @@ Compute the log-likelihood ratios for BioFindr test 0 (**correlation test**) for
 
 See also [`supernormalize`](@ref).
 """
-function realLLR_col(Y::AbstractArray{T},Ycol::AbstractVector{T}) where T<:AbstractFloat
+function real_llr_col(Y::AbstractArray{T},Ycol::AbstractVector{T}) where T<:AbstractFloat
     ρ = vec(cov(Y,Ycol,corrected=false))
     # ρ[col] = 1. # set self to exact value
     -0.5*log.(abs.(1 .- ρ.^2))
 end
 
 """
-    realLLR_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}) where {T<:AbstractFloat, S<:Integer}
+    real_llr_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}) where {T<:AbstractFloat, S<:Integer}
 
 Compute the log-likelihood ratios for the BioFindr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y` : 
 
@@ -25,11 +25,11 @@ Compute the log-likelihood ratios for the BioFindr causal tests for a given colu
 
 `Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 
-See also [`supernormalize`](@ref), [`llrstats_col`](@ref).
+See also [`supernormalize`](@ref), [`llr_stats_col`](@ref).
 """
-function realLLR_col(Y::AbstractArray{T},Ycol::AbstractVector{T},E::AbstractVector{S}) where {T<:AbstractFloat, S<:Integer}
+function real_llr_col(Y::AbstractArray{T},Ycol::AbstractVector{T},E::AbstractVector{S}) where {T<:AbstractFloat, S<:Integer}
     # compute the sufficient statistics
-    ρ, σ, σcol = llrstats_col(Y,Ycol,E)
+    ρ, σ, σcol = llr_stats_col(Y,Ycol,E)
 
     # test 2
     llr2 = -0.5*log.(σ[:,1])
@@ -53,24 +53,24 @@ end
 
 
 """
-    realLLR_col(Y::AbstractArray{T},E::AbstractVector{S}) where {T<:AbstractFloat, S<:Integer}
+    real_llr_col(Y::AbstractArray{T},E::AbstractVector{S}) where {T<:AbstractFloat, S<:Integer}
 
 Compute the log-likelihood ratios for BioFindr test 2 (**Linkage test**)  for a given categorical vector `E` against all columns of matrix `Y`.
 
 `Y` is assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 
-See also [`supernormalize`](@ref), [`llrstats_col`](@ref).
+See also [`supernormalize`](@ref), [`llr_stats_col`](@ref).
 """
-function realLLR_col(Y::AbstractArray{T},E::AbstractVector{S}) where {T<:AbstractFloat, S<:Integer}
+function real_llr_col(Y::AbstractArray{T},E::AbstractVector{S}) where {T<:AbstractFloat, S<:Integer}
     # compute the sufficient statistics
-    σ = llrstats_col(Y,E)
+    σ = llr_stats_col(Y,E)
 
     # test 2
     -0.5*log.(σ)
 end
 
 """
-    llrstats_col(Y,Ycol,E)
+    llr_stats_col(Y,Ycol,E)
 
 Compute the sufficient statistics for the log-likelihood ratios for BioFindr tests 2-5  for a given column vector `Ycol` with categorical instrument `E` against all columns of `Y`.
 
@@ -83,12 +83,12 @@ The sufficient statistics are:
 - the weighted average covariances ``\\sigma_{AB}`` between `Ycol` and all  columns of `Y` over the groups (unique values) of `E`, returned as the second column of the second output argument,
 - the weighted average variance ``\\hat{\\sigma}_A^2`` of `Ycol` over the groups (unique values) in `E`, returned as the third output argument.
 
-See also [`groupmeans`](@ref).
+See also [`group_means`](@ref).
 """
-function llrstats_col(Y,Ycol,E)
+function llr_stats_col(Y,Ycol,E)
     ρ = vec(cov(Y,Ycol,corrected=false))
 
-    gs, μ, μcol = groupmeans(Y,Ycol,E)
+    gs, μ, μcol = group_means(Y,Ycol,E)
     
     ns = length(E) # number of samples
     w = pweights(gs/ns) # probability weights
@@ -101,7 +101,7 @@ end
 
 
 """
-    llrstats_col(Y,E)
+    llr_stats_col(Y,E)
 
 Compute the sufficient statistics for the log-likelihood ratios for BioFindr tests 2  for a given categorical vector `E` against all columns of `Y`.
 
@@ -109,10 +109,10 @@ Compute the sufficient statistics for the log-likelihood ratios for BioFindr tes
 
 The sufficient statistics are the weighted average variances ``\\hat{\\sigma}_B^2`` of each column of matrix `Y` over the groups (unique values) in `E`.
 
-See also [`groupmeans`](@ref).
+See also [`group_means`](@ref).
 """
-function llrstats_col(Y,E)
-    gs, μ = groupmeans(Y,E)
+function llr_stats_col(Y,E)
+    gs, μ = group_means(Y,E)
     
     ns = length(E) # number of samples
     w = pweights(gs/ns) # probability weights
@@ -121,36 +121,38 @@ function llrstats_col(Y,E)
 end
 
 """
-    groupmeans(Y,Ycol,E)
+    group_means(Y,Ycol,E)
 
 Compute the size ``n_j`` for each of the groups (unique values) in categorical vector `E` (first output argument), and the means ``\\hat{\\nu_j}`` of each column of matrix `Y` (second output argument) and ``\\hat{\\mu_j}`` of `Ycol` (third output argument) for each of the groups in `E`.
 """
-function groupmeans(Y,Ycol,E)
+function group_means(Y,Ycol,E)
     uE = unique(E)
     gs = zeros(Int,length(uE))
     μ = zeros(size(Y,2),length(uE))
     μcol = zeros(length(uE))
     Threads.@threads for i = eachindex(uE)
-        gs[i] = sum(E.==uE[i])
-        μ[:,i] = mean(Y[E.==uE[i],:], dims=1)
-        μcol[i] = mean(Ycol[E.==uE[i]])
+        idx = findall(E .== uE[i])
+        gs[i] = length(idx)
+        μ[:,i] = mean(Y[idx,:], dims=1)
+        μcol[i] = mean(Ycol[idx])
     end
     gs, μ, μcol
 end
 
 
 """
-    groupmeans(Y,E)
+    group_means(Y,E)
 
 Compute the size ``n_j`` for each of the groups (unique values) in categorical vector `E` (first output argument), and the means ``\\hat{\\nu_j}`` of each column of matrix `Y` (second output argument) for each of the groups in `E`.
 """
-function groupmeans(Y,E)
+function group_means(Y,E)
     uE = unique(E)
     gs = zeros(Int,length(uE))
     μ = zeros(size(Y,2),length(uE))
     Threads.@threads for i = eachindex(uE)
-        gs[i] = sum(E.==uE[i])
-        μ[:,i] = mean(Y[E.==uE[i],:], dims=1)
+        idx = findall(E .== uE[i])
+        gs[i] = length(idx)
+        μ[:,i] = mean(Y[idx,:], dims=1)
     end
     gs, μ
 end

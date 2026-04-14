@@ -3,6 +3,7 @@ module BioFindr
 # External packages
 
 using DataFrames
+using CategoricalArrays
 using Statistics
 using StatsBase
 using Distributions
@@ -16,15 +17,7 @@ using MetaGraphsNext
 using ScientificTypes
 
 # Export statements
-export findr, dagfindr!
-
-# Define test names as variables
-
-corr = "corr"
-link = "link"
-med = "med"
-relev = "relev"
-pleio = "pleio"
+export findr, dagfindr!, LBeta, generate_test_data, coerce_scitypes!
 
 # Load the different code files
 include("findr.jl");
@@ -39,9 +32,9 @@ include("supernormalization.jl")
 
 include("lbeta.jl")
 
-include("randomLLR.jl")
+include("random_llr.jl")
 
-include("realLLR.jl")
+include("real_llr.jl")
 
 include("posteriorprobs.jl")
 

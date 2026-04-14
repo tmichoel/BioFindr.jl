@@ -45,7 +45,7 @@ Evaluate the probability density function of an LBeta distribution.
 """
 function Distributions.logpdf(d::LBeta, x::Real)
     α,β = params(d)
-    return x >= 0 ? log(2) - logbeta(0.5α,0.5β) + (0.5α-1)*log(1-exp(-2x)) - β*x : 0.
+    return x >= 0 ? log(2) - logbeta(0.5α,0.5β) + (0.5α-1)*log(1-exp(-2x)) - β*x : -Inf
 end
 
 """

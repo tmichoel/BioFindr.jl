@@ -18,9 +18,9 @@ supernormalize = true
 E, Ycol, Y, istarget = BioFindr.generate_test_data(nA, nB, fB, ns, ng, maf, bGA, bAB, supernormalize)
 
 # compute likelihood ratios
-llr = BioFindr.realLLR_col(Y,Ycol);
-llr1 = BioFindr.realLLR_col(Y,E);
-llr2, llr3, llr4, llr5 = BioFindr.realLLR_col(Y,Ycol,E);
+llr = BioFindr.real_llr_col(Y,Ycol);
+llr1 = BioFindr.real_llr_col(Y,E);
+llr2, llr3, llr4, llr5 = BioFindr.real_llr_col(Y,Ycol,E);
 
 @testset "pprob_col test 0" begin
     # test method of moments
