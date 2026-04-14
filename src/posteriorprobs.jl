@@ -13,7 +13,7 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="moments
     # number of samples
     ns = size(Y,1) 
     # log-likelihood ratios
-    llr = realLLR_col(Y,Ycol) 
+    llr = real_llr_col(Y,Ycol) 
     # posterior probabilities
     if method == "moments"
         # Method of moments can fail if moments don't satisfy a positivity condition; this also catches the case where π0=1
@@ -56,7 +56,7 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVecto
     ns = size(Y,1) 
     ng = length(unique(E))
     # log-likelihood ratios
-    llr2, llr3, llr4, llr5 = realLLR_col(Y,Ycol,E)
+    llr2, llr3, llr4, llr5 = real_llr_col(Y,Ycol,E)
     # allocate output array
     pp = ones(length(llr2),4)
     if method == "moments"
@@ -132,7 +132,7 @@ function pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="moments") 
     ns = size(Y,1) 
     ng = length(unique(E))
     # log-likelihood ratios
-    llr2 = realLLR_col(Y,E)
+    llr2 = real_llr_col(Y,E)
     # posterior probabilities for test 2
     if method == "moments"
         # Method of moments can fail if moments don't satisfy a positivity condition

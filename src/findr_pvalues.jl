@@ -12,7 +12,7 @@ function findrpval_matrix(X::AbstractMatrix{T}) where T<:AbstractFloat
     pv = ones(ncols,ncols) # this sets the diagonal elements to one
     # Compute LLRs and p-values for each column separately
     Threads.@threads for col = axes(Y,2)
-        llr = realLLR_col(Y[:,Not(col)],Y[:,col])
+        llr = real_llr_col(Y[:,Not(col)],Y[:,col])
         pv[Not(col),col] = nulllog10pval(llr,ns)
     end
     return pv

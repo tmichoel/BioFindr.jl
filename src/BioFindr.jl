@@ -32,9 +32,9 @@ include("supernormalization.jl")
 
 include("lbeta.jl")
 
-include("randomLLR.jl")
+include("random_llr.jl")
 
-include("realLLR.jl")
+include("real_llr.jl")
 
 include("posteriorprobs.jl")
 

@@ -20,7 +20,7 @@ using Graphs
     end
 
     @testset "Real LLRs" begin
-        include("realLLR_tests.jl");
+        include("real_llr_tests.jl");
     end
 
     @testset "LBeta" begin
@@ -28,7 +28,7 @@ using Graphs
     end
 
     @testset "Random LLRs" begin
-        include("randomLLR_tests.jl");
+        include("random_llr_tests.jl");
     end
 
     @testset "Posterior probabilities" begin

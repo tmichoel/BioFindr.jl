@@ -18,7 +18,7 @@ Consider correlated genes ``A``, ``B``, and a third variable ``E`` upstream of `
 
 LLRs of every test are calculated separately as follows:
 
-## [Correlation test](@id corr_test_realLLR)
+## [Correlation test](@id corr_test_real_llr)
 
 Define the null hypothesis as ``A`` and ``B`` are independent, and the alternative hypothesis as they are correlated:
 
@@ -66,13 +66,13 @@ In the absence of genotype information, we use nonzero correlation between ``A``
 P(A - B)=P(\mathcal{H}_{\mathrm{alt}}^{\mathrm{(0)}} \mid \mathrm{LLR}^{\mathrm{(0)}}).
 ```
 
-The LLR for the correlation test of a specific gene ``A`` against all other genes ``B`` is implemented as a method of the `realLLR_col` function:
+The LLR for the correlation test of a specific gene ``A`` against all other genes ``B`` is implemented as a method of the `real_llr_col` function:
 
 ```@docs
-realLLR_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
+real_llr_col(Y::Matrix{T},Ycol::Vector{T}) where T<:AbstractFloat
 ```
 
-## [Primary linkage test](@id prim_test_realLLR) 
+## [Primary linkage test](@id prim_test_real_llr) 
 
 Verify that ``E`` regulates ``A`` from ``{\mathcal H}_{\mathrm{alt}}^{\mathrm{(1)}}\equiv E\rightarrow A`` and ``{\mathcal H}_{\mathrm{null}}^{\mathrm{(1)}}\equiv E\qquad A``. For ``{\mathcal H}_{\mathrm{alt}}^{\mathrm{(1)}}``, we model ``E\rightarrow A`` as ``A`` follows a normal distribution whose mean is determined by ``E`` categorically, i.e.
 
@@ -124,11 +124,11 @@ and the LLR as
 ``{\mathcal H}_{\mathrm{alt}}^{\mathrm{(2)}}`` is chosen to verify that ``E`` regulates ``B``.
 
 
-In [Association analysis](@ref), the linkage test is used standalone, and then its LLR for testing a specific grouping vector ``E`` against all genes ``B`` is implemented as a method of the `realLLR_col` function:
+In [Association analysis](@ref), the linkage test is used standalone, and then its LLR for testing a specific grouping vector ``E`` against all genes ``B`` is implemented as a method of the `real_llr_col` function:
 
 
 ```@docs
-realLLR_col(Y::Matrix{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
+real_llr_col(Y::Matrix{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
 ```
 
 In [Causal inference](@ref), the LLR for the linkage test is computed together with the other tests for efficiency (see below).
@@ -172,7 +172,7 @@ For ``{\mathcal H}_{\mathrm{alt}}^{\mathrm{(3)}}``, the bivariate normal distrib
     \right).
 ```
     
-For ``{\mathcal H}_{\mathrm{null}}^{\mathrm{(3)}}``, the distributions follow ``A_i\mid E_i`` as in the [Primary linkage test](@ref prim_test_realLLR), as well as
+For ``{\mathcal H}_{\mathrm{null}}^{\mathrm{(3)}}``, the distributions follow ``A_i\mid E_i`` as in the [Primary linkage test](@ref prim_test_real_llr), as well as
 
 ```math
 B_i\mid A_i\sim N(\rho A_i,\sigma_B^2).
@@ -190,7 +190,7 @@ where
 \sigma_{AB} \equiv 1-\sum_{j=0}^{n_a}\frac{n_j}{n}\hat{\mu}_j\hat{\nu}_j,
 ``` 
 
-and ``\hat\rho=\frac{1}{n}\sum_{i=1}^n A_iB_i`` is the same as in the [Correlation test](@ref corr_test_realLLR).
+and ``\hat\rho=\frac{1}{n}\sum_{i=1}^n A_iB_i`` is the same as in the [Correlation test](@ref corr_test_real_llr).
 
 ## Relevance test
 
@@ -253,22 +253,22 @@ The LLRs for the secondary linkage, conditional independence, relevance, and ple
 \end{aligned}
 ```
 
-Hence for efficiency these LLRs are computed jointly by a method of the `realLLR_col` function:
+Hence for efficiency these LLRs are computed jointly by a method of the `real_llr_col` function:
 
 
 ```@docs
-realLLR_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
+real_llr_col(Y::Matrix{T},Ycol::Vector{T},E::Vector{S}) where {T<:AbstractFloat, S<:Integer}
 ```
 
-The MLEs of the various model parameters are computed in the `llrstats_col` and `groupmeans` functions:
+The MLEs of the various model parameters are computed in the `llr_stats_col` and `group_means` functions:
 
 ```@docs
-llrstats_col
-groupmeans
+llr_stats_col
+group_means
 ```
 
-A summary of all methods of the `realLLR_col` function:
+A summary of all methods of the `real_llr_col` function:
 
 ```@docs
-realLLR_col
+real_llr_col
 ```

@@ -19,8 +19,8 @@ makedocs(;
     pages=[
         "Introduction" => "index.md",
         "General inference algorithm" => "inference.md",
-        "Likelihood ratio tests" => "realLLR.md",
-        "Null distributions of the LLRs" => "randomLLR.md",
+        "Likelihood ratio tests" => "real_llr.md",
+        "Null distributions of the LLRs" => "random_llr.md",
         "Bayesian inference of posterior probabilities" => "posteriorprobs.md",
         "Tests to evaluate" => "testLLR.md",
         "Bayesian networks" => "bayesiannets.md",
