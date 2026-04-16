@@ -1,6 +1,6 @@
 name = "BioFindr"
 uuid = "77580646-997d-4218-a3cc-42097ecd1c68"
-version = "1.1.0"
+version = "1.2.0"
 authors = ["tmichoel <11647967+tmichoel@users.noreply.github.com> and contributors"]
 
 [deps]
