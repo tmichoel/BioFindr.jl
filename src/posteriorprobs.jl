@@ -1,15 +1,15 @@
 """
-    pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="moments") where T<:AbstractFloat
+    pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="kde") where T<:AbstractFloat
 
 Compute the posterior probabilities for BioFindr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
 `Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 
-The optional parameter `method` determines the mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
 
 See also [`supernormalize`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
-function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="moments") where T<:AbstractFloat
+function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="kde") where T<:AbstractFloat
     # number of samples
     ns = size(Y,1) 
     # log-likelihood ratios
@@ -34,7 +34,7 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="moments
 end
 
 """
-    pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}   
+    pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}; method="kde") where {T<:AbstractFloat, S<:Integer}   
 
 Compute the posterior probabilities for the BioFindr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y`: 
 
@@ -47,11 +47,11 @@ Compute the posterior probabilities for the BioFindr causal tests for a given co
 
 For test 2, 4, and 5 the posterior probabilities are the probabilities of the alternative hypothesis being true. For test 3 they are the probabilities of the null hypothesis being true.
 
-The optional parameter `method` determines the mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
 
 See also [`supernormalize`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
-function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
+function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}; method="kde") where {T<:AbstractFloat, S<:Integer}
     # number of samples and groups
     ns = size(Y,1) 
     ng = length(unique(E))
@@ -117,17 +117,17 @@ end
 
 
 """
-    pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
+    pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="kde") where {T<:AbstractFloat, S<:Integer}
 
 Compute the posterior probabilities for differential expression of columns of matrix `Y` in the groups defined by  categorical vector `E` using BioFindr test 2 (**Linkage test**) 
     
 `Y` is assumed to have undergone supernormalization with each column having mean zero and variance one.
 
-The optional parameter `method` determines the mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
 
 See also [`supernormalize`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
-function pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
+function pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="kde") where {T<:AbstractFloat, S<:Integer}
     # number of samples and groups
     ns = size(Y,1) 
     ng = length(unique(E))

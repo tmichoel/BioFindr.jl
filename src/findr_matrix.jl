@@ -1,17 +1,17 @@
 """
-    findr_matrix(X::AbstractMatrix{T}; cols=[], method="moments", combination="none") where T<:AbstractFloat
+    findr_matrix(X::AbstractMatrix{T}; cols=[], method="kde", combination="none") where T<:AbstractFloat
 
 Compute posterior probabilities for nonzero pairwise correlations between columns of input matrix `X`. The probabilities are directed (asymmetric) in the sense that they are estimated from a column-specific background distribution.
 
 The optional parameter `cols` (vector of integers) determines whether we consider all columns of `X` as source nodes (`cols=[]`, default), or only a subset of columns determined by the indices in the vector `cols`.
 
-The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
 
 The optional parameter `combination` determines whether the output must be symmetrized. Possible values are `none` (default), `prod`, `mean`, or `anti`. If the optional parameter `cols` is non-empty, symmetrization makes no sense and an error will be thrown unless `combination="none"`.
 
 See also [`findr(::DataFrame)`](@ref), [`symprobs`](@ref), [`supernormalize`](@ref), [`pprob_col`](@ref).
 """
-function findr_matrix(X::AbstractMatrix{T}; cols=[], method="moments", combination="none") where T<:AbstractFloat
+function findr_matrix(X::AbstractMatrix{T}; cols=[], method="kde", combination="none") where T<:AbstractFloat
     # Inverse-normal transformation and standardization for each columns of X
     Y = supernormalize(X)
     # check if we need to use all columns or only a subset as source nodes
@@ -30,17 +30,17 @@ function findr_matrix(X::AbstractMatrix{T}; cols=[], method="moments", combinati
 end
 
 """
-    findr_matrix(X1::AbstractMatrix{T}, X2::AbstractMatrix{T}; method="moments") where T<:AbstractFloat
+    findr_matrix(X1::AbstractMatrix{T}, X2::AbstractMatrix{T}; method="kde") where T<:AbstractFloat
 
 Compute posterior probabilities for nonzero pairwise correlations between columns of input matrices `X1` and `X2`. The probabilities are directed (asymmetric) from the columns of `X2` to the columns of `X1` in the sense that they are estimated from a column-specific background distribution for each column of `X2`.
 
-The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
 
 Only use this method if `X1` and `X2` are distinct (no overlapping columns). For `X2` consisting of a subset of columns with indices `idx`, use `findr(X1; cols=idx)` instead. 
 
 See also [`findr(::DataFrame)`](@ref), [`symprobs`](@ref), [`supernormalize`](@ref), [`pprob_col`](@ref).
 """
-function findr_matrix(X1::AbstractMatrix{T}, X2::AbstractArray{T}; method="moments") where T<:AbstractFloat
+function findr_matrix(X1::AbstractMatrix{T}, X2::AbstractArray{T}; method="kde") where T<:AbstractFloat
     # Inverse-normal transformation and standardization for each columns of X1 and X2
     Y1 = supernormalize(X1)
     Y2 = supernormalize(X2)
@@ -54,20 +54,20 @@ function findr_matrix(X1::AbstractMatrix{T}, X2::AbstractArray{T}; method="momen
 end
   
 """
-    findr_matrix(X::AbstractMatrix{T},G::AbstractArray{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
+    findr_matrix(X::AbstractMatrix{T},G::AbstractArray{S}; method="kde") where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero differential expression of colunns of input matrix `X` across groups defined by one or more categorical variables (columns of `G`).
 
 Return a matrix of size ncols(X) x ncols(G)
 
-The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
 
 See also [`findr(::DataFrame,::DataFrame)`](@ref), [`supernormalize`](@ref), [`pprob_col`](@ref).
 
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. CategoricalArrays will be supported in the future.
 """
-function findr_matrix(X::AbstractMatrix{T}, G::AbstractArray{S}; method="moments") where {T<:AbstractFloat, S<:Integer}
+function findr_matrix(X::AbstractMatrix{T}, G::AbstractArray{S}; method="kde") where {T<:AbstractFloat, S<:Integer}
     # Inverse-normal transformation and standardization for each column of X
     Y = supernormalize(X)
     # Matrix to store posterior probabilities
@@ -80,7 +80,7 @@ function findr_matrix(X::AbstractMatrix{T}, G::AbstractArray{S}; method="moments
 end
 
 """
-    findr_matrix(X::AbstractMatrix{T},G::AbstractMatrix{S},pairGX::AbstractMatrix{S}; method="moments", combination="none") where {T<:AbstractFloat, S<:Integer}
+    findr_matrix(X::AbstractMatrix{T},G::AbstractMatrix{S},pairGX::AbstractMatrix{S}; method="kde", combination="none") where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero causal relations between columns of input matrix `X`. The probabilities are estimated for relations going from a subset of columns of `X` that have a (discrete) instrumental variable in input matrix `G` to all columns of `X`, while excluding self-interactions (given default value 1). The matching between columns of `X` and columns of `G` is given by `pairGX`, a two-column array where the first column corresponds to a column index in `G` and the second to a column index in `X`.
 
@@ -93,7 +93,7 @@ Posterior probabilities are computed for the following tests
 
 which can be combined into the mediation test (``P_2 P_3``; `combination="mediation"`), the instrumental variable or non-independence test (``P_2 P_5``; `combination="IV"`), or BioFindr's original combination (``\\frac{1}{2}(P_2 P_5 + P_4)``; `combination="orig"`). By default, individual probability matrices for all tests are returned (`combination="none"`).
 
-The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
 
 If `combination="none"`, then the output has size ncols(X) x 4 x ncols(G), where the middle index indexes the tests, and otherwise the output has size ncols(X) x ncols(G). 
 
@@ -102,7 +102,7 @@ See also [`findr(::DataFrame,::DataFrame,::DataFrame)`](@ref), [`supernormalize`
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. I intend to use CategoricalArrays in the future.
 """
-function findr_matrix(X::AbstractMatrix{T},G::AbstractArray{S},pairGX::AbstractMatrix{R}; method="moments", combination="none") where {T<:AbstractFloat, S<:Integer, R<:Integer}
+function findr_matrix(X::AbstractMatrix{T},G::AbstractArray{S},pairGX::AbstractMatrix{R}; method="kde", combination="none") where {T<:AbstractFloat, S<:Integer, R<:Integer}
     if !(combination in Set(["none","IV","mediation","orig"]))
         error("combination parameter must be one of \"none\", \"IV\", \"mediation\", or \"orig\"")
     end
@@ -121,7 +121,7 @@ function findr_matrix(X::AbstractMatrix{T},G::AbstractArray{S},pairGX::AbstractM
 end
 
 """
-    findr_matrix(X1::AbstractMatrix{T},X2::AbstractArray{T},G::AbstractArray{S},pairGX::AbstractMatrix{R}; method="moments", combination="none")  where {T<:AbstractFloat, S<:Integer}
+    findr_matrix(X1::AbstractMatrix{T},X2::AbstractArray{T},G::AbstractArray{S},pairGX::AbstractMatrix{R}; method="kde", combination="none")  where {T<:AbstractFloat, S<:Integer}
 
 Compute posterior probabilities for nonzero causal relations from columns of input matrix `X2` to columns of input matrix `X1`. The probabilities are estimated for a subset of columns of `X2` that have a (discrete) instrumental variable in input matrix `G`. The matching between columns of `X2` and columns of `G` is given by `pairGX`, a two-column array where the first column corresponds to a column index in `G` and the second to a column index in `X2`.
 
@@ -134,7 +134,7 @@ Posterior probabilities are computed for the following tests
 
 which can be combined into the mediation test (``P_2 P_3``; `combination="mediation"`), the instrumental variable or non-independence test (``P_2 P_5``; `combination="IV"`), or BioFindr's original combination (``\\frac{1}{2}(P_2 P_5 + P_4)``; `combination="orig"`). By default, individual probability matrices for all tests are returned (`combination="none"`).
 
-The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
 
 If `combination="none"`, then the output has size ncols(X1) x 4 x ncols(X2), where the middle index indexes the tests, and otherwise the output has size ncols(X1) x ncols(X2).
 
@@ -143,7 +143,7 @@ See also [`findr(::DataFrame,::DataFrame,::DataFrame,::DataFrame)`](@ref), [`com
 !!! note
     `G` is currently assumed to be an array (vector or matrix) of integers. I intend to use CategoricalArrays in the future.
 """
-function findr_matrix(X1::AbstractMatrix{T}, X2::AbstractArray{T}, G::AbstractArray{S}, pairGX::AbstractMatrix{R}; method="moments", combination="none")  where {T<:AbstractFloat, S<:Integer, R<:Integer}
+function findr_matrix(X1::AbstractMatrix{T}, X2::AbstractArray{T}, G::AbstractArray{S}, pairGX::AbstractMatrix{R}; method="kde", combination="none")  where {T<:AbstractFloat, S<:Integer, R<:Integer}
     if !(combination in Set(["none","IV","mediation","orig"]))
         error("combination parameter must be one of \"none\", \"IV\", \"mediation\", or \"orig\"")
     end
