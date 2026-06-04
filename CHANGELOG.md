@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.3.0] - 2026-06-04
+
+### Breaking Changes
+
+There are no breaking changes in this release.
+
+### Behavior Changes
+
+- Change the default LLR mixture-distribution fitting method from `moments` to `kde` across public inference entry points (`findr`, `findr_matrix`, and `pprob_col`) and update docstrings accordingly ([#27](https://github.com/tmichoel/BioFindr.jl/pull/27))
+- Update posterior-probability tests to validate the new default behavior while keeping explicit `method="moments"`/`method="kde"` support ([#27](https://github.com/tmichoel/BioFindr.jl/pull/27))
+
+### Documentation
+
+- Clarify posterior-probability docs to highlight that kernel density estimation is now the default method and how to switch methods explicitly ([#27](https://github.com/tmichoel/BioFindr.jl/pull/27))
+- Minor markdown cleanup in `docs/src/posteriorprobs.md` ([#27](https://github.com/tmichoel/BioFindr.jl/pull/27))
+
+### Logging
+
+- Reduce noise when `π₀ = 1` in KDE fitting by changing a warning log to debug level in `fit_mixdist_KDE` ([#27](https://github.com/tmichoel/BioFindr.jl/pull/27))
+
+**Full Changelog**: https://github.com/tmichoel/BioFindr.jl/compare/v1.2.0...v1.3.0
+
 ## [v1.2.0] - 2026-04-16
 
 ### Breaking Changes
@@ -126,6 +148,7 @@ There are no breaking changes in this release.
 - Most of the functionality of the [original findr software](https://github.com/lingfeiwang/findr) implemented
 - See the [tutorials](https://tmichoel.github.io/FindrTutorials/) for usage examples and the [docs](https://tmichoel.github.io/Findr.jl/dev/) for more details
 
+[v1.3.0]: https://github.com/tmichoel/BioFindr.jl/releases/tag/v1.3.0
 [v1.2.0]: https://github.com/tmichoel/BioFindr.jl/releases/tag/v1.2.0
 [v1.1.0]: https://github.com/tmichoel/BioFindr.jl/releases/tag/v1.1.0
 [v1.0.5]: https://github.com/tmichoel/BioFindr.jl/releases/tag/v1.0.5
