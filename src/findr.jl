@@ -4,13 +4,13 @@
 
 
 """
-    findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
+    findr(dX::T; colnames=[], method="kde", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
 
 Wrapper for `findr_matrix(Matrix(dX))` when the input `dX` is in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target`, (Posterior) `Probability`, and `qvalue` columns. All columns of the input DataFrame must have a count or continuous scientific type. 
 
 The optional parameter `colnames` (vector of strings) determines whether we consider all columns of `dX` as source nodes (`colnames=[]`, default), or only a subset of columns determined by the variable names in the vector `colnames`.
 
-The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
 
 The optional parameter `FDR` can be used to return only a subset of interactions with a desired expected FDR value (q-value threshold) (default 1.0, no filtering).
 
@@ -20,7 +20,7 @@ The optional parameter `combination` determines whether the output must be symme
 
 See also [`coerce_scitypes!`](@ref), [`findr_matrix(::Matrix)`](@ref), [`symprobs`](@ref), [`stackprobs`](@ref), [`globalfdr!`](@ref).
 """
-function findr(dX::T; colnames=[], method="moments", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
+function findr(dX::T; colnames=[], method="kde", FDR=1.0, sorted=true, combination="none") where T<:AbstractDataFrame
     # verify that scientific type of dX is Continuous or Count
     if !test_scitype(dX, ScientificTypes.Continuous) && !test_scitype(dX, ScientificTypes.Count)
         error("All columns of the input DataFrame must have a count or continuous scientific type. Use the function BioFindr.coerce_scitypes! to convert the DataFrame to the correct scientific type.")
@@ -44,11 +44,11 @@ end
 ########################################################################
 
 """
-    findr(dX::T, dG::T; method="moments", FDR=1.0, sorted=true) where T<:AbstractDataFrame
+    findr(dX::T, dG::T; method="kde", FDR=1.0, sorted=true) where T<:AbstractDataFrame
 
 Wrapper for `findr_matrix(Matrix(dX), Matrix(dG))` when the inputs `dX` and `dG` are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` (Posterior) `Probability`, and `qvalue` columns.
 
-The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
 
 The optional parameter `FDR` can be used to return only a subset of interactions with a desired expected FDR value (q-value threshold) (default 1.0, no filtering).
 
@@ -58,7 +58,7 @@ Note that depending on the scitype of `dG`, different matrix-based methods are c
 
 See also [`coerce_scitypes!`](@ref), [`findr_matrix(::Matrix,::Array)`](@ref), [`stackprobs`](@ref), [`globalfdr!`](@ref). 
 """
-function findr(dX::T, dG::T; method="moments", FDR=1.0, sorted=true) where T<:AbstractDataFrame
+function findr(dX::T, dG::T; method="kde", FDR=1.0, sorted=true) where T<:AbstractDataFrame
     # verify that scientific type of dX is Continuous or Count
     if !test_scitype(dX, ScientificTypes.Continuous) && !test_scitype(dX, ScientificTypes.Count)
         error("All columns of the first input DataFrame must have a count or continuous scientific type. Use the function BioFindr.coerce_scitypes! to convert the DataFrame to the correct scientific type.")
@@ -80,7 +80,7 @@ function findr(dX::T, dG::T; method="moments", FDR=1.0, sorted=true) where T<:Ab
 end
 
 """
-    findr(dX::T, dG::T, dE::T; colX=2, colG=1, method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
+    findr(dX::T, dG::T, dE::T; colX=2, colG=1, method="kde", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
 
 Wrapper for `findr(Matrix(dX), Matrix(dG), pairGX)` when the inputs are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target` (Posterior) `Probability`, and `qvalue` columns. When DataFrames are used, only combined posterior probabilities can be returned (`combination="IV"` (default), `"mediation"`, or `"orig"`).
 
@@ -96,7 +96,7 @@ The numeric mapping between column indices in `Matrix(dG)` and `Matrix(dX)` is o
 - `colX` - name or number of gene ID column in `dE`, default 2
 - `namesX` - names of a possible subset of columns in `dX` to be considered as potential causal regulators (default `names(dX)`)
 
-The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
 
 The optional parameter `FDR` can be used to return only a subset of interactions with a desired expected FDR value (q-value threshold) (default 1.0, no filtering).
 
@@ -104,7 +104,7 @@ The optional parameter `sorted` determines if the output must be sorted by incre
 
 See also [`findr(::Matrix,::Array,::Matrix)`](@ref), [`getpairs`](@ref), [`combineprobs`](@ref), [`stackprobs`](@ref), [`globalfdr!`](@ref).
 """
-function findr(dX::T, dG::T, dE::T; colG=1, colX=2, namesX=[], method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
+function findr(dX::T, dG::T, dE::T; colG=1, colX=2, namesX=[], method="kde", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
     if combination == "none"
         error("Returning posterior probabilities for individual tests is not supported with DataFrame inputs. Set combination argument to one of \"IV\", \"mediation\", or \"orig\", or use matrix inputs.")
     elseif combination in Set(["IV","mediation","orig"])
@@ -121,7 +121,7 @@ function findr(dX::T, dG::T, dE::T; colG=1, colX=2, namesX=[], method="moments",
 end
 
 """
-    findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
+    findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, method="kde", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
 
 Wrapper for `findr(Matrix(dX1), Matrix(dX2), Matrix(dG), pairGX2)` when the inputs `dX1`, `dX2`, and `dG` are in the form of a DataFrame. The output is then also wrapped in a DataFrame with `Source`, `Target`, (Posterior) `Probability`, and `qvalue` columns. When DataFrames are used, only combined posterior probabilities can be returned (`combination="IV"` (default), `"mediation"`, or `"orig"`).
 
@@ -131,7 +131,7 @@ The numeric mapping between column indices in `Matrix(dG)` and `Matrix(dX2)` is 
 - `colX` - name or number of gene ID column in `dE`, default 2
 - `namesX` - names of a possible subset of columns in `dX` to be considered as potential causal regulators (default `names(dX)`)
 
-The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `moments` (default) for the method of moments, or `kde` for kernel-based density estimation.
+The optional parameter `method` determines the LLR mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
 
 The optional parameter `FDR` can be used to return only a subset of interactions with a desired expected FDR value (q-value threshold) (default 1.0, no filtering).
 
@@ -139,7 +139,7 @@ The optional parameter `sorted` determines if the output must be sorted by incre
     
 See also [`findr(::Matrix,::Array,::Array,::Matrix)`](@ref), [`combineprobs`](@ref), [`stackprobs`](@ref), [`globalfdr!`](@ref).
 """
-function findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, namesX=[], method="moments", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
+function findr(dX1::T, dX2::T, dG::T, dE::T; colG=1, colX=2, namesX=[], method="kde", combination="IV", FDR=1.0, sorted=true) where T<:AbstractDataFrame
     if combination == "none"
         error("Returning posterior probabilities for individual tests is not supported with DataFrame inputs. Set combination argument to one of \"IV\", \"mediation\", or \"orig\", or use matrix inputs.")
     elseif combination in Set(["IV","mediation","orig"])

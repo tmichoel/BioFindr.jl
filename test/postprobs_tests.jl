@@ -23,30 +23,30 @@ llr1 = BioFindr.real_llr_col(Y,E);
 llr2, llr3, llr4, llr5 = BioFindr.real_llr_col(Y,Ycol,E);
 
 @testset "pprob_col test 0" begin
-    # test method of moments
-    pp_mom = BioFindr.pprob_col(Y,Ycol,method="moments");
-    @test all(pp_mom .≈ BioFindr.fit_mixdist_mom(llr,ns)[1])
+    # test default method
+    pp_default = BioFindr.pprob_col(Y,Ycol);
+    @test all(pp_default .≈ BioFindr.fit_mixdist_KDE(llr,ns))
     # test kde method
     pp_kde = BioFindr.pprob_col(Y,Ycol,method="kde");
     @test all(pp_kde .≈ BioFindr.fit_mixdist_KDE(llr,ns))
 end
 
 @testset "pprob_col test 2" begin
-    # test method of moments
-    pp_mom = BioFindr.pprob_col(Y,E,method="moments");
-    @test all(pp_mom .≈ BioFindr.fit_mixdist_mom(llr1,ns,ng,:link)[1])
+    # test default method
+    pp_default = BioFindr.pprob_col(Y,E);
+    @test all(pp_default .≈ BioFindr.fit_mixdist_KDE(llr1,ns,ng,:link))
     # test kde method
     pp_kde = BioFindr.pprob_col(Y,E,method="kde");
     @test all(pp_kde .≈ BioFindr.fit_mixdist_KDE(llr1,ns,ng,:link))
 end
 
 @testset "pprob_col test 2-5" begin 
-    # test method of moments
-    pp_mom = BioFindr.pprob_col(Y,Ycol,E,method="moments");
-    @test all(pp_mom[:,1] .≈ BioFindr.fit_mixdist_mom(llr2,ns,ng,:link)[1])
-    @test all(pp_mom[:,2] .≈ 1 .- BioFindr.fit_mixdist_mom(llr3,ns,ng,:med)[1])
-    @test all(pp_mom[:,3] .≈ BioFindr.fit_mixdist_mom(llr4,ns,ng,:relev)[1])
-    @test all(pp_mom[:,4] .≈ BioFindr.fit_mixdist_mom(llr5,ns,ng,:pleio)[1])
+    # test default method
+    pp_default = BioFindr.pprob_col(Y,Ycol,E);
+    @test all(pp_default[:,1] .≈ BioFindr.fit_mixdist_KDE(llr2,ns,ng,:link))
+    @test all(pp_default[:,2] .≈ 1 .- BioFindr.fit_mixdist_KDE(llr3,ns,ng,:med))
+    @test all(pp_default[:,3] .≈ BioFindr.fit_mixdist_KDE(llr4,ns,ng,:relev))
+    @test all(pp_default[:,4] .≈ BioFindr.fit_mixdist_KDE(llr5,ns,ng,:pleio))
     # test kde method
     pp_kde = BioFindr.pprob_col(Y,Ycol,E,method="kde");
     @test all(pp_kde[:,1] .≈ BioFindr.fit_mixdist_KDE(llr2,ns,ng,:link))
@@ -155,4 +155,3 @@ end
     pval = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     @test BioFindr.pi0est(pval) ≈ 1.0
 end
-
