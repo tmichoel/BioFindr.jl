@@ -245,7 +245,7 @@ function fit_mixdist_KDE(llr,ns,ng=1,test=:corr)
      If π0=1, a single non-null value may be missed. However in this case KDE also fails sometimes. Therefore give a warning and return the null distribution, i.e. pp=0
     =#
     if π0==1
-        @warn "Estimated prior probability π0=1, returning null distribution"
+        @debug "Estimated prior probability π0=1, returning null distribution"
         return zeros(length(llr))
     else
         # Evaluate the null distribution p.d.f. on the log-likelihood ratios
