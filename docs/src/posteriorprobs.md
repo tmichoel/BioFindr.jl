@@ -200,6 +200,6 @@ Nevertheless, the KDE of ``p(\mathrm{LLR})`` will still fluctuate wildly near ``
 p(x_i) = \max\left(0, \min_{j\geq i} \tilde{p}(x_j) \right)
 ```
 
-:::{.callout-note}
+**Note**
+
 The kernel density method is set as the default. The keyword argument `method="moments"` or `method="kde"` can be used to switch between the two methods in all relevant functions. 
-:::
