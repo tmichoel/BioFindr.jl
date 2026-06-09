@@ -33,8 +33,17 @@ function fit_mixdist_hist(llr,ns,ng=1,test=:corr)
     edges = collect(range(0.0, dmax * (1 + 1e-6), length=nbin+1))
     widths = diff(edges)
 
-    hreal = fit(Histogram, llr, edges)
-    counts = hreal.weights
+    counts = zeros(Float64, nbin)
+    @inbounds for x in llr
+        if x < edges[1]
+            continue
+        elseif x >= edges[end]
+            counts[end] += 1
+        else
+            idx = searchsortedlast(edges, x)
+            counts[clamp(idx, 1, nbin)] += 1
+        end
+    end
     total = sum(counts)
     total == 0 && return zeros(length(llr))
     realdens = counts ./ (total .* widths)
