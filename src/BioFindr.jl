@@ -15,6 +15,7 @@ using InvertedIndices
 using Graphs
 using MetaGraphsNext
 using ScientificTypes
+using Interpolations
 
 # Export statements
 export findr, dagfindr!, LBeta, generate_test_data, coerce_scitypes!
@@ -37,6 +38,8 @@ include("random_llr.jl")
 include("real_llr.jl")
 
 include("posteriorprobs.jl")
+
+include("posteriorprobs_hist.jl")
 
 include("bayesiannets.jl")
 

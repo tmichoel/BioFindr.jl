@@ -23,7 +23,7 @@ If you are familiar with the [original Findr software](https://github.com/lingfe
 
 - You can pass a desired global FDR value for filtering inferred associations as a parameter when calling `findr`, no more need for manual post-processing of the output.  
 
-- Estimation of the observed distribution of log-likelihood ratios uses either a [new, parametric method of moments](@ref mom_postprobs), or a [kernel density estimation method](@ref kde_postprobs), replacing the previous histogram-based method. 
+- Estimation of the observed distribution of log-likelihood ratios supports three approaches: the [original histogram-based method](@ref hist_postprobs), a [new, parametric method of moments](@ref mom_postprobs), and a [kernel density estimation method](@ref kde_postprobs). 
 
 ## Table of contents
 

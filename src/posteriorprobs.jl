@@ -1,15 +1,15 @@
 """
-    pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="kde") where T<:AbstractFloat
+    pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="hist") where T<:AbstractFloat
 
 Compute the posterior probabilities for BioFindr test 0 (**correlation test**) for a given column vector `Ycol` against all columns of matrix `Y`.
 
 `Y` and `Ycol` are assumed to have undergone supernormalization with each column having mean zero and variance one. The LLRs are scaled by the number of rows (samples).
 
-The optional parameter `method` determines the mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
+The optional parameter `method` determines the mixture distribution fitting method and can be one of `hist` (default) for histogram-based estimation, `kde` for kernel-based density estimation, or `moments` for the method of moments.
 
-See also [`supernormalize`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
+See also [`supernormalize`](@ref), [`fit_mixdist_hist`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
-function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="kde") where T<:AbstractFloat
+function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="hist") where T<:AbstractFloat
     # number of samples
     ns = size(Y,1) 
     # log-likelihood ratios
@@ -21,20 +21,21 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T}; method="kde") w
             pp, _ = fit_mixdist_mom(llr,ns)
         catch e
             e isa AssertionError || rethrow(e)
-            # Fall back on KDE method in case of failure
-            # @info "Encountered $e, using KDE instead of moments method.
-            pp = fit_mixdist_KDE(llr,ns)
+            # Fall back on histogram method in case of failure
+            pp = fit_mixdist_hist(llr,ns)
         end        
+    elseif method == "hist"
+        pp = fit_mixdist_hist(llr,ns)
     elseif method == "kde"
         pp = fit_mixdist_KDE(llr,ns)
     else
-        error("Optional `method` parameter must be equal to `moments` or `kde`.")
+        error("Optional `method` parameter must be equal to `moments`, `hist`, or `kde`.")
     end
     return pp
 end
 
 """
-    pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}; method="kde") where {T<:AbstractFloat, S<:Integer}   
+    pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}; method="hist") where {T<:AbstractFloat, S<:Integer}   
 
 Compute the posterior probabilities for the BioFindr causal tests for a given column vector `Ycol` with categorical instrument `E` against all columns of matrix `Y`: 
 
@@ -47,11 +48,11 @@ Compute the posterior probabilities for the BioFindr causal tests for a given co
 
 For test 2, 4, and 5 the posterior probabilities are the probabilities of the alternative hypothesis being true. For test 3 they are the probabilities of the null hypothesis being true.
 
-The optional parameter `method` determines the mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
+The optional parameter `method` determines the mixture distribution fitting method and can be one of `hist` (default) for histogram-based estimation, `kde` for kernel-based density estimation, or `moments` for the method of moments.
 
-See also [`supernormalize`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
+See also [`supernormalize`](@ref), [`fit_mixdist_hist`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
-function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}; method="kde") where {T<:AbstractFloat, S<:Integer}
+function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVector{S}; method="hist") where {T<:AbstractFloat, S<:Integer}
     # number of samples and groups
     ns = size(Y,1) 
     ng = length(unique(E))
@@ -66,9 +67,8 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVecto
             pp[:,1], _ = fit_mixdist_mom(llr2,ns,ng,:link)
         catch e
             e isa AssertionError || rethrow(e)
-            # Fall back on KDE method in case of failure
-            # @info "Encountered $e, using KDE instead of moments method."
-            pp[:,1] = fit_mixdist_KDE(llr2,ns,ng,:link)
+            # Fall back on histogram method in case of failure
+            pp[:,1] = fit_mixdist_hist(llr2,ns,ng,:link)
         end
         
         # posterior probabilities for test 3, here we swap the role of null and alternative
@@ -77,9 +77,8 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVecto
             pp[:,2] = 1.0 .- fit_mixdist_mom(llr3,ns,ng,:med)[1]
         catch e
             e isa AssertionError || rethrow(e)
-            # Fall back on KDE method in case of failure
-            # @info "Encountered $e, using KDE instead of moments method."
-            pp[:,2] = 1.0 .- fit_mixdist_KDE(llr3,ns,ng,:med)
+            # Fall back on histogram method in case of failure
+            pp[:,2] = 1.0 .- fit_mixdist_hist(llr3,ns,ng,:med)
         end      
         
         # posterior probabilities for test 4 and 5
@@ -88,19 +87,25 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVecto
             pp[:,3], _ = fit_mixdist_mom(llr4,ns,ng,:relev)
         catch e
             e isa AssertionError || rethrow(e)
-            # Fall back on KDE method in case of failure
-            # @info "Encountered $e, using KDE instead of moments method."
-            pp[:,3] = fit_mixdist_KDE(llr4,ns,ng,:relev)
+            # Fall back on histogram method in case of failure
+            pp[:,3] = fit_mixdist_hist(llr4,ns,ng,:relev)
         end   
         try
             # Method of moments can fail if moments don't satisfy a positivity condition; this also catches the case where π0=1
             pp[:,4], _ = fit_mixdist_mom(llr5,ns,ng,:pleio)
         catch e
             e isa AssertionError || rethrow(e)
-            # Fall back on KDE method in case of failure
-            # @info "Encountered $e, using KDE instead of moments method."
-            pp[:,4] = fit_mixdist_KDE(llr5,ns,ng,:pleio)
+            # Fall back on histogram method in case of failure
+            pp[:,4] = fit_mixdist_hist(llr5,ns,ng,:pleio)
         end        
+    elseif method == "hist"
+        # posterior probabilities for test 2
+        pp[:,1] = fit_mixdist_hist(llr2,ns,ng,:link)
+        # posterior probabilities for test 3, here we swap the role of null and alternative
+        pp[:,2] = 1.0 .- fit_mixdist_hist(llr3,ns,ng,:med)
+        # posterior probabilities for test 4 and 5
+        pp[:,3] = fit_mixdist_hist(llr4,ns,ng,:relev)
+        pp[:,4] = fit_mixdist_hist(llr5,ns,ng,:pleio)
     elseif method == "kde"
         # posterior probabilities for test 2
         pp[:,1] = fit_mixdist_KDE(llr2,ns,ng,:link)
@@ -110,24 +115,24 @@ function pprob_col(Y::AbstractMatrix{T},Ycol::AbstractVector{T},E::AbstractVecto
         pp[:,3] = fit_mixdist_KDE(llr4,ns,ng,:relev)
         pp[:,4] = fit_mixdist_KDE(llr5,ns,ng,:pleio)
     else
-        error("Optional `method` parameter must be equal to `moments` or `kde`.")
+        error("Optional `method` parameter must be equal to `moments`, `hist`, or `kde`.")
     end
     return pp
 end
 
 
 """
-    pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="kde") where {T<:AbstractFloat, S<:Integer}
+    pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="hist") where {T<:AbstractFloat, S<:Integer}
 
 Compute the posterior probabilities for differential expression of columns of matrix `Y` in the groups defined by  categorical vector `E` using BioFindr test 2 (**Linkage test**) 
     
 `Y` is assumed to have undergone supernormalization with each column having mean zero and variance one.
 
-The optional parameter `method` determines the mixture distribution fitting method and can be either `kde` (default) for kernel-based density estimation, or `moments` for the method of moments.
+The optional parameter `method` determines the mixture distribution fitting method and can be one of `hist` (default) for histogram-based estimation, `kde` for kernel-based density estimation, or `moments` for the method of moments.
 
-See also [`supernormalize`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
+See also [`supernormalize`](@ref), [`fit_mixdist_hist`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
-function pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="kde") where {T<:AbstractFloat, S<:Integer}
+function pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="hist") where {T<:AbstractFloat, S<:Integer}
     # number of samples and groups
     ns = size(Y,1) 
     ng = length(unique(E))
@@ -140,14 +145,15 @@ function pprob_col(Y::AbstractMatrix{T},E::AbstractVector{S}; method="kde") wher
             pp, _ = fit_mixdist_mom(llr2,ns,ng,:link)
         catch e
             e isa AssertionError || rethrow(e)
-            # Fall back on KDE method in case of failure
-            # @info "Encountered $e, using KDE instead of moments method."
-            pp = fit_mixdist_KDE(llr2,ns,ng,:link)
+            # Fall back on histogram method in case of failure
+            pp = fit_mixdist_hist(llr2,ns,ng,:link)
         end
+    elseif method == "hist"
+        pp = fit_mixdist_hist(llr2,ns,ng,:link)
     elseif method == "kde"
         pp = fit_mixdist_KDE(llr2,ns,ng,:link)
     else
-        error("Optional `method` parameter must be equal to `moments` or `kde`.")
+        error("Optional `method` parameter must be equal to `moments`, `hist`, or `kde`.")
     end
     return pp
 end
