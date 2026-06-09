@@ -13,25 +13,20 @@ The input variable `test` can take the values:
 
 With two input arguments, the correlation test with `ns` samples is used. With three input arguments, or with four arguments and `test == :corr`, the correlation test with `ns` samples is used and the third argument is ignored.
 
-See also [`pi0est`](@ref), [`nulldist`](@ref), [`nullpval`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
+See also [`nulldist`](@ref), [`nullpval`](@ref), [`fit_mixdist_mom`](@ref), [`fit_mixdist_KDE`](@ref).
 """
 function fit_mixdist_hist(llr,ns,ng=1,test=:corr)
-    # Port of tmichoel/findr llrtopij.c: llrtopij() setup for null model and π0 estimate.
+    # Null distribution
     dnull = nulldist(ns, ng, test)
-    π0 = pi0est(nullpval(llr, ns, ng, test))
-    if π0 == 1
-        @debug "Estimated prior probability π0=1, returning null distribution"
-        return zeros(length(llr))
-    end
 
-    # Port of tmichoel/findr nullhist.c: derive histogram support from observed LLR maximum.
+    # Derive histogram support from observed LLR maximum.
     dmax = maximum(llr)
     if !(isfinite(dmax) && dmax > 0)
         @debug "Encountered non-positive or non-finite dmax in histogram fit, returning null distribution" dmax
         return zeros(length(llr))
     end
 
-    # Port of tmichoel/findr nullhist.c: histogram binning of observed LLRs.
+    # Histogram binning of observed LLRs.
     nd = length(llr)
     nbin = clamp(round(Int, sqrt(nd)), 10, 200)
     edges = collect(range(0.0, dmax * (1 + 1e-6), length=nbin+1))
@@ -64,7 +59,7 @@ function fit_mixdist_hist(llr,ns,ng=1,test=:corr)
         return zeros(length(llr))
     end
 
-    # Port of tmichoel/findr nullhist.c: fill zero-density gaps in empirical histogram.
+    # Fill zero-density gaps in empirical histogram.
     realwork = copy(realdens[1:nb])
     for i in 2:nb
         if realwork[i] == 0
@@ -77,7 +72,7 @@ function fit_mixdist_hist(llr,ns,ng=1,test=:corr)
         nulldens[i] = (cdf(dnull, edges[i+1]) - cdf(dnull, edges[i])) / widths[i]
     end
 
-    # Port of tmichoel/findr llrtopij.c: estimate posterior scale from null/real density ratio.
+    # Estimate posterior scale from null/real density ratio.
     null_over_real = nulldens ./ realwork
     minpos = argmax(null_over_real)
     ndens = inv(null_over_real[minpos])
@@ -86,19 +81,19 @@ function fit_mixdist_hist(llr,ns,ng=1,test=:corr)
         return ones(length(llr))
     end
 
-    # Port of tmichoel/findr llrtopij.c: compute raw posterior by null-over-real correction.
+    # Compute raw posterior by null-over-real correction.
     ratio = 1 .- ndens .* null_over_real
     ratio = clamp.(ratio, 0.0, 1.0)
     ratio[1:minpos] .= 0.0
 
-    # Port of tmichoel/findr llrtopij.c: extend binned posterior to all bins.
+    # PExtend binned posterior to all bins.
     pbin = zeros(nbin)
     pbin[1:nb] .= ratio
     if nb < nbin
         pbin[(nb+1):end] .= pbin[nb]
     end
 
-    # Port of tmichoel/findr llrtopij.c: monotonic envelope averaging.
+    # Monotonic envelope averaging.
     upper = copy(pbin)
     for i in 2:nbin
         upper[i] = max(upper[i], upper[i-1])
@@ -109,7 +104,7 @@ function fit_mixdist_hist(llr,ns,ng=1,test=:corr)
     end
     pbin .= 0.5 .* (upper .+ lower)
 
-    # Port of tmichoel/findr llrtopij.c: Gaussian smoothing in histogram space.
+    # Gaussian smoothing in histogram space.
     ncut = min(nbin ÷ 2, 50)
     if ncut > 0
         sigma = min(ncut / 3, 30.0)
@@ -126,7 +121,7 @@ function fit_mixdist_hist(llr,ns,ng=1,test=:corr)
         end
     end
 
-    # Port of tmichoel/findr llrtopij.c: final monotonic clamp and interpolation to sample LLRs.
+    # Final monotonic clamp and interpolation to sample LLRs.
     pbin = accumulate(max, clamp.(pbin, 0.0, 1.0))
 
     mids = 0.5 .* (edges[1:(end-1)] .+ edges[2:end])
