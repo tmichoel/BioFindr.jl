@@ -25,7 +25,10 @@ llr2, llr3, llr4, llr5 = BioFindr.real_llr_col(Y,Ycol,E);
 @testset "pprob_col test 0" begin
     # test default method
     pp_default = BioFindr.pprob_col(Y,Ycol);
-    @test all(pp_default .≈ BioFindr.fit_mixdist_KDE(llr,ns))
+    @test all(pp_default .≈ BioFindr.fit_mixdist_hist(llr,ns))
+    # test hist method
+    pp_hist = BioFindr.pprob_col(Y,Ycol,method="hist");
+    @test all(pp_hist .≈ BioFindr.fit_mixdist_hist(llr,ns))
     # test kde method
     pp_kde = BioFindr.pprob_col(Y,Ycol,method="kde");
     @test all(pp_kde .≈ BioFindr.fit_mixdist_KDE(llr,ns))
@@ -34,7 +37,10 @@ end
 @testset "pprob_col test 2" begin
     # test default method
     pp_default = BioFindr.pprob_col(Y,E);
-    @test all(pp_default .≈ BioFindr.fit_mixdist_KDE(llr1,ns,ng,:link))
+    @test all(pp_default .≈ BioFindr.fit_mixdist_hist(llr1,ns,ng,:link))
+    # test hist method
+    pp_hist = BioFindr.pprob_col(Y,E,method="hist");
+    @test all(pp_hist .≈ BioFindr.fit_mixdist_hist(llr1,ns,ng,:link))
     # test kde method
     pp_kde = BioFindr.pprob_col(Y,E,method="kde");
     @test all(pp_kde .≈ BioFindr.fit_mixdist_KDE(llr1,ns,ng,:link))
@@ -43,16 +49,42 @@ end
 @testset "pprob_col test 2-5" begin 
     # test default method
     pp_default = BioFindr.pprob_col(Y,Ycol,E);
-    @test all(pp_default[:,1] .≈ BioFindr.fit_mixdist_KDE(llr2,ns,ng,:link))
-    @test all(pp_default[:,2] .≈ 1 .- BioFindr.fit_mixdist_KDE(llr3,ns,ng,:med))
-    @test all(pp_default[:,3] .≈ BioFindr.fit_mixdist_KDE(llr4,ns,ng,:relev))
-    @test all(pp_default[:,4] .≈ BioFindr.fit_mixdist_KDE(llr5,ns,ng,:pleio))
+    @test all(pp_default[:,1] .≈ BioFindr.fit_mixdist_hist(llr2,ns,ng,:link))
+    @test all(pp_default[:,2] .≈ 1 .- BioFindr.fit_mixdist_hist(llr3,ns,ng,:med))
+    @test all(pp_default[:,3] .≈ BioFindr.fit_mixdist_hist(llr4,ns,ng,:relev))
+    @test all(pp_default[:,4] .≈ BioFindr.fit_mixdist_hist(llr5,ns,ng,:pleio))
+    # test hist method
+    pp_hist = BioFindr.pprob_col(Y,Ycol,E,method="hist");
+    @test all(pp_hist[:,1] .≈ BioFindr.fit_mixdist_hist(llr2,ns,ng,:link))
+    @test all(pp_hist[:,2] .≈ 1 .- BioFindr.fit_mixdist_hist(llr3,ns,ng,:med))
+    @test all(pp_hist[:,3] .≈ BioFindr.fit_mixdist_hist(llr4,ns,ng,:relev))
+    @test all(pp_hist[:,4] .≈ BioFindr.fit_mixdist_hist(llr5,ns,ng,:pleio))
     # test kde method
     pp_kde = BioFindr.pprob_col(Y,Ycol,E,method="kde");
     @test all(pp_kde[:,1] .≈ BioFindr.fit_mixdist_KDE(llr2,ns,ng,:link))
     @test all(pp_kde[:,2] .≈ 1 .- BioFindr.fit_mixdist_KDE(llr3,ns,ng,:med))
     @test all(pp_kde[:,3] .≈ BioFindr.fit_mixdist_KDE(llr4,ns,ng,:relev))
     @test all(pp_kde[:,4] .≈ BioFindr.fit_mixdist_KDE(llr5,ns,ng,:pleio))
+end
+
+@testset "fit_mixdist_hist" begin
+    pp0 = BioFindr.fit_mixdist_hist(llr,ns);
+    pp2 = BioFindr.fit_mixdist_hist(llr2,ns,ng,:link);
+    pp3 = BioFindr.fit_mixdist_hist(llr3,ns,ng,:med);
+    pp4 = BioFindr.fit_mixdist_hist(llr4,ns,ng,:relev);
+    pp5 = BioFindr.fit_mixdist_hist(llr5,ns,ng,:pleio);
+
+    @test all(pp0 .≥ 0) && all(pp0 .≤ 1)
+    @test all(pp2 .≥ 0) && all(pp2 .≤ 1)
+    @test all(pp3 .≥ 0) && all(pp3 .≤ 1)
+    @test all(pp4 .≥ 0) && all(pp4 .≤ 1)
+    @test all(pp5 .≥ 0) && all(pp5 .≤ 1)
+
+    @test issorted(round.(pp0,digits=3)[sortperm(llr)])
+    @test issorted(round.(pp2,digits=3)[sortperm(llr2)])
+    @test issorted(round.(pp3,digits=3)[sortperm(llr3)])
+    @test issorted(round.(pp4,digits=3)[sortperm(llr4)])
+    @test issorted(round.(pp5,digits=3)[sortperm(llr5)])
 end
 
 @testset "fit_mixdist_mom test" begin

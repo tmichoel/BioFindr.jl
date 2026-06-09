@@ -180,6 +180,14 @@ The entire procedure is implemented in the `fit_mixdist_mom` function:
 fit_mixdist_mom
 ```
 
+## [Histogram-based conversion of the mixture distribution](@id hist_postprobs)
+
+BioFindr also provides this original histogram-based conversion approach:
+
+```@docs
+fit_mixdist_hist
+```
+
 ## [Kernel density estimation of the mixture distribution](@id kde_postprobs)
 
 The method of moments mixture distribution works very well in practice (by visual inspection of histograms and fitted distributions), but there is no theory to support it. Moreover the condition on the moments to produce valid distribution parameters (See [`fit_mom`](@ref)) is sometimes violated (typically when ``\pi_0\approx 1``). Hence [BioFindr](https://github.com/tmichoel/BioFindr.jl) also implements an alternative [kernel density estimation](https://en.wikipedia.org/wiki/Kernel_density_estimation) method, comparable to the one implemented in the [qvalue package for R](https://github.com/StoreyLab/qvalue). 
@@ -202,4 +210,4 @@ p(x_i) = \max\left(0, \min_{j\geq i} \tilde{p}(x_j) \right)
 
 **Note**
 
-The kernel density method is set as the default. The keyword argument `method="moments"` or `method="kde"` can be used to switch between the two methods in all relevant functions. 
+The histogram method is set as the default. The keyword argument `method="moments"` or `method="kde"` can be used to switch to alternative methods in all relevant functions. 
