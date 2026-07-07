@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.4.0] - 2026-07-07
+
+### Breaking Changes
+
+There are no breaking changes in this release.
+
+### New Features
+
+- Add `fit_mixdist_hist` function in `posteriorprobs_hist.jl`: a histogram-based LLR-to-posterior-probability conversion ported from the original [Findr C implementation](https://github.com/lingfeiwang/findr). The function supports all five BioFindr tests (`:corr`, `:link`, `:med`, `:relev`, `:pleio`) and uses unequal-bin histogram construction with iterative bin-edge refinement to match the null distribution ([#29](https://github.com/tmichoel/BioFindr.jl/pull/29))
+- `pprob_col` now accepts `method="hist"` as a third mixture-fitting option in addition to the existing `"kde"` and `"moments"` options ([#29](https://github.com/tmichoel/BioFindr.jl/pull/29))
+
+### Behavior Changes
+
+- The fallback method used when `method="moments"` raises an `AssertionError` in `pprob_col` is changed from KDE to histogram (`fit_mixdist_hist`) ([#29](https://github.com/tmichoel/BioFindr.jl/pull/29))
+- The default method for `pprob_col` remains `kde` (a previous intermediate commit set it to `hist`; this was reverted back to `kde` before release)
+
+### Dependency Changes
+
+- Add `Interpolations` as a runtime dependency (required by `fit_mixdist_hist` for spline interpolation during histogram construction) ([#29](https://github.com/tmichoel/BioFindr.jl/pull/29))
+- Bump compat for `Interpolations` to include version 0.16 ([#30](https://github.com/tmichoel/BioFindr.jl/pull/30))
+
+### Tests
+
+- Add a `fit_mixdist_hist` test set in `test/postprobs_tests.jl` covering all five BioFindr test types, validating that posterior probabilities are in `[0, 1]` and are non-decreasing with respect to the LLR values ([#29](https://github.com/tmichoel/BioFindr.jl/pull/29))
+- Update existing `pprob_col` test sets to explicitly test the `"hist"` method and verify fallback-from-`"moments"` behaviour ([#29](https://github.com/tmichoel/BioFindr.jl/pull/29))
+
+### Documentation
+
+- Add a new `## Histogram-based conversion of the mixture distribution` section in `docs/src/posteriorprobs.md` with API docs for `fit_mixdist_hist` ([#29](https://github.com/tmichoel/BioFindr.jl/pull/29))
+- Update `docs/src/index.md` to mention all three posterior-probability estimation approaches (histogram, moments, KDE) ([#29](https://github.com/tmichoel/BioFindr.jl/pull/29))
+- Update the note at the end of `docs/src/posteriorprobs.md` to reflect that the histogram method is available as an option ([#29](https://github.com/tmichoel/BioFindr.jl/pull/29))
+
+**Full Changelog**: https://github.com/tmichoel/BioFindr.jl/compare/v1.3.0...v1.4.0
+
 ## [v1.3.0] - 2026-06-04
 
 ### Breaking Changes
@@ -148,6 +182,7 @@ There are no breaking changes in this release.
 - Most of the functionality of the [original findr software](https://github.com/lingfeiwang/findr) implemented
 - See the [tutorials](https://tmichoel.github.io/FindrTutorials/) for usage examples and the [docs](https://tmichoel.github.io/Findr.jl/dev/) for more details
 
+[v1.4.0]: https://github.com/tmichoel/BioFindr.jl/releases/tag/v1.4.0
 [v1.3.0]: https://github.com/tmichoel/BioFindr.jl/releases/tag/v1.3.0
 [v1.2.0]: https://github.com/tmichoel/BioFindr.jl/releases/tag/v1.2.0
 [v1.1.0]: https://github.com/tmichoel/BioFindr.jl/releases/tag/v1.1.0
