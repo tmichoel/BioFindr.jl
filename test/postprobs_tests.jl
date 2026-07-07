@@ -23,8 +23,8 @@ llr1 = BioFindr.real_llr_col(Y,E);
 llr2, llr3, llr4, llr5 = BioFindr.real_llr_col(Y,Ycol,E);
 
 @testset "pprob_col test 0" begin
-    # test default method
-    pp_default = BioFindr.pprob_col(Y,Ycol);
+    # test moments method
+    pp_default = BioFindr.pprob_col(Y,Ycol,method="moments");
     @test all(pp_default .≈ BioFindr.fit_mixdist_hist(llr,ns))
     # test hist method
     pp_hist = BioFindr.pprob_col(Y,Ycol,method="hist");
@@ -35,8 +35,8 @@ llr2, llr3, llr4, llr5 = BioFindr.real_llr_col(Y,Ycol,E);
 end
 
 @testset "pprob_col test 2" begin
-    # test default method
-    pp_default = BioFindr.pprob_col(Y,E);
+    # test moments method
+    pp_default = BioFindr.pprob_col(Y,E,method="moments");
     @test all(pp_default .≈ BioFindr.fit_mixdist_hist(llr1,ns,ng,:link))
     # test hist method
     pp_hist = BioFindr.pprob_col(Y,E,method="hist");
@@ -47,8 +47,8 @@ end
 end
 
 @testset "pprob_col test 2-5" begin 
-    # test default method
-    pp_default = BioFindr.pprob_col(Y,Ycol,E);
+    # test moments method
+    pp_default = BioFindr.pprob_col(Y,Ycol,E,method="moments");
     @test all(pp_default[:,1] .≈ BioFindr.fit_mixdist_hist(llr2,ns,ng,:link))
     @test all(pp_default[:,2] .≈ 1 .- BioFindr.fit_mixdist_hist(llr3,ns,ng,:med))
     @test all(pp_default[:,3] .≈ BioFindr.fit_mixdist_hist(llr4,ns,ng,:relev))
